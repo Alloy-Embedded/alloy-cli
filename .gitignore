@@ -44,5 +44,8 @@ tests/_artifacts/
 tests/_publication/
 tests/_tmp/
 
+# Snapshot script scratch dir
+.tmp_screenshots/
+
 # ccd-session worktrees (Claude Code dev)
 .claude/worktrees/
