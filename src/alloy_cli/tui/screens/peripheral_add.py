@@ -109,8 +109,17 @@ class PeripheralAddScreen(Screen[None]):
             yield ValidationPanel(id="peripheral-validation")
             yield Static("", id="peripheral-status", classes="panel")
             with Horizontal(id="peripheral-actions"):
-                yield Button("Diff", id="diff-button")
-                yield Button("Apply", id="apply-button", variant="success")
+                yield Button(
+                    "Diff",
+                    id="diff-button",
+                    tooltip="Show the alloy.toml + peripherals.cpp diff before applying.",
+                )
+                yield Button(
+                    "Apply",
+                    id="apply-button",
+                    variant="success",
+                    tooltip="Write the diff to disk (Ctrl+S also applies).",
+                )
         yield Footer()
 
     def _compose_kind_fields(self) -> ComposeResult:

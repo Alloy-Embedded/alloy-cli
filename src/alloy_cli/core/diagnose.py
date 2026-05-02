@@ -155,6 +155,33 @@ def _mcp_extras_check() -> CheckResult:
     )
 
 
+def _accessibility_check() -> CheckResult:
+    """Surface the active terminal's accessibility-relevant env vars.
+
+    No auto-fix — we just give the user a single place to confirm
+    that NO_COLOR / TERM / COLORTERM are set the way they expect.
+    """
+    import os
+
+    no_color = os.environ.get("NO_COLOR", "")
+    term = os.environ.get("TERM", "")
+    colorterm = os.environ.get("COLORTERM", "")
+    parts: list[str] = []
+    if no_color:
+        parts.append(f"NO_COLOR={no_color}")
+    if term:
+        parts.append(f"TERM={term}")
+    if colorterm:
+        parts.append(f"COLORTERM={colorterm}")
+    summary = ", ".join(parts) or "(default terminal)"
+    return CheckResult(
+        name="accessibility-suite",
+        ok=True,
+        severity="info",
+        message=f"terminal: {summary}",
+    )
+
+
 def run(*, project_dir: Path | None = None) -> DiagnosticReport:
     """Aggregate every diagnostic check into a single report."""
     project_dir = (project_dir or Path.cwd()).resolve()
@@ -166,6 +193,7 @@ def run(*, project_dir: Path | None = None) -> DiagnosticReport:
         _devices_submodule_check(),
         _mcp_extras_check(),
         _project_check(project_dir),
+        _accessibility_check(),
     ]
     return DiagnosticReport(checks=tuple(checks))
 
