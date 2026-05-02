@@ -1,24 +1,77 @@
-"""Entry point stub.  Real CLI surface is built across
-``add-cli-new`` / ``add-cli-build-flash-debug`` / etc.  This module
-exists so the ``alloy = "alloy_cli.main:main"`` pyproject scripts entry
-resolves before any phase-2 proposal lands.
+"""``alloy`` CLI entry point.
+
+The Click root command + global options.  Subcommands land via
+later proposals (``add-cli-new``, ``add-cli-build-flash-debug``,
+``add-cli-boards-and-devices``, ``add-cli-add-peripheral``,
+``add-mcp-server``, ``add-doctor-update-export``).
+
+This module ships only:
+
+* ``alloy --version`` — version string from VCS tags via hatch-vcs.
+* ``alloy --help`` — banner mentioning the Alloy embedded platform.
+
+Everything else routes through subcommand groups that future
+proposals add via ``cli.add_command(...)``.
 """
 
 from __future__ import annotations
 
 import sys
+from typing import NoReturn
+
+import click
+from rich.console import Console
+
+from alloy_cli import __version__
+
+_BANNER = """\
+alloy — terminal-native developer surface for the Alloy embedded platform.
+
+The roadmap is sequenced under openspec/changes/ in this repository.
+Phase 1 (this proposal: bootstrap-alloy-cli) ships only the package
+skeleton.  Subcommands (new, build, flash, debug, boards, add, mcp,
+doctor) land in subsequent proposals.
+"""
 
 
-def main() -> int:
-    """Placeholder — phase 2 ``add-cli-new`` proposal replaces this."""
-    print(
-        "alloy-cli: the terminal-native developer surface for the Alloy "
-        "embedded platform is not yet implemented.\n"
-        "See openspec/changes/ for the in-flight roadmap.",
-        file=sys.stderr,
-    )
-    return 2
+@click.group(
+    invoke_without_command=True,
+    help=_BANNER,
+    context_settings={"help_option_names": ["-h", "--help"]},
+)
+@click.version_option(
+    version=__version__,
+    package_name="alloy-cli",
+    prog_name="alloy",
+    message="%(prog)s %(version)s",
+)
+@click.pass_context
+def cli(ctx: click.Context) -> None:
+    """alloy — Alloy embedded platform CLI."""
+    if ctx.invoked_subcommand is None:
+        # No subcommand: print the banner via Rich for nice colors,
+        # then the standard Click usage line.
+        Console().print(_BANNER)
+        click.echo(ctx.get_usage())
+
+
+def main(argv: list[str] | None = None) -> NoReturn:
+    """``[project.scripts] alloy = "alloy_cli.main:main"`` entry."""
+    try:
+        cli.main(args=argv, prog_name="alloy", standalone_mode=False)
+    except click.exceptions.UsageError as exc:
+        exc.show()
+        sys.exit(exc.exit_code)
+    except click.exceptions.ClickException as exc:
+        exc.show()
+        sys.exit(exc.exit_code)
+    except SystemExit:
+        raise
+    except KeyboardInterrupt:
+        sys.stderr.write("\nInterrupted.\n")
+        sys.exit(130)
+    sys.exit(0)
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    main()
