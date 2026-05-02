@@ -879,6 +879,42 @@ def _remove_by_name(tool: str, version: str) -> None:
         shutil.rmtree(target, ignore_errors=True)
 
 
+def installed_bin_dirs() -> list[Path]:
+    """Return every ``bin/``-equivalent directory across the store.
+
+    Used by ``alloy toolchain shell`` to augment ``PATH`` with the
+    cached binaries' parent dirs.  Deduplicates by absolute path so
+    a repeated install does not blow up the PATH.
+    """
+    seen: set[Path] = set()
+    out: list[Path] = []
+    for tool in list_installed():
+        if not tool.store_path.is_dir():
+            continue
+        for rel in tool.binaries:
+            bin_dir = (tool.store_path / rel).parent.resolve()
+            if bin_dir in seen:
+                continue
+            if not bin_dir.is_dir():
+                continue
+            seen.add(bin_dir)
+            out.append(bin_dir)
+    return out
+
+
+def find_installed(
+    tool_name: str, *, version: str | None = None
+) -> InstalledTool | None:
+    """Return the first matching :class:`InstalledTool` or ``None``."""
+    for tool in list_installed():
+        if tool.tool != tool_name:
+            continue
+        if version is not None and tool.version != version:
+            continue
+        return tool
+    return None
+
+
 __all__ = [
     "MANIFEST_NAME",
     "MANIFEST_SCHEMA_VERSION",
@@ -887,7 +923,9 @@ __all__ = [
     "PruneCandidate",
     "PruneReport",
     "ensure_store",
+    "find_installed",
     "install",
+    "installed_bin_dirs",
     "list_installed",
     "prune",
     "resolve",

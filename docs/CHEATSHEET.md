@@ -291,6 +291,55 @@ Options:
   - `--path` — Destination directory.  Defaults to ./<NAME>.
   - `--from-example` — Scaffold from a docs/EXAMPLES entry (e.g. 01-blinky, 02-uart-echo).  Mutually exclusive with --board / --device.
 
+## `alloy toolchain install`
+
+Download + verify + extract every non-vendor tool the family declares.
+
+Options:
+  - `--for` — MCU family id (default: resolved from the project's alloy.toml).
+  - `--shared` — Install only into the global store; do NOT update the project lockfile.
+  - `--dry-run` — Print the plan + estimated total size without writing anything.
+  - `--include-optional` — Also install the family's optional tools.
+  - `--force` — Re-download even when the SHA matches an already-installed entry.
+  - `--project-dir` — Project root (used for family resolution + lockfile updates).
+
+## `alloy toolchain list`
+
+Show the per-family tool list with install state.
+
+Options:
+  - `--for` — 
+  - `--installed` — Show only tools that are installed.
+  - `--missing` — Show only tools that are not installed.
+  - `--include-optional` — Include the family's optional tools in the listing.
+  - `--json` — Emit JSON.
+  - `--project-dir` — 
+
+## `alloy toolchain prune`
+
+Garbage-collect store entries no project lockfile pins.
+
+Options:
+  - `--dry-run` — List candidates without deleting.
+  - `--projects-root` — One or more directories to scan recursively for `.alloy/toolchain.lock` files.  Repeat to add more.  Default: the current --project-dir only.
+  - `--project-dir` — 
+
+## `alloy toolchain shell`
+
+Spawn a subshell with PATH augmented for cached toolchain binaries.
+
+Options:
+  - `--for` — 
+  - `--print-path` — Print the augmented PATH instead of spawning a subshell.
+  - `--project-dir` — 
+
+## `alloy toolchain use`
+
+Pin a specific tool version in .alloy/toolchain.lock.
+
+Options:
+  - `--project-dir` — 
+
 ## `alloy ui`
 
 Launch the alloy Textual UI.

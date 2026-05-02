@@ -34,6 +34,7 @@ from alloy_cli.commands.export import export_command
 from alloy_cli.commands.flash import flash_command
 from alloy_cli.commands.mcp import mcp_command
 from alloy_cli.commands.new import new_command
+from alloy_cli.commands.toolchain import toolchain_command
 from alloy_cli.commands.ui import ui_command
 from alloy_cli.commands.update import update_command
 
@@ -79,6 +80,7 @@ cli.add_command(ui_command)
 cli.add_command(mcp_command)
 cli.add_command(chat_command)
 cli.add_command(doctor_command)
+cli.add_command(toolchain_command)
 cli.add_command(update_command)
 cli.add_command(export_command)
 
