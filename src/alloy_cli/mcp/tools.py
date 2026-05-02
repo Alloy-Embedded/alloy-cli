@@ -449,8 +449,13 @@ def _tool_apply_diff(registry: ToolRegistry, *, diff_id: str) -> dict[str, Any]:
 
     Preconditions: ``diff_id`` was returned by a recent
     ``preview_diff`` / ``add_*`` call.  Side effects: writes one or
-    more files inside ``project_dir``.
+    more files inside ``project_dir``; emits the matching event to
+    ``.alloy/cache/events.jsonl`` so the Dashboard activity panel
+    surfaces the change.
     """
+    from alloy_cli.core.events import record_event
+    from alloy_cli.core.project import AlloyDir
+
     cached = registry.diff_cache.fetch(diff_id)
     written: list[str] = []
     for patch in cached.diff.patches:
@@ -461,6 +466,19 @@ def _tool_apply_diff(registry: ToolRegistry, *, diff_id: str) -> dict[str, Any]:
         target.write_text(patch.after, encoding="utf-8")
         written.append(str(patch.path))
     registry.diff_cache.discard(diff_id)
+
+    summary = cached.proposed_summary
+    layout = AlloyDir(root=registry.project_dir)
+    proposed = summary.get("proposed") if isinstance(summary, dict) else None
+    if isinstance(proposed, dict) and "kind" in proposed and "name" in proposed:
+        record_event(
+            layout, "peripheral_added", kind=proposed["kind"], name=proposed["name"]
+        )
+    elif "clocks.profiles" in summary:
+        record_event(layout, "clock_profile_saved", name=summary["clocks.profiles"])
+    elif "clocks.profile" in summary:
+        record_event(layout, "clock_profile_activated", name=summary["clocks.profile"])
+
     return {"applied": True, "written": written, "summary": cached.proposed_summary}
 
 

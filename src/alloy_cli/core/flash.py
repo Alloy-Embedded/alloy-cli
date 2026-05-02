@@ -17,7 +17,8 @@ from pathlib import Path
 from alloy_cli.core import process
 from alloy_cli.core import toolchain as _toolchain
 from alloy_cli.core.errors import AlloyCliError, ToolchainMissingError
-from alloy_cli.core.project import ProjectConfig
+from alloy_cli.core.events import record_event
+from alloy_cli.core.project import AlloyDir, ProjectConfig
 
 
 @dataclass(frozen=True, slots=True)
@@ -203,8 +204,14 @@ def run(
     runner: process.CommandRunner | None = None,
     on_line: Callable[[str], None] | None = None,
     require_toolchain: bool = True,
+    project_root: Path | None = None,
 ) -> FlashResult:
-    """Flash ``elf`` onto a connected probe."""
+    """Flash ``elf`` onto a connected probe.
+
+    ``project_root`` defaults to the parent of ``elf`` and is the
+    seam through which the event log is written.  Tests that build
+    against a tmp dir already pass it implicitly.
+    """
     if require_toolchain:
         status = _toolchain.detect_probe_rs()
         if not status.present:
@@ -224,8 +231,21 @@ def run(
     if probe.serial:
         args.extend(["--probe", f"{probe.kind}:{probe.serial}"])
 
+    layout = AlloyDir(root=project_root or elf.parent.resolve())
+    record_event(
+        layout, "flash_started", probe=probe.kind, target=chip, elf=str(elf)
+    )
+
     r = runner or process.runner
     result = r.run(args, on_line=on_line)
+
+    record_event(
+        layout,
+        "flash_finished",
+        probe=probe.kind,
+        target=chip,
+        returncode=result.returncode,
+    )
     return FlashResult(probe=probe, elf=elf, returncode=result.returncode, log=result.stdout)
 
 

@@ -25,6 +25,7 @@ from typing import Any
 
 from alloy_cli import __version__ as _alloy_cli_version
 from alloy_cli.core.errors import AlloyCliError
+from alloy_cli.core.events import record_event
 from alloy_cli.core.ir import device_yaml_path
 from alloy_cli.core.project import AlloyDir, ProjectConfig
 
@@ -282,6 +283,14 @@ def _run_entry(
     stamp_path = _stamp_path(layout, device_label)
     stamp_path.parent.mkdir(parents=True, exist_ok=True)
     stamp_path.write_text(expected.to_json(), encoding="utf-8")
+
+    record_event(
+        layout,
+        "codegen_completed",
+        device=device_label,
+        codegen_version=entry.version,
+        files_written=len(new_files),
+    )
 
     return RegenResult(
         returncode=0,

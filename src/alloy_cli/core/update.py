@@ -21,6 +21,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from alloy_cli.core import process as _process
+from alloy_cli.core.events import record_event
 from alloy_cli.core.lockfile import AlloyLockfile, read_lock, write_lock
 from alloy_cli.core.project import AlloyDir, ProjectConfig
 
@@ -291,6 +292,14 @@ def apply_upgrades(
         else:
             outcome = upgrader(upgrade, ctx)
         outcomes.append((upgrade, outcome))
+        if outcome.ok:
+            record_event(
+                layout,
+                "update_completed",
+                component=upgrade.component,
+                target=upgrade.target,
+                restart_required=outcome.restart_required,
+            )
         if not outcome.ok:
             return UpgradeReport(
                 new_lock=None,

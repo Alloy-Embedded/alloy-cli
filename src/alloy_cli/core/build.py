@@ -18,6 +18,7 @@ from alloy_cli.core import process
 from alloy_cli.core import toolchain as _toolchain
 from alloy_cli.core.codegen import RegenResult
 from alloy_cli.core.errors import AlloyCliError, ToolchainMissingError
+from alloy_cli.core.events import record_event
 from alloy_cli.core.memory import MemoryReport, parse_elf
 from alloy_cli.core.project import PROJECT_FILE, AlloyDir, ProjectConfig, read
 
@@ -140,6 +141,7 @@ def run(
 
     layout = AlloyDir(root=project_root)
     layout.ensure()
+    record_event(layout, "build_started", profile=profile, clean=clean, regen=regen)
     build_dir = layout.base / "build"
     if clean and build_dir.exists():
         shutil.rmtree(build_dir, ignore_errors=True)
@@ -158,6 +160,9 @@ def run(
                     config, layout, entry=codegen_entry, on_line=on_line
                 )
         except _codegen.CodegenError as exc:
+            record_event(
+                layout, "build_finished", profile=profile, returncode=-1, reason=str(exc)
+            )
             return BuildResult(
                 profile=profile,
                 build_dir=build_dir,
@@ -170,6 +175,13 @@ def run(
                 codegen_reason=str(exc),
             )
         if codegen_result.returncode is not None and codegen_result.returncode != 0:
+            record_event(
+                layout,
+                "build_finished",
+                profile=profile,
+                returncode=codegen_result.returncode,
+                reason=codegen_result.reason,
+            )
             return BuildResult(
                 profile=profile,
                 build_dir=build_dir,
@@ -197,6 +209,9 @@ def run(
     ]
     cfg = r.run(configure_args, on_line=on_line)
     if not cfg.ok:
+        record_event(
+            layout, "build_finished", profile=profile, returncode=cfg.returncode, stage="cmake"
+        )
         return BuildResult(
             profile=profile,
             build_dir=build_dir,
@@ -215,6 +230,15 @@ def run(
 
     elf_path = _resolve_elf(build_dir, config.project.name) if bld.ok else None
     memory = parse_elf(elf_path, runner=r) if elf_path else None
+
+    record_event(
+        layout,
+        "build_finished",
+        profile=profile,
+        returncode=bld.returncode,
+        elf_path=str(elf_path) if elf_path else None,
+        stage="ninja",
+    )
 
     return BuildResult(
         profile=profile,

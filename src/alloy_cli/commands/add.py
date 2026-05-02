@@ -49,13 +49,23 @@ def _print_diagnostics(console: Console, result: AddResult) -> None:
             console.print(f"     [dim]suggestions:[/dim] {preview}")
 
 
-def _apply_diff(project_dir: Path, diff: UnifiedDiff) -> None:
+def _apply_diff(project_dir: Path, diff: UnifiedDiff, result: AddResult | None = None) -> None:
     for patch in diff.patches:
         if not patch.changed:
             continue
         target = project_dir / patch.path
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(patch.after, encoding="utf-8")
+    if result is not None and result.proposed is not None:
+        from alloy_cli.core.events import record_event
+        from alloy_cli.core.project import AlloyDir
+
+        record_event(
+            AlloyDir(root=project_dir),
+            "peripheral_added",
+            kind=result.proposed.kind,
+            name=result.proposed.name,
+        )
 
 
 def _common_options(f):  # type: ignore[no-untyped-def]
@@ -102,7 +112,7 @@ def _execute(
         console.print(rendered, highlight=False, markup=False, end="")
         return
 
-    _apply_diff(project_dir, result.diff)
+    _apply_diff(project_dir, result.diff, result=result)
     console.print("[green]✓ Applied[/green] — peripheral added.")
 
 

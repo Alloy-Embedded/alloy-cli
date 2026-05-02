@@ -279,6 +279,17 @@ class PeripheralAddScreen(Screen[None]):
             target = self._project_dir / patch.path
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(patch.after, encoding="utf-8")
+        proposed = self._result.proposed
+        if proposed is not None:
+            from alloy_cli.core.events import record_event
+            from alloy_cli.core.project import AlloyDir
+
+            record_event(
+                AlloyDir(root=self._project_dir),
+                "peripheral_added",
+                kind=proposed.kind,
+                name=proposed.name,
+            )
         self.notify("Applied.  Returning to Dashboard.", severity="information")
         self.dismiss(None)
 

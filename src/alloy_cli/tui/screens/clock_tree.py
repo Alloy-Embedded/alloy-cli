@@ -271,6 +271,10 @@ class ClockTreeScreen(Screen[None]):
         if not applied:
             return
         self._write_diff(diff)
+        from alloy_cli.core.events import record_event
+        from alloy_cli.core.project import AlloyDir
+
+        record_event(AlloyDir(root=self._project_dir), "clock_profile_saved", name=name)
         # Refresh the in-screen profile rotation so `p` immediately
         # reflects the new entry.
         if self._config is not None:

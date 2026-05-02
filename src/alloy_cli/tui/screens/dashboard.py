@@ -65,11 +65,23 @@ def _read_events(layout: AlloyDir, limit: int = 5) -> tuple[str, ...]:
     out: list[str] = []
     for line in lines:
         try:
-            payload = json.loads(line)
+            record = json.loads(line)
         except json.JSONDecodeError:
             out.append(line)
             continue
-        out.append(f"{payload.get('timestamp', '?')}  {payload.get('event', '?')}")
+        timestamp = record.get("timestamp", "?")
+        event = record.get("event", "?")
+        # Surface the most identifying field from the payload — for
+        # peripheral_added that's `name`, for build_finished it's
+        # the profile, etc.  Falling back to the empty string keeps
+        # records without a payload readable.
+        payload = record.get("payload") or {}
+        tail = ""
+        for key in ("name", "profile", "component", "device"):
+            if key in payload:
+                tail = f"  {key}={payload[key]}"
+                break
+        out.append(f"{timestamp}  {event}{tail}")
     return tuple(out)
 
 
