@@ -23,11 +23,13 @@ from alloy_cli.core import ir as _ir
 from alloy_cli.core import peripherals as _peripherals
 from alloy_cli.core import process as _process
 from alloy_cli.core import search as _search
+from alloy_cli.core import toolchain_registry as _registry
 from alloy_cli.core.diagnostics import UnifiedDiff
 from alloy_cli.core.errors import (
     AlloyCliError,
     BoardNotFoundError,
     DeviceNotFoundError,
+    FamilyToolchainNotFoundError,
     PinInvalidError,
     StaleDiffError,
 )
@@ -389,6 +391,61 @@ def _tool_list_recent_events(registry: ToolRegistry, *, limit: int = 5) -> list[
         except json.JSONDecodeError:
             out.append({"raw": line})
     return out
+
+
+def _tool_requirement_to_dict(tool_req: _registry.ToolRequirement) -> dict[str, Any]:
+    """Project a :class:`ToolRequirement` to the JSON shape MCP clients see."""
+    return {
+        "tool": tool_req.tool,
+        "version": tool_req.version,
+        "source": tool_req.source,
+        "capabilities": list(tool_req.capabilities),
+        "bundles": list(tool_req.bundles),
+        "udev_required": tool_req.udev_required,
+        "install_docs": dict(tool_req.install_docs),
+    }
+
+
+def _tool_list_family_toolchain(
+    registry: ToolRegistry, *, family_id: str
+) -> dict[str, Any]:
+    """Return the resolved per-MCU-family toolchain manifest as JSON.
+
+    Wave-1 surface for LLM agents.  Mirrors the data
+    ``alloy doctor --for <family_id>`` consumes — the agent sees
+    the same required / recommended / optional tool list, with
+    each entry carrying its source, version range, capabilities,
+    bundled binaries, and per-OS install docs (vendor tools).
+
+    Preconditions: a manifest exists at
+    ``data/families/<family_id>.yml``.  Side effects: none.
+
+    Errors: ``error_type="family-toolchain-not-found"`` when no
+    manifest ships for the requested id; the envelope's
+    ``known_families`` field carries every family the running
+    alloy-cli can resolve so the caller can retry with a valid id.
+    """
+    del registry  # tool is project-independent
+    try:
+        manifest = _registry.load_family(family_id)
+    except FamilyToolchainNotFoundError as exc:
+        raise ToolError(
+            error_type="family-toolchain-not-found",
+            message=str(exc),
+            detail={"known_families": list(_registry.known_families())},
+        ) from exc
+
+    return {
+        "family_id": manifest.family_id,
+        "core": manifest.core,
+        "arch": manifest.arch,
+        "schema_version": manifest.schema_version,
+        "extends": manifest.extends,
+        "chain": list(manifest.chain),
+        "required": [_tool_requirement_to_dict(t) for t in manifest.required],
+        "recommended": [_tool_requirement_to_dict(t) for t in manifest.recommended],
+        "optional": [_tool_requirement_to_dict(t) for t in manifest.optional],
+    }
 
 
 # ----- mutating: preview / apply ------------------------------------------
@@ -931,6 +988,7 @@ _PARAM_SCHEMA: dict[str, dict[str, Any]] = {
     },
     "read_alloy_toml": {},
     "list_recent_events": {"limit": "int"},
+    "list_family_toolchain": {"family_id": "string"},
     "preview_diff": {"kind": "string", "name": "string", "payload": "object?"},
     "apply_diff": {"diff_id": "string"},
     "add_uart": {
@@ -1037,6 +1095,7 @@ def build_default_registry(
         "suggest_pins": _tool_suggest_pins,
         "read_alloy_toml": _tool_read_alloy_toml,
         "list_recent_events": _tool_list_recent_events,
+        "list_family_toolchain": _tool_list_family_toolchain,
         "preview_diff": _tool_preview_diff,
         "apply_diff": _tool_apply_diff,
         "add_uart": _tool_add_uart,
