@@ -23,6 +23,9 @@ import click
 from rich.console import Console
 
 from alloy_cli import __version__
+from alloy_cli.commands.build import build_command
+from alloy_cli.commands.debug import debug_command
+from alloy_cli.commands.flash import flash_command
 from alloy_cli.commands.new import new_command
 
 _BANNER = """\
@@ -57,6 +60,9 @@ def cli(ctx: click.Context) -> None:
 
 
 cli.add_command(new_command)
+cli.add_command(build_command)
+cli.add_command(flash_command)
+cli.add_command(debug_command)
 
 
 def main(argv: list[str] | None = None) -> NoReturn:

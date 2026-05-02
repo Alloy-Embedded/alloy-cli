@@ -60,21 +60,28 @@ underway (`alloy new` is implemented; build/flash/debug land next).
 ```sh
 pip install alloy-cli  # (or `pip install -e .` from a dev checkout)
 
-# From a board id (run `alloy boards` once that command lands)
+# 1. Scaffold a project from a board id
 alloy new firmware --board nucleo_g071rb
 
-cd firmware
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
-cmake --build build
+# 2. Build
+alloy build               # auto-detects toolchain, runs cmake + ninja
+alloy build --profile release --clean
 
-# Or, for a chip-only project (no board defaults):
-alloy new raw --device st/stm32g0/stm32g071rb
+# 3. Flash (requires probe-rs + a connected probe)
+alloy flash               # auto-selects when only one probe is connected
+alloy flash --probe jlink
+
+# 4. Debug — spawns probe-rs gdb-server + attaches your GDB front-end
+alloy debug
+alloy debug --gdb-ui /opt/gdb-multiarch
 ```
 
 The scaffolder generates `alloy.toml`, a `CMakeLists.txt` that calls
 `alloy_cli_init()`, a `src/main.cpp` that toggles the board's LED when
 one exists, plus `README.md`, `.gitignore`, and a `LICENSE` of your
-choice (`--license MIT|Apache-2.0|BSD-3`).
+choice (`--license MIT|Apache-2.0|BSD-3`).  Build artefacts land under
+`.alloy/build/` (gitignored), and a memory-summary line prints after
+every successful build.
 
 ## Architecture (tl;dr)
 
