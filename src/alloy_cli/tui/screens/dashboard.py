@@ -100,7 +100,9 @@ class DashboardScreen(Screen):
     BINDINGS: ClassVar[list[Binding]] = [
         Binding("b", "noop('build')", "Build"),
         Binding("f", "noop('flash')", "Flash"),
-        Binding("d", "noop('debug')", "Debug"),
+        # `d` opens the new DoctorScreen (replaces the placeholder
+        # "debug" no-op that wave-1 shipped).
+        Binding("d", "doctor", "Doctor"),
         Binding("a", "noop('add')", "Add"),
         Binding("c", "noop('clocks')", "Clocks"),
         Binding("m", "noop('memory')", "Memory"),
@@ -147,7 +149,7 @@ class DashboardScreen(Screen):
             yield from self._compose_memory()
             yield from self._compose_activity()
             yield Static(
-                "[dim]Hotkeys: b build, f flash, d debug, a add, c clocks, m memory, "
+                "[dim]Hotkeys: b build, f flash, d doctor, a add, c clocks, m memory, "
                 "Ctrl+P palette[/dim]",
                 classes="panel",
             )
@@ -238,6 +240,14 @@ class DashboardScreen(Screen):
             f"'{_hint}' will jump to its dedicated screen once the next OpenSpec lands.",
             severity="information",
         )
+
+    def action_doctor(self) -> None:
+        """Open the interactive doctor screen."""
+        # Imported lazily — keeps dashboard.py free of a hard
+        # dependency on the doctor screen + its DataTable widget.
+        from alloy_cli.tui.screens.doctor import DoctorScreen
+
+        self.app.push_screen(DoctorScreen(project_dir=self._project_dir))
 
 
 @register_screen(
