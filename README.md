@@ -4,6 +4,15 @@
 > Pin picker, clock-tree visualiser, build/flash/debug, AI-assisted scaffolding —
 > all in your terminal, all from a single tool.
 
+![Project Dashboard](docs/images/02-dashboard.svg)
+![Peripheral Add — UART, IR-validated pinout, live diagnostics](docs/images/05-peripheral-add.svg)
+![Clock Tree](docs/images/06-clock-tree.svg)
+
+*See [`docs/images/`](docs/images/) for the full screen catalogue;
+re-render with `python scripts/generate_docs_images.py`.  A
+post-launch review of every shipped feature lives in
+[`docs/REVIEW.md`](docs/REVIEW.md).*
+
 `alloy-cli` is the developer-facing surface of the **Alloy embedded
 platform**.  It replaces the dance of CubeMX (GUI) → IDE (closed
 project format) → vendor flasher (per-chip) → CMake (write-it-yourself)

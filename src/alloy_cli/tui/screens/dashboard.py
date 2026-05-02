@@ -167,9 +167,11 @@ class DashboardScreen(Screen):
         with Horizontal(classes="panel"):
             yield Static(f"[bold]{config.project.name}[/bold]  {target}", classes="panel-title")
             yield Static(f"  clock=[magenta]{clock}[/magenta]")
-        with Horizontal(classes="panel"):
-            for status in _toolchain_summary():
-                yield Static("  " + _render_status_pill(status))
+        # Toolchain pills render on a single row.  We render them as one
+        # joined string rather than 3 Statics so Textual's Horizontal
+        # auto-sizing doesn't squash the trailing pills off-screen.
+        pills = "  ".join(_render_status_pill(s) for s in _toolchain_summary())
+        yield Static(f"  {pills}", classes="panel", id="dash-toolchain")
 
     def _compose_peripherals(self, config: ProjectConfig) -> ComposeResult:
         with Vertical(classes="panel", id="dash-peripherals"):
