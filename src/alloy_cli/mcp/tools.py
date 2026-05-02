@@ -570,7 +570,12 @@ def _tool_set_clock_profile(registry: ToolRegistry, *, profile: str) -> dict[str
 
 
 def _tool_build(registry: ToolRegistry, *, profile: str = "debug") -> dict[str, Any]:
-    """Run cmake + ninja for the current project (no real toolchain check)."""
+    """Run cmake + ninja for the current project (no real toolchain check).
+
+    Includes the alloy-codegen pre-step when alloy-codegen is
+    importable; the result reports ``codegen_returncode`` so the
+    LLM can branch on a codegen-only failure.
+    """
     from alloy_cli.core import build as _build
 
     result = _build.run(
@@ -584,7 +589,37 @@ def _tool_build(registry: ToolRegistry, *, profile: str = "debug") -> dict[str, 
         "profile": result.profile,
         "cmake_returncode": result.cmake_returncode,
         "build_returncode": result.build_returncode,
+        "codegen_returncode": result.codegen_returncode,
+        "codegen_skipped": result.codegen_skipped,
+        "codegen_reason": result.codegen_reason,
         "elf": str(result.elf_path) if result.elf_path else None,
+    }
+
+
+def _tool_regenerate(registry: ToolRegistry) -> dict[str, Any]:
+    """Force a fresh alloy-codegen pass for the current project.
+
+    Preconditions: alloy-codegen is importable in the active
+    Python environment.  Side effects: writes one or more files
+    under ``.alloy/generated/<device>/`` and updates the stamp
+    file used by the build pipeline cache.
+    """
+    from alloy_cli.core import codegen as _codegen
+    from alloy_cli.core.project import AlloyDir
+
+    config = _read_project(registry.project_dir)
+    layout = AlloyDir(root=registry.project_dir)
+    layout.ensure()
+    try:
+        result = _codegen.force_regenerate(config, layout)
+    except _codegen.CodegenError as exc:
+        raise ToolError(error_type="codegen-not-installed", message=str(exc)) from exc
+    return {
+        "returncode": result.returncode,
+        "skipped": result.skipped,
+        "out_dir": str(result.out_dir),
+        "written": [str(p.relative_to(registry.project_dir)) for p in result.written],
+        "reason": result.reason,
     }
 
 
@@ -678,6 +713,7 @@ _PARAM_SCHEMA: dict[str, dict[str, Any]] = {
     },
     "set_clock_profile": {"profile": "string"},
     "build": {"profile": "string"},
+    "regenerate": {},
     "flash": {"elf": "string", "probe_kind": "string", "target": "string?"},
 }
 
@@ -707,6 +743,7 @@ def build_default_registry(
         "add_i2c": _tool_add_i2c,
         "set_clock_profile": _tool_set_clock_profile,
         "build": _tool_build,
+        "regenerate": _tool_regenerate,
         "flash": _tool_flash,
     }
     for name, handler in handlers.items():

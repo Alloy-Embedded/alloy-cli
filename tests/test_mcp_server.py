@@ -229,6 +229,67 @@ def test_set_clock_profile_caches_diff(tmp_path) -> None:
     assert "custom_profile" in result["diff_text"]
 
 
+def test_default_registry_lists_regenerate_tool(tmp_path) -> None:
+    registry = build_default_registry(project_dir=tmp_path)
+    assert "regenerate" in registry.names()
+    descriptor = next(s for s in registry._tools.values() if s.name == "regenerate")
+    assert descriptor.description.strip()
+
+
+def test_regenerate_tool_raises_when_alloy_codegen_missing(tmp_path, monkeypatch) -> None:
+    _seed_project(tmp_path)
+    monkeypatch.setattr("alloy_cli.core.codegen.discover_codegen_entry", lambda: None)
+    registry = build_default_registry(project_dir=tmp_path)
+    with pytest.raises(ToolError) as exc_info:
+        registry.call("regenerate")
+    assert exc_info.value.error_type == "codegen-not-installed"
+
+
+def test_regenerate_tool_writes_files_and_stamp(tmp_path, monkeypatch) -> None:
+    _seed_project(tmp_path)
+    from alloy_cli.core.codegen import CodegenEntry
+
+    def _generate(_config, out_dir):
+        out_dir.mkdir(parents=True, exist_ok=True)
+        (out_dir / "device.hpp").write_text("// ok\n", encoding="utf-8")
+
+    entry = CodegenEntry(version="0.4.2", callable=_generate)
+    monkeypatch.setattr("alloy_cli.core.codegen.discover_codegen_entry", lambda: entry)
+
+    registry = build_default_registry(project_dir=tmp_path)
+    result = registry.call("regenerate")
+    assert result["returncode"] == 0
+    assert any("device.hpp" in path for path in result["written"])
+    stamp = tmp_path / ".alloy" / "generated" / "st_stm32g0_stm32g071rb" / ".stamp"
+    assert stamp.exists()
+
+
+def test_build_tool_surfaces_codegen_returncode(tmp_path, monkeypatch) -> None:
+    _seed_project(tmp_path)
+    monkeypatch.setattr(
+        "alloy_cli.core.codegen.discover_codegen_entry",
+        lambda: None,
+    )
+    monkeypatch.setattr("alloy_cli.core.memory.shutil.which", lambda _name: None)
+
+    from alloy_cli.core import process as _process
+
+    fake = FakeRunner()
+    fake.expect(["cmake", "-S"], returncode=0)
+    fake.expect(["cmake", "--build"], returncode=0)
+    registry = ToolRegistry(project_dir=tmp_path, runner=fake)
+    # Re-register the standard tools but with our runner.
+    from alloy_cli.mcp import build_default_registry as _build_default
+
+    base = _build_default(project_dir=tmp_path, runner=fake)
+    base.diff_cache = registry.diff_cache  # share TTL-free cache for the test
+    result = base.call("build")
+    assert result["ok"] is True
+    assert result["codegen_returncode"] is None
+    assert result["codegen_skipped"] is True
+    del _process  # quiet the linter
+
+
 def test_list_boards_query_filters_results(tmp_path, monkeypatch) -> None:
     catalog = tmp_path / "boards"
     catalog.mkdir()

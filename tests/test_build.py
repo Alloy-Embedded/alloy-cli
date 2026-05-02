@@ -163,3 +163,192 @@ def test_run_chip_only_project_still_invokes_cmake(tmp_path, monkeypatch) -> Non
     )
     # Both stages dispatched.
     assert len(fake.calls) >= 2
+
+
+# ---------------------------------------------------------------------------
+# Codegen integration
+# ---------------------------------------------------------------------------
+
+
+def test_run_skips_codegen_when_alloy_codegen_missing(tmp_path, monkeypatch) -> None:
+    """No codegen entry → BuildResult.codegen_returncode is None."""
+    _make_project(tmp_path)
+    monkeypatch.setattr("alloy_cli.core.memory.shutil.which", lambda _name: None)
+    monkeypatch.setattr("alloy_cli.core.codegen.discover_codegen_entry", lambda: None)
+
+    fake = FakeRunner()
+    fake.expect(["cmake", "-S"], returncode=0)
+    fake.expect(["cmake", "--build"], returncode=0)
+
+    result = _build.run(
+        project_root=tmp_path,
+        profile="debug",
+        require_toolchain=False,
+        runner=fake,
+    )
+    assert result.ok
+    assert result.codegen_returncode is None
+    assert result.codegen_skipped is True
+
+
+def test_run_invokes_codegen_when_entry_is_present(tmp_path, monkeypatch) -> None:
+    _make_project(tmp_path)
+    monkeypatch.setattr("alloy_cli.core.memory.shutil.which", lambda _name: None)
+    from alloy_cli.core.codegen import CodegenEntry
+
+    calls: list[Path] = []
+
+    def _generate(_config, out_dir: Path) -> None:
+        calls.append(out_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        (out_dir / "device.hpp").write_text("// generated\n", encoding="utf-8")
+
+    entry = CodegenEntry(version="0.4.2", callable=_generate)
+    monkeypatch.setattr("alloy_cli.core.codegen.discover_codegen_entry", lambda: entry)
+
+    fake = FakeRunner()
+    fake.expect(["cmake", "-S"], returncode=0)
+    fake.expect(["cmake", "--build"], returncode=0)
+
+    result = _build.run(
+        project_root=tmp_path,
+        profile="debug",
+        require_toolchain=False,
+        runner=fake,
+    )
+    assert result.ok
+    assert result.codegen_returncode == 0
+    assert result.codegen_skipped is False
+    assert len(calls) == 1
+
+
+def test_run_second_call_skips_codegen_via_stamp(tmp_path, monkeypatch) -> None:
+    """Stamp-cache hit on the second build → codegen_skipped=True."""
+    _make_project(tmp_path)
+    monkeypatch.setattr("alloy_cli.core.memory.shutil.which", lambda _name: None)
+    from alloy_cli.core.codegen import CodegenEntry
+
+    calls: list[Path] = []
+
+    def _generate(_config, out_dir: Path) -> None:
+        calls.append(out_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        (out_dir / "device.hpp").write_text("// generated\n", encoding="utf-8")
+
+    entry = CodegenEntry(version="0.4.2", callable=_generate)
+    monkeypatch.setattr("alloy_cli.core.codegen.discover_codegen_entry", lambda: entry)
+
+    def _seed_runner() -> FakeRunner:
+        runner = FakeRunner()
+        runner.expect(["cmake", "-S"], returncode=0)
+        runner.expect(["cmake", "--build"], returncode=0)
+        return runner
+
+    first = _build.run(
+        project_root=tmp_path,
+        profile="debug",
+        require_toolchain=False,
+        runner=_seed_runner(),
+    )
+    assert first.codegen_skipped is False
+    assert len(calls) == 1
+
+    second = _build.run(
+        project_root=tmp_path,
+        profile="debug",
+        require_toolchain=False,
+        runner=_seed_runner(),
+    )
+    assert second.ok
+    assert second.codegen_skipped is True
+    assert second.codegen_returncode == 0
+    assert len(calls) == 1  # codegen NOT re-invoked
+
+
+def test_run_regen_forces_codegen(tmp_path, monkeypatch) -> None:
+    _make_project(tmp_path)
+    monkeypatch.setattr("alloy_cli.core.memory.shutil.which", lambda _name: None)
+    from alloy_cli.core.codegen import CodegenEntry
+
+    calls: list[Path] = []
+
+    def _generate(_config, out_dir: Path) -> None:
+        calls.append(out_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        (out_dir / "device.hpp").write_text("// generated\n", encoding="utf-8")
+
+    entry = CodegenEntry(version="0.4.2", callable=_generate)
+    monkeypatch.setattr("alloy_cli.core.codegen.discover_codegen_entry", lambda: entry)
+
+    def _seed_runner() -> FakeRunner:
+        runner = FakeRunner()
+        runner.expect(["cmake", "-S"], returncode=0)
+        runner.expect(["cmake", "--build"], returncode=0)
+        return runner
+
+    _build.run(
+        project_root=tmp_path,
+        profile="debug",
+        require_toolchain=False,
+        runner=_seed_runner(),
+    )
+    _build.run(
+        project_root=tmp_path,
+        profile="debug",
+        require_toolchain=False,
+        runner=_seed_runner(),
+        regen=True,
+    )
+    assert len(calls) == 2  # second call forced regen
+
+
+def test_run_skip_codegen_bypasses_step(tmp_path, monkeypatch) -> None:
+    _make_project(tmp_path)
+    monkeypatch.setattr("alloy_cli.core.memory.shutil.which", lambda _name: None)
+
+    def _fail_generate(_config, _out_dir: Path) -> None:  # pragma: no cover
+        raise AssertionError("codegen must NOT run when skip_codegen=True")
+
+    from alloy_cli.core.codegen import CodegenEntry
+
+    entry = CodegenEntry(version="0.4.2", callable=_fail_generate)
+    monkeypatch.setattr("alloy_cli.core.codegen.discover_codegen_entry", lambda: entry)
+
+    fake = FakeRunner()
+    fake.expect(["cmake", "-S"], returncode=0)
+    fake.expect(["cmake", "--build"], returncode=0)
+
+    result = _build.run(
+        project_root=tmp_path,
+        profile="debug",
+        require_toolchain=False,
+        runner=fake,
+        skip_codegen=True,
+    )
+    assert result.ok
+    assert result.codegen_returncode is None
+    assert result.codegen_skipped is True
+
+
+def test_run_codegen_failure_aborts_build(tmp_path, monkeypatch) -> None:
+    _make_project(tmp_path)
+    monkeypatch.setattr("alloy_cli.core.memory.shutil.which", lambda _name: None)
+    from alloy_cli.core.codegen import CodegenEntry
+
+    def _bad_generate(_config, _out_dir: Path) -> None:
+        raise RuntimeError("codegen exploded")
+
+    entry = CodegenEntry(version="0.4.2", callable=_bad_generate)
+    monkeypatch.setattr("alloy_cli.core.codegen.discover_codegen_entry", lambda: entry)
+
+    fake = FakeRunner()  # cmake should NOT be invoked
+    result = _build.run(
+        project_root=tmp_path,
+        profile="debug",
+        require_toolchain=False,
+        runner=fake,
+    )
+    assert not result.ok
+    assert result.codegen_returncode == 1
+    assert "codegen exploded" in result.codegen_reason
+    assert fake.calls == []  # cmake never ran

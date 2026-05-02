@@ -13,8 +13,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
+from alloy_cli.core import codegen as _codegen
 from alloy_cli.core import process
 from alloy_cli.core import toolchain as _toolchain
+from alloy_cli.core.codegen import RegenResult
 from alloy_cli.core.errors import AlloyCliError, ToolchainMissingError
 from alloy_cli.core.memory import MemoryReport, parse_elf
 from alloy_cli.core.project import PROJECT_FILE, AlloyDir, ProjectConfig, read
@@ -43,9 +45,14 @@ class BuildResult:
     memory: MemoryReport | None
     cmake_returncode: int
     build_returncode: int
+    codegen_returncode: int | None = None
+    codegen_skipped: bool = True
+    codegen_reason: str = ""
 
     @property
     def ok(self) -> bool:
+        if self.codegen_returncode is not None and self.codegen_returncode != 0:
+            return False
         return self.cmake_returncode == 0 and self.build_returncode == 0
 
 
@@ -101,6 +108,9 @@ def run(
     runner: process.CommandRunner | None = None,
     on_line: Callable[[str], None] | None = None,
     require_toolchain: bool = True,
+    regen: bool = False,
+    skip_codegen: bool = False,
+    codegen_entry: _codegen.CodegenEntry | None = None,
 ) -> BuildResult:
     """Build ``project_root`` with the requested ``profile``.
 
@@ -108,6 +118,10 @@ def run(
     when a required dependency is missing and ``require_toolchain`` is
     True (default).  Tests pass ``require_toolchain=False`` and a
     :class:`process.FakeRunner` to short-circuit the actual cmake call.
+
+    ``regen`` forces a codegen pass; ``skip_codegen`` bypasses it
+    entirely (useful for CI scenarios shipping pre-generated headers).
+    Either flag wins over the stamp-cache logic.
     """
     if profile not in SUPPORTED_PROFILES:
         raise AlloyCliError(
@@ -131,6 +145,43 @@ def run(
         shutil.rmtree(build_dir, ignore_errors=True)
     build_dir.mkdir(parents=True, exist_ok=True)
 
+    # Codegen — runs before cmake so generated headers are in place.
+    codegen_result: RegenResult | None = None
+    if not skip_codegen:
+        try:
+            if regen:
+                codegen_result = _codegen.force_regenerate(
+                    config, layout, entry=codegen_entry, on_line=on_line
+                )
+            else:
+                codegen_result = _codegen.regenerate_if_stale(
+                    config, layout, entry=codegen_entry, on_line=on_line
+                )
+        except _codegen.CodegenError as exc:
+            return BuildResult(
+                profile=profile,
+                build_dir=build_dir,
+                elf_path=None,
+                memory=None,
+                cmake_returncode=-1,
+                build_returncode=-1,
+                codegen_returncode=1,
+                codegen_skipped=False,
+                codegen_reason=str(exc),
+            )
+        if codegen_result.returncode is not None and codegen_result.returncode != 0:
+            return BuildResult(
+                profile=profile,
+                build_dir=build_dir,
+                elf_path=None,
+                memory=None,
+                cmake_returncode=-1,
+                build_returncode=-1,
+                codegen_returncode=codegen_result.returncode,
+                codegen_skipped=codegen_result.skipped,
+                codegen_reason=codegen_result.reason,
+            )
+
     r = runner or process.runner
 
     # Configure
@@ -153,6 +204,9 @@ def run(
             memory=None,
             cmake_returncode=cfg.returncode,
             build_returncode=-1,
+            codegen_returncode=codegen_result.returncode if codegen_result else None,
+            codegen_skipped=codegen_result.skipped if codegen_result else True,
+            codegen_reason=codegen_result.reason if codegen_result else "",
         )
 
     # Build
@@ -169,6 +223,9 @@ def run(
         memory=memory,
         cmake_returncode=cfg.returncode,
         build_returncode=bld.returncode,
+        codegen_returncode=codegen_result.returncode if codegen_result else None,
+        codegen_skipped=codegen_result.skipped if codegen_result else True,
+        codegen_reason=codegen_result.reason if codegen_result else "",
     )
 
 
