@@ -414,3 +414,166 @@ PR with no code changes.
 **MCP tool:** the `alloy.list_family_toolchain` error envelope
 returns the same `known_families` list so an LLM agent can
 retry with a valid id.
+
+## family-toolchain-installer-error
+
+**Trigger:** generic base error for the per-MCU-family
+toolchain installer (Wave 2 of toolchain-management).
+Concrete failures use one of the seven sub-types below — see
+those for actionable fixes.
+
+**Example message:** typically not raised directly; sub-types
+carry the specific cause.
+
+**Fix:** branch on the sub-type's `error_type` and follow the
+matching anchor in this cookbook.
+
+**MCP tool:** `alloy.toolchain_status(family_id)` to inspect
+the local store; `alloy.toolchain_install_plan(family_id)` to
+preview the planned download set.
+
+## family-toolchain-installer-checksum
+
+**Trigger:** a downloaded artefact's SHA256 did not match the
+pinned value in `data/sources/*.json`.  The streaming download
+verifies bytes on the wire and refuses to finalise the file when
+hashes diverge — so the corrupt / tampered tarball never lands
+in the store.
+
+**Example message:** `family-toolchain-installer-checksum:
+arm-none-eabi-gcc 14.2.0 (xpack, macos-arm64): expected
+abc123..., got def456...`
+
+**Fix:**
+- Re-run `alloy toolchain install` once — transient network
+  flakes occasionally corrupt downloads.
+- If the failure persists, inspect `data/sources/*.json` for a
+  stale pin (upstream may have re-issued the release with a
+  different SHA).  Run `python scripts/refresh_source_pins.py
+  --apply` to regenerate the pins from upstream.
+- File a bug report including the URL, expected SHA, and
+  observed SHA so the maintainers can vet whether the upstream
+  release was tampered with.
+
+**MCP tool:** none — this is a download-time integrity check.
+
+## family-toolchain-installer-download
+
+**Trigger:** the HTTP fetch for an artefact failed (DNS
+failure, 4xx/5xx, redirect to a domain not pinned in
+`data/sources/`, TLS error, timeout).
+
+**Example message:**
+`family-toolchain-installer-download: HTTP 503 fetching
+https://github.com/.../arm-none-eabi-gcc-14.2.0.tar.xz`
+
+**Fix:**
+- Re-run after a moment — transient HTTP errors are common.
+- Behind an enterprise proxy?  Set `SSL_CERT_FILE` /
+  `SSL_CERT_DIR` so stdlib `urllib` honours the proxy's
+  trust roots.
+- Persistent failures may indicate an upstream URL rot;
+  refresh the pin file (`scripts/refresh_source_pins.py`).
+
+**MCP tool:** `alloy.toolchain_install_plan(family_id)` to
+inspect the URLs alloy-cli would otherwise hit.
+
+## family-toolchain-installer-extract
+
+**Trigger:** archive extraction failed — corrupt archive,
+unsupported member type, or path-traversal attempt blocked by
+`tarfile.data_filter`.
+
+**Example message:**
+`family-toolchain-installer-extract: refusing to write outside
+extraction root: ../../etc/passwd`
+
+**Fix:** delete `~/.local/share/alloy/tools/store/.tmp/` and
+re-run `alloy toolchain install`.  If the same archive fails
+twice, the upstream tarball is malformed — file a bug.
+
+**MCP tool:** none.
+
+## family-toolchain-installer-store-corrupt
+
+**Trigger:** the toolchain store is in an inconsistent state.
+`manifest.json` references a SHA whose `store/<sha>/` directory
+is missing, or an extraction directory exists without a
+matching manifest entry.  Often happens after a manual `rm -rf`
+under the store.
+
+**Example message:**
+`family-toolchain-installer-store-corrupt: probe-rs 0.27.0
+manifest entry has no extraction at
+~/.local/share/alloy/tools/store/abc123...`
+
+**Fix:** run `alloy toolchain install --force` to reinstall the
+affected tools.  When in doubt, `alloy toolchain prune` removes
+unreferenced detritus and `alloy toolchain install` re-syncs the
+store with the project lockfile.
+
+**MCP tool:** `alloy.toolchain_status(family_id)` to confirm
+which tools the store is missing.
+
+## family-toolchain-installer-version-mismatch
+
+**Trigger:** `.alloy/toolchain.lock` pins a tool version not
+present in the local store.  Raised by `alloy build / flash /
+debug` before any subprocess is spawned, so the user sees the
+pin/store divergence immediately.
+
+**Example message:**
+`family-toolchain-installer-version-mismatch: probe-rs 0.27.0
+pinned in .alloy/toolchain.lock but store has 0.26.0.  Run
+\`alloy toolchain install\`.`
+
+**Fix:** run `alloy toolchain install` to populate the store
+with the pinned version.  Alternatively, run
+`alloy toolchain use probe-rs@0.26.0` to repin the lockfile to
+the version you actually have installed.
+
+**MCP tool:** `alloy.toolchain_install_plan(family_id)`.
+
+## family-toolchain-installer-unsupported-host
+
+**Trigger:** the active host triple
+(`<os>-<arch>` derived from `platform.system()` +
+`platform.machine()`) has no matching pin in any
+`data/sources/*.json` for the requested tool.  Examples:
+running on `linux-mips64` (no upstream binaries), or asking
+Espressif tools on `linux-arm64` (Espressif does not publish
+those).
+
+**Example message:**
+`family-toolchain-installer-unsupported-host: xtensa-esp-elf-gcc
+14.2.0_20240906 has no pin for linux-arm64.  Supported hosts:
+linux-x86_64, macos-x86_64, macos-arm64, windows-x86_64.`
+
+**Fix:**
+- Pick a different host (run on a supported machine, or build
+  inside Docker / a VM with a supported triple).
+- For a tool that genuinely lacks upstream binaries on your
+  host, the `unsupported_hosts` field in the pin file documents
+  the gap; you may need to install the tool from another source
+  (system package manager, upstream build instructions).
+
+**MCP tool:** `alloy.toolchain_status(family_id)` reports the
+`state` per tool including `unsupported-host`.
+
+## family-toolchain-installer-locked
+
+**Trigger:** another `alloy toolchain install` (or another
+mutating toolchain operation) is already running — the
+advisory file lock at `<store>/.lock` is held.
+
+**Example message:**
+`family-toolchain-installer-locked: another process holds the
+toolchain store lock at ~/.local/share/alloy/tools/.lock.  Wait
+for it to finish and retry.`
+
+**Fix:** wait for the other invocation to finish and re-run.
+If the lock file is stale (no other alloy-cli process is
+running), delete it manually: `rm
+~/.local/share/alloy/tools/.lock`.
+
+**MCP tool:** none — the lock is process-level coordination.
