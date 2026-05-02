@@ -50,12 +50,52 @@ class StaleDiffError(AlloyCliError):
     error_type = "StaleDiffError"
 
 
+class FamilyToolchainError(AlloyCliError):
+    """Per-MCU-family toolchain manifest is missing, malformed, or
+    references a parent that cannot be resolved.
+
+    Sub-classes carry stable ``error_type`` strings (``family-toolchain-*``)
+    that LLM agents and tests branch on without parsing messages.
+    """
+
+    error_type = "family-toolchain-error"
+
+
+class FamilyToolchainCycleError(FamilyToolchainError):
+    """The ``extends:`` chain forms a cycle (a → b → a)."""
+
+    error_type = "family-toolchain-cycle"
+
+
+class FamilyToolchainUnknownParentError(FamilyToolchainError):
+    """A manifest declares ``extends: <id>`` but that family has no manifest."""
+
+    error_type = "family-toolchain-unknown-parent"
+
+
+class FamilyToolchainSchemaError(FamilyToolchainError):
+    """Manifest YAML failed JSON Schema validation."""
+
+    error_type = "family-toolchain-schema"
+
+
+class FamilyToolchainNotFoundError(FamilyToolchainError):
+    """No manifest ships under ``data/families/<family_id>.yml``."""
+
+    error_type = "family-toolchain-not-found"
+
+
 __all__ = [
     "AlloyCliError",
     "BoardNotFoundError",
     "DataRepoMissingError",
     "DeviceNotFoundError",
     "DmaConflictError",
+    "FamilyToolchainCycleError",
+    "FamilyToolchainError",
+    "FamilyToolchainNotFoundError",
+    "FamilyToolchainSchemaError",
+    "FamilyToolchainUnknownParentError",
     "PinInvalidError",
     "ProjectConfigError",
     "ProjectConfigVersionError",

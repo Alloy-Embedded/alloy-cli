@@ -326,3 +326,91 @@ debug` after `probe-rs list` confirms the probe is still
 attached.
 
 **MCP tool:** none — the GDB seam stays local-only today.
+
+## family-toolchain-error
+
+**Trigger:** generic base error for the per-MCU-family
+toolchain manifest loader (`core.toolchain_registry`).
+Concrete failures use one of the four sub-types below — see
+those for actionable fixes.
+
+**Example message:** typically not raised directly; sub-types
+carry the specific cause.
+
+**Fix:** branch on the sub-type's `error_type` and follow the
+matching anchor in this cookbook.
+
+**MCP tool:** `alloy.list_family_toolchain(family_id)` to
+inspect what alloy-cli ships for a family.
+
+## family-toolchain-cycle
+
+**Trigger:** the `extends:` chain in `data/families/*.yml`
+forms a cycle (`a → b → a`).  Only fires when a contributor
+authors a malformed manifest pair; not user-facing.
+
+**Example message:** `family-toolchain extends chain forms a
+cycle: alpha → beta → alpha.`
+
+**Fix:** edit the offending YAMLs so each `extends:` walks
+toward a base that does NOT extend a descendant.  Cycle
+detection runs at load time, so a `pytest` run will
+flag the regression before merge.
+
+**MCP tool:** none — this is bad alloy-cli data, not bad user
+input.
+
+## family-toolchain-unknown-parent
+
+**Trigger:** a family manifest declares `extends: <id>` but
+no manifest exists at `data/families/<id>.yml`.  Common when
+a contributor types the parent name wrong, or removes a base
+manifest without updating its children.
+
+**Example message:** `kid.yml declares extends: 'ghost', but
+no manifest exists for that family.`
+
+**Fix:** either restore the missing parent manifest or change
+the child's `extends:` to point at an existing family
+(usually `arm-cortex-m` for Cortex-M children).
+
+**MCP tool:** `alloy.list_family_toolchain` returns
+`known_families` in its error envelope when called with an
+unknown id — useful for picking a valid parent.
+
+## family-toolchain-schema
+
+**Trigger:** a manifest YAML failed JSON Schema validation
+against `schema/family_toolchain_v1.json` (Draft 2020-12).
+Examples: missing `core`, unknown `source`, vendor tool
+without `install_docs`, unknown `capabilities` value.
+
+**Example message:** `stm32xyz.yml failed family-toolchain
+schema validation:`
+``  • /required/0/source: 'homebrew' does not match …``
+
+**Fix:** the message names the offending JSON path and the
+schema rule.  See `docs/TOOLCHAIN_REGISTRY.md` for the full
+field vocabulary.
+
+**MCP tool:** none — schema failures are caught before any
+tool would expose the manifest.
+
+## family-toolchain-not-found
+
+**Trigger:** `core.toolchain_registry.load_family(family_id)`
+or `alloy.list_family_toolchain(family_id)` was called with
+a family id alloy-cli does not ship a manifest for.
+
+**Example message:** `No family manifest found for
+'stm32xyz'.  Known families: arm-cortex-m, esp32, nrf52,
+rp2040, stm32f4, stm32g0.`
+
+**Fix:** pick one of the known families (the message lists
+them).  To add a new family, follow the contributor walkthrough
+in `docs/TOOLCHAIN_REGISTRY.md` — the data fix lands as a YAML
+PR with no code changes.
+
+**MCP tool:** the `alloy.list_family_toolchain` error envelope
+returns the same `known_families` list so an LLM agent can
+retry with a valid id.
