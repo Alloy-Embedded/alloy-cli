@@ -125,15 +125,19 @@ def _parse_probe_rs_plain(text: str) -> tuple[ProbeInfo, ...]:
     return tuple(out)
 
 
-def detect_probes(*, runner: process.CommandRunner | None = None) -> tuple[ProbeInfo, ...]:
+def detect_probes(
+    *,
+    runner: process.CommandRunner | None = None,
+    probe_rs_binary: str = "probe-rs",
+) -> tuple[ProbeInfo, ...]:
     r = runner or process.runner
     # Prefer JSON; fall back to plain output.
-    res = r.run(["probe-rs", "list", "--output=json"])
+    res = r.run([probe_rs_binary, "list", "--output=json"])
     if res.ok and res.stdout.strip():
         parsed = _parse_probe_rs_json(res.stdout)
         if parsed:
             return parsed
-    res = r.run(["probe-rs", "list"])
+    res = r.run([probe_rs_binary, "list"])
     return _parse_probe_rs_plain(res.stdout)
 
 
@@ -223,15 +227,27 @@ def run(
                     "and install openocd."
                 )
 
-    probes = detect_probes(runner=runner)
+    layout = AlloyDir(root=project_root or elf.parent.resolve())
+
+    # Wave-2: prefer the project lockfile's pinned probe-rs over PATH.
+    # When no lockfile pins probe-rs, fall back to the bare command
+    # (PATH resolution; byte-identical to the pre-Wave-2 baseline).
+    # Lockfile pin without matching store entry surfaces as a typed
+    # FamilyToolchainInstallerVersionMismatchError up the stack.
+    from alloy_cli.core import toolchain_manager as _tm
+
+    pinned_probe_rs = _tm.resolve_for_lockfile(layout.root, "probe-rs")
+    probe_rs_arg = str(pinned_probe_rs) if pinned_probe_rs is not None else "probe-rs"
+
+    probes = detect_probes(runner=runner, probe_rs_binary=probe_rs_arg)
     probe = select_probe(probes, requested=probe_kind)
 
     chip = target or _target_for(config) or "auto"
-    args = ["probe-rs", "run", "--chip", chip, str(elf)]
+    args = [probe_rs_arg, "run", "--chip", chip, str(elf)]
     if probe.serial:
         args.extend(["--probe", f"{probe.kind}:{probe.serial}"])
 
-    layout = AlloyDir(root=project_root or elf.parent.resolve())
+
     record_event(
         layout, "flash_started", probe=probe.kind, target=chip, elf=str(elf)
     )

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -217,3 +218,164 @@ def test_probe_short_format_includes_kind_and_serial() -> None:
 def test_probe_short_format_omits_serial_when_none() -> None:
     p = ProbeInfo(kind="stlink", serial=None, vendor_id=None, product_id=None, label="ST-Link")
     assert "sn=" not in p.short
+
+
+# ---------------------------------------------------------------------------
+# Wave 2: lockfile-aware probe-rs resolution
+# ---------------------------------------------------------------------------
+
+
+def _seed_store_with_probe_rs(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    version: str = "0.27.0",
+) -> str:
+    """Install a fake probe-rs into an isolated store; returns the sha."""
+    import hashlib
+    import tarfile
+
+    from alloy_cli.core import toolchain_manager as _tm
+    from alloy_cli.core.tool_sources import FakeDownloader, SourceArtifact
+
+    monkeypatch.setenv("ALLOY_TOOLS_ROOT", str(tmp_path / "_store" / "tools"))
+
+    src = tmp_path / "_pkg" / f"probe-rs-tools-{version}"
+    src.mkdir(parents=True, exist_ok=True)
+    (src / "probe-rs").write_text("#!/bin/sh\nfake\n", encoding="utf-8")
+    archive = tmp_path / f"probe-rs-{version}.tar.gz"
+    with tarfile.open(archive, "w:gz") as tar:
+        tar.add(src, arcname=f"probe-rs-tools-{version}")
+    sha = hashlib.sha256(archive.read_bytes()).hexdigest()
+
+    artefact = SourceArtifact(
+        tool="probe-rs",
+        version=version,
+        source="probe-rs",
+        url=f"https://example.com/probe-rs-{version}.tar.gz",
+        sha256=sha,
+        archive_kind="tar.gz",
+        extract_to_subdir=f"probe-rs-tools-{version}",
+        binaries=("probe-rs",),
+    )
+    fake_dl = FakeDownloader()
+    fake_dl.expect(artefact.url, archive)
+    _tm.install(artefact, downloader=fake_dl)
+    return sha
+
+
+def _seed_lockfile_with_probe_rs(
+    project_root: Path, *, sha256: str, version: str = "0.27.0"
+) -> None:
+    from alloy_cli.core import lockfile_toolchain as _lf
+
+    lock = _lf.add(_lf.empty(), "probe-rs", version, sha256)
+    _lf.write(project_root / ".alloy" / _lf.LOCKFILE_NAME, lock)
+
+
+def test_run_with_pinned_probe_rs_uses_store_path(tmp_path, monkeypatch) -> None:
+    """Lockfile pins probe-rs + store has it → spawned argv begins with
+    the absolute store path (not the bare ``probe-rs``).
+    """
+    sha = _seed_store_with_probe_rs(tmp_path, monkeypatch)
+    project = tmp_path / "proj"
+    project.mkdir()
+    _seed_lockfile_with_probe_rs(project, sha256=sha)
+
+    elf = project / "firmware.elf"
+    elf.write_bytes(b"\x7fELF")
+    fake = FakeRunner()
+    # Match the cached probe-rs path prefix; both 'list' and 'run' will
+    # invoke it as argv[0] = "<absolute path to>/probe-rs".
+    fake.default = type(
+        "_R",
+        (),
+        {
+            "args": (),
+            "returncode": 0,
+            "stdout": json.dumps(
+                [{"type": "stlink", "serial_number": "S"}]
+            ),
+            "stderr": "",
+            "ok": True,
+        },
+    )()
+
+    _flash.run(
+        elf=elf,
+        config=_config(),
+        require_toolchain=False,
+        runner=fake,
+        project_root=project,
+    )
+
+    # Some call's argv[0] must end with /probe-rs and live under /store/.
+    cached_observed = any(
+        c.args and "store" in c.args[0] and c.args[0].endswith("probe-rs")
+        for c in fake.calls
+    )
+    assert cached_observed, (
+        f"no cached probe-rs path in argv: {[c.args for c in fake.calls]}"
+    )
+    bare_observed = any(c.args and c.args[0] == "probe-rs" for c in fake.calls)
+    assert not bare_observed, (
+        "fell back to PATH-resolved 'probe-rs' despite lockfile pin"
+    )
+
+
+def test_run_without_lockfile_keeps_bare_probe_rs_command(tmp_path) -> None:
+    """Regression guard: legacy projects keep the pre-Wave-2 invocation
+    byte-identical (argv[0] == 'probe-rs').
+    """
+    project = tmp_path / "proj"
+    project.mkdir()
+    elf = project / "firmware.elf"
+    elf.write_bytes(b"\x7fELF")
+
+    fake = FakeRunner()
+    fake.expect(
+        ["probe-rs", "list", "--output=json"],
+        stdout=json.dumps([{"type": "stlink", "serial_number": "S"}]),
+        returncode=0,
+    )
+    fake.expect(["probe-rs", "run"], returncode=0, stdout="OK")
+
+    _flash.run(
+        elf=elf,
+        config=_config(),
+        require_toolchain=False,
+        runner=fake,
+        project_root=project,
+    )
+    # Every call uses the bare 'probe-rs' command
+    assert all(c.args and c.args[0] == "probe-rs" for c in fake.calls)
+
+
+def test_run_with_pinned_probe_rs_missing_from_store_raises(
+    tmp_path, monkeypatch
+) -> None:
+    """Lockfile pins probe-rs but the store has nothing → typed
+    version-mismatch error before any subprocess runs.
+    """
+    monkeypatch.setenv("ALLOY_TOOLS_ROOT", str(tmp_path / "_empty" / "tools"))
+    project = tmp_path / "proj"
+    project.mkdir()
+    _seed_lockfile_with_probe_rs(project, sha256="0" * 64)
+
+    elf = project / "firmware.elf"
+    elf.write_bytes(b"\x7fELF")
+    fake = FakeRunner()  # MUST NOT be invoked
+
+    from alloy_cli.core.errors import (
+        FamilyToolchainInstallerVersionMismatchError,
+    )
+
+    with pytest.raises(FamilyToolchainInstallerVersionMismatchError):
+        _flash.run(
+            elf=elf,
+            config=_config(),
+            require_toolchain=False,
+            runner=fake,
+            project_root=project,
+        )
+    assert fake.calls == []

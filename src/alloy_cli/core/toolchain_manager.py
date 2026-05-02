@@ -915,6 +915,77 @@ def find_installed(
     return None
 
 
+def resolve_for_lockfile(
+    project_root: Path, tool_name: str
+) -> Path | None:
+    """Resolve ``tool_name`` against the project's ``.alloy/toolchain.lock``.
+
+    Used by build / flash / debug to honour project pins: when the
+    lockfile pins a tool (or a bundle whose binaries include
+    ``tool_name``), this returns the absolute path inside the store.
+    Returns ``None`` when the project has no lockfile, or when the
+    lockfile doesn't pin anything matching ``tool_name`` — callers
+    fall back to ``shutil.which`` so legacy projects keep working.
+
+    Raises:
+      FamilyToolchainInstallerVersionMismatchError when the lockfile
+        pins a tool whose ``(version, sha256)`` is missing from the
+        store.  Build / flash / debug surface this as a typed error
+        instead of running with the wrong binary.
+    """
+    from alloy_cli.core import lockfile_toolchain
+    from alloy_cli.core.errors import (
+        FamilyToolchainInstallerVersionMismatchError,
+    )
+    from alloy_cli.core.project import AlloyDir
+
+    lock_path = (
+        AlloyDir(root=project_root).base / lockfile_toolchain.LOCKFILE_NAME
+    )
+    lock = lockfile_toolchain.read_optional(lock_path)
+    if lock is None or not lock.tools:
+        return None
+
+    for pinned_name, pin in lock.tools.items():
+        installed = find_installed(pinned_name, version=pin.version)
+
+        # Does this pin claim tool_name? (direct or bundled)
+        is_direct = pinned_name == tool_name
+        is_bundled = False
+        if installed is not None:
+            for rel in installed.binaries:
+                if rel == tool_name or Path(rel).name == tool_name:
+                    is_bundled = True
+                    break
+        if not is_direct and not is_bundled:
+            continue
+
+        # Match found — pin must be installed AND sha must match.
+        if installed is None:
+            raise FamilyToolchainInstallerVersionMismatchError(
+                f"{pinned_name} {pin.version} pinned in toolchain.lock "
+                "but not present in the store.  Run "
+                "`alloy toolchain install`."
+            )
+        if installed.sha256 != pin.sha256:
+            raise FamilyToolchainInstallerVersionMismatchError(
+                f"{pinned_name} {pin.version} sha256 in toolchain.lock "
+                "differs from the store entry.  Run "
+                "`alloy toolchain install --force`."
+            )
+
+        # Locate the absolute binary path.
+        if is_bundled:
+            for rel in installed.binaries:
+                if rel == tool_name or Path(rel).name == tool_name:
+                    return installed.store_path / rel
+        if installed.primary_binary:
+            return installed.store_path / installed.primary_binary
+        return installed.store_path
+
+    return None
+
+
 __all__ = [
     "MANIFEST_NAME",
     "MANIFEST_SCHEMA_VERSION",
@@ -929,6 +1000,7 @@ __all__ = [
     "list_installed",
     "prune",
     "resolve",
+    "resolve_for_lockfile",
     "store_root",
     "verify",
 ]
