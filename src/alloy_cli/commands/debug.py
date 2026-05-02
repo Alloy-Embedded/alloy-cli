@@ -93,6 +93,15 @@ def _resolve_chip(project_dir: Path, target: str | None) -> str:
     default=False,
     help="Print the gdb-server + GDB invocations without running them.",
 )
+@click.option(
+    "--tui/--no-tui",
+    "tui_mode",
+    default=None,
+    help=(
+        "Launch the Textual DebugScreen instead of the wrapper.  "
+        "Defaults to --tui on a TTY, --no-tui otherwise."
+    ),
+)
 def debug_command(
     probe_kind: str,
     target: str | None,
@@ -101,8 +110,11 @@ def debug_command(
     elf_override: Path | None,
     project_dir: Path,
     dry_run: bool,
+    tui_mode: bool | None,
 ) -> None:
     """Spawn a gdb-server in the background and attach the user's GDB."""
+    import sys as _sys
+
     console = Console()
     project_dir = project_dir.resolve()
     elf = _resolve_elf(project_dir, elf_override)
@@ -128,6 +140,8 @@ def debug_command(
         console.print("[bold]gdb       [/bold]: " + " ".join(session.gdb_args))
         return
 
+    use_tui = tui_mode if tui_mode is not None else bool(_sys.stdout.isatty())
+
     console.print(f"[bold]Starting gdb-server[/bold] on port {session.gdb_port} …")
     server = subprocess.Popen(
         list(session.server_args),
@@ -136,13 +150,31 @@ def debug_command(
     )
     try:
         time.sleep(1)  # give the server a moment to bind
-        console.print(f"[bold]Attaching[/bold] {session.gdb_args[0]} …")
-        gdb = subprocess.Popen(list(session.gdb_args))
-        try:
-            gdb.wait()
-        except KeyboardInterrupt:
-            gdb.send_signal(signal.SIGINT)
-            gdb.wait()
+        if use_tui:
+            from alloy_cli.core import gdb as _gdb
+            from alloy_cli.tui.app import TuiApp
+            from alloy_cli.tui.screens.debug import DebugScreen
+
+            console.print("[bold]Launching DebugScreen[/bold] …")
+            gdb_session = _gdb.launch(
+                gdb_binary=session.gdb_args[0],
+                elf_path=elf,
+                target_port=session.gdb_port,
+            )
+            try:
+                gdb_session.connect_target(session.gdb_port)
+                app = TuiApp(initial_screen=DebugScreen(session=gdb_session))
+                app.run()
+            finally:
+                gdb_session.close()
+        else:
+            console.print(f"[bold]Attaching[/bold] {session.gdb_args[0]} …")
+            gdb = subprocess.Popen(list(session.gdb_args))
+            try:
+                gdb.wait()
+            except KeyboardInterrupt:
+                gdb.send_signal(signal.SIGINT)
+                gdb.wait()
     finally:
         if server.poll() is None:
             server.terminate()

@@ -226,6 +226,7 @@ Options:
   - `--elf` — Path to the firmware ELF.
   - `--project-dir` — Project root containing alloy.toml.
   - `--dry-run` — Print the gdb-server + GDB invocations without running them.
+  - `--tui, --no-tui` — Launch the Textual DebugScreen instead of the wrapper.  Defaults to --tui on a TTY, --no-tui otherwise.
 
 ## `alloy devices`
 

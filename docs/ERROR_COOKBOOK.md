@@ -308,3 +308,21 @@ isn't registered.
 
 **Fix:** call `list_tools` (the MCP host's discovery path)
 and pick a real tool name.
+
+## gdb-session-error
+
+**Trigger:** the GDB MI2 wire returned `^error` or the
+underlying subprocess died mid-command (`alloy debug --tui`
+flows through `core.gdb.GdbSession`).
+
+**Example message:** `gdb-session-error: No symbol 'foo' in
+current context.`
+
+**Fix:** the message echoes GDB's own diagnostic — usually a
+typo in a watched expression or a stale breakpoint
+location.  If the subprocess died entirely (probe-rs
+gdb-server crashed), close the screen and re-run `alloy
+debug` after `probe-rs list` confirms the probe is still
+attached.
+
+**MCP tool:** none — the GDB seam stays local-only today.
