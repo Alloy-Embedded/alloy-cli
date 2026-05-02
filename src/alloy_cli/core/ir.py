@@ -115,6 +115,40 @@ class ClockNodeView:
 
 
 @dataclass(frozen=True, slots=True)
+class PackagePadView:
+    """One pad / ball of a physical package.
+
+    Mirrors the ``package_pads`` block of the device YAML.  Pads
+    that aren't bonded to a logical pin (e.g. NC / power / ground)
+    surface ``bonded_pin = None`` so the layout engine can render a
+    label without hunting for a `PinView` that doesn't exist.
+    """
+
+    pad_id: str
+    package: str
+    position_label: str
+    physical_index: int
+    pad_kind: str | None
+    bonded_pin: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class PackageView:
+    """Active physical package of a device.
+
+    ``kind`` is the lower-cased package family — ``lqfp`` / ``qfn``
+    / ``bga`` / ``wlcsp`` / ``soic`` / ``dip`` / ``tssop`` / ``other``.
+    Layout strategies in :mod:`tui.widgets.pinout_layout` branch on
+    this string.
+    """
+
+    name: str
+    kind: str
+    pin_count: int
+    pads: tuple[PackagePadView, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class DeviceIR:
     """Strongly-typed slice of the canonical IR.
 
@@ -128,7 +162,8 @@ class DeviceIR:
     connection_candidates: tuple[ConnectionCandidateView, ...]
     dma_routes: tuple[DmaRouteView, ...]
     clock_nodes: tuple[ClockNodeView, ...]
-    payload: dict[str, Any] = field(repr=False)
+    package: PackageView | None = None
+    payload: dict[str, Any] = field(repr=False, default_factory=dict)
 
 
 # ---------------------------------------------------------------------------
@@ -269,7 +304,84 @@ def _project_ir(payload: dict[str, Any]) -> DeviceIR:
         connection_candidates=candidates,
         dma_routes=dma_routes,
         clock_nodes=clock_nodes,
+        package=_project_package(payload, identity.package),
         payload=payload,
+    )
+
+
+_PACKAGE_KIND_PREFIXES: tuple[tuple[str, str], ...] = (
+    # Order matters — longer / more specific prefixes first.
+    ("wlcsp", "wlcsp"),
+    ("tssop", "tssop"),
+    ("lqfp", "lqfp"),
+    ("ufqfpn", "qfn"),
+    ("uqfpn", "qfn"),
+    ("qfn", "qfn"),
+    ("bga", "bga"),
+    ("ufbga", "bga"),
+    ("lfbga", "bga"),
+    ("tfbga", "bga"),
+    ("soic", "soic"),
+    ("sop", "soic"),
+    ("dip", "dip"),
+    ("pdip", "dip"),
+)
+
+
+def _detect_package_kind(name: str) -> str:
+    lower = name.lower()
+    for prefix, kind in _PACKAGE_KIND_PREFIXES:
+        if lower.startswith(prefix):
+            return kind
+    return "other"
+
+
+def _project_package(
+    payload: dict[str, Any], active_name: str
+) -> PackageView | None:
+    """Project the YAML's ``packages`` + ``package_pads`` blocks.
+
+    Returns ``None`` when the device YAML doesn't yet declare a
+    package — the schematic view falls back to compact mode in
+    that case.  We pick the *active* package by name (mirrors
+    ``identity.package``); if that isn't present we take the first
+    declared package as a best-effort fallback.
+    """
+    packages_raw = payload.get("packages") or []
+    if not packages_raw:
+        return None
+    matched: dict[str, Any] | None = None
+    for entry in packages_raw:
+        if isinstance(entry, dict) and entry.get("name") == active_name:
+            matched = entry
+            break
+    if matched is None:
+        first = packages_raw[0]
+        if not isinstance(first, dict):
+            return None
+        matched = first
+    name = str(matched.get("name", active_name or ""))
+    if not name:
+        return None
+    pin_count = int(matched.get("pin_count", 0) or 0)
+    pads_raw = payload.get("package_pads") or []
+    pads = tuple(
+        PackagePadView(
+            pad_id=str(pad.get("pad_id", "")),
+            package=str(pad.get("package", "")),
+            position_label=str(pad.get("position_label", "")),
+            physical_index=int(pad.get("physical_index", 0) or 0),
+            pad_kind=pad.get("pad_kind"),
+            bonded_pin=pad.get("bonded_pin"),
+        )
+        for pad in pads_raw
+        if isinstance(pad, dict) and (pad.get("package") == name or not pad.get("package"))
+    )
+    return PackageView(
+        name=name,
+        kind=_detect_package_kind(name),
+        pin_count=pin_count or len(pads),
+        pads=pads,
     )
 
 
@@ -354,6 +466,8 @@ __all__ = [
     "DeviceIR",
     "DeviceIdentity",
     "DmaRouteView",
+    "PackagePadView",
+    "PackageView",
     "PeripheralView",
     "PinView",
     "connection_candidates",

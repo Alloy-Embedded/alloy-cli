@@ -58,6 +58,24 @@ def _print_table(console: Console, results: tuple[_boards.BoardSummary, ...]) ->
     console.print(table)
 
 
+def _open_pinout(board_id: str) -> None:
+    """Resolve the board's chip + open the read-only schematic view."""
+    # Lazy import — keeps the CLI start-up fast for the more
+    # common list / detail subcommands.
+    try:
+        manifest = _boards.lookup(board_id)
+    except BoardNotFoundError as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    from alloy_cli.core import ir as _ir
+    from alloy_cli.tui.app import TuiApp
+    from alloy_cli.tui.screens.pinout import PinoutScreen
+
+    device_ir = _ir.load_device(manifest.vendor, manifest.family, manifest.device)
+    app = TuiApp(initial_screen=PinoutScreen(device_ir))
+    app.run()
+
+
 def _print_detail(console: Console, board_id: str) -> None:
     try:
         manifest = _boards.lookup(board_id)
@@ -93,6 +111,13 @@ def _print_detail(console: Console, board_id: str) -> None:
 )
 @click.option("--tier", type=int, default=None, help="Filter by support tier.")
 @click.option("--json", "as_json", is_flag=True, default=False, help="Emit JSON for scripting.")
+@click.option(
+    "--pinout",
+    "pinout",
+    is_flag=True,
+    default=False,
+    help="Open the read-only schematic pinout view in a Textual session.",
+)
 def boards_command(
     board_id: str | None,
     query: str | None,
@@ -101,9 +126,16 @@ def boards_command(
     features: tuple[str, ...],
     tier: int | None,
     as_json: bool,
+    pinout: bool,
 ) -> None:
     """List boards from the SDK or print one board's manifest."""
     console = Console()
+
+    if pinout:
+        if board_id is None:
+            raise click.ClickException("--pinout requires a board id.")
+        _open_pinout(board_id)
+        return
 
     if board_id is not None:
         if as_json:

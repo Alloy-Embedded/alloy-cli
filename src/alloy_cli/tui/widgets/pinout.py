@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import StrEnum
@@ -12,7 +13,8 @@ from textual.containers import Vertical
 from textual.widget import Widget
 from textual.widgets import Static
 
-from alloy_cli.core.ir import DeviceIR, PinView
+from alloy_cli.core.ir import DeviceIR, PackageView, PinView
+from alloy_cli.tui.widgets.pinout_layout import PinoutCell, pick_layout
 
 
 class PinState(StrEnum):
@@ -82,6 +84,7 @@ class PinoutWidget(Widget):
         self,
         rows: Iterable[PinRow] = (),
         *,
+        package: PackageView | None = None,
         mode: PinoutMode = PinoutMode.COMPACT,
         terminal_width: int = 120,
         name: str | None = None,
@@ -89,6 +92,7 @@ class PinoutWidget(Widget):
     ) -> None:
         super().__init__(name=name, id=id)
         self._rows: tuple[PinRow, ...] = tuple(rows)
+        self._package: PackageView | None = package
         self._mode = mode if terminal_width >= _SCHEMATIC_MIN_WIDTH else PinoutMode.COMPACT
         self._terminal_width = terminal_width
 
@@ -99,6 +103,10 @@ class PinoutWidget(Widget):
     @property
     def rows(self) -> tuple[PinRow, ...]:
         return self._rows
+
+    @property
+    def package(self) -> PackageView | None:
+        return self._package
 
     def compose(self) -> ComposeResult:
         with Vertical():
@@ -120,8 +128,35 @@ class PinoutWidget(Widget):
             )
 
     def _compose_schematic(self) -> ComposeResult:
-        # Minimal ASCII chip outline — labels on the left edge by default.
-        # Per-package perimeter layout lives in a follow-up proposal.
+        if self._package is None:
+            # Devices that don't expose a PackageView fall back to a
+            # minimal ASCII placeholder — preserves the F3 contract
+            # without crashing on partial data.
+            yield from self._compose_schematic_fallback()
+            return
+        layout = pick_layout(self._package)
+        cells = layout.cells(self._package)
+        if not cells:
+            yield from self._compose_schematic_fallback()
+            return
+
+        # Title bar mirrors CubeMX's package legend.
+        yield Static(
+            f"[bold]{self._package.name.upper()}[/bold] "
+            f"({self._package.kind} · {self._package.pin_count} pads)"
+        )
+
+        by_row: dict[int, list[PinoutCell]] = defaultdict(list)
+        for cell in cells:
+            by_row[cell.row].append(cell)
+
+        cell_width = max(12, min(self._terminal_width // 8, 18))
+        for row_idx in sorted(by_row):
+            row_cells = sorted(by_row[row_idx], key=lambda c: c.column)
+            line = self._render_row(row_cells, cell_width=cell_width)
+            yield Static(line, classes="pin-row")
+
+    def _compose_schematic_fallback(self) -> ComposeResult:
         if not self._rows:
             yield Static("[dim]No pin layout available.[/dim]")
             return
@@ -135,8 +170,34 @@ class PinoutWidget(Widget):
             )
         yield Static("└" + "─" * 30 + "┘")
 
+    def _render_row(
+        self, row_cells: list[PinoutCell], *, cell_width: int
+    ) -> str:
+        """Pack the cells of one logical row into a fixed-pitch string."""
+        pin_to_row = {row.pin.name: row for row in self._rows}
+        chunks: list[str] = []
+        last_col = 0
+        for cell in row_cells:
+            gap = " " * (max(0, cell.column - last_col) * cell_width)
+            text = self._format_cell(cell, pin_to_row.get(cell.pin_id))
+            chunks.append(gap + text.ljust(cell_width))
+            last_col = cell.column + 1
+        return "".join(chunks)
+
+    def _format_cell(self, cell: PinoutCell, row: PinRow | None) -> str:
+        """Render one pad — pad number + glyph + pin name."""
+        if row is None:
+            # Power / ground / unbonded pads — show kind hint when present.
+            tag = (cell.pad_kind or cell.pin_id or "·").upper()[:3]
+            return f"{cell.pad_label} ▣ {tag}"
+        return f"{cell.pad_label} {row.glyph} {row.pin.name}"
+
     def set_rows(self, rows: Iterable[PinRow]) -> None:
         self._rows = tuple(rows)
+        self.refresh(recompose=True)
+
+    def set_package(self, package: PackageView | None) -> None:
+        self._package = package
         self.refresh(recompose=True)
 
     def toggle_mode(self) -> None:
