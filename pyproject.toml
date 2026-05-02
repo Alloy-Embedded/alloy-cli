@@ -1,0 +1,89 @@
+[build-system]
+requires = ["hatchling>=1.21", "hatch-vcs>=0.4"]
+build-backend = "hatchling.build"
+
+[project]
+name = "alloy-cli"
+description = "The terminal-native developer surface for the Alloy embedded platform."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT OR Apache-2.0" }
+authors = [{ name = "Alloy Embedded" }]
+keywords = ["embedded", "firmware", "stm32", "esp32", "rp2040", "tui", "cli", "mcp"]
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Embedded Systems",
+    "Topic :: Software Development :: Code Generators",
+    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    # CLI surface
+    "click>=8.1",
+    # Rich text / non-interactive output
+    "rich>=13.7",
+    # Interactive TUI
+    "textual>=0.80",
+    # Schema validation
+    "jsonschema>=4.21",
+    "pyyaml>=6.0",
+    # Project format
+    "tomli>=2.0; python_version < '3.11'",
+    # Subprocess + plumbing
+    "platformdirs>=4.2",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+mcp = [
+    # MCP SDK once stable; pinned to the official Anthropic Python MCP SDK.
+    "mcp>=0.10",
+]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.23",
+    "pytest-textual-snapshot>=0.4",
+    "ruff>=0.5",
+    "pyright>=1.1",
+    "mypy>=1.10",
+]
+
+[project.scripts]
+alloy = "alloy_cli.main:main"
+
+[project.urls]
+Homepage = "https://github.com/Alloy-Embedded"
+Repository = "https://github.com/Alloy-Embedded/alloy-cli"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/alloy_cli/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/alloy_cli"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N", "RUF"]
+ignore = ["E501"]  # rely on formatter
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+asyncio_mode = "auto"
+
+[tool.pyright]
+include = ["src", "tests"]
+strict = ["src/alloy_cli"]
+pythonVersion = "3.11"

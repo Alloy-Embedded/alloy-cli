@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+*.whl
+
+# venv
+.venv/
+venv/
+.python-version
+
+# Tooling
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+
+# Editors / IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Build output
+*.elf
+*.bin
+*.hex
+*.map
+
+# alloy-cli local cache
+.alloy/
+~/.alloy/
+
+# Test artifacts
+tests/_artifacts/
+tests/_publication/
+tests/_tmp/
+
+# ccd-session worktrees (Claude Code dev)
+.claude/worktrees/
