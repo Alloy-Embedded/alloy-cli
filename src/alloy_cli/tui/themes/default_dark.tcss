@@ -1,0 +1,61 @@
+/* Default dark theme — alloy TUI.
+ * The colour contract is documented in docs/TUI_DESIGN.md.
+ * Glyphs are paired with colours so NO_COLOR users still see state.
+ */
+
+Screen {
+    background: #0b0d10;
+    color: #d6deeb;
+}
+
+Header {
+    background: #11151c;
+    color: #82aaff;
+    text-style: bold;
+}
+
+Footer {
+    background: #11151c;
+    color: #6b7280;
+}
+
+#palette {
+    border: round #82aaff;
+    background: #11151c;
+}
+
+#diff-modal {
+    border: round #addb67;
+}
+
+.diag-error {
+    color: #ef5350;
+    text-style: bold;
+}
+
+.diag-warning {
+    color: #ffcb6b;
+}
+
+.diag-info {
+    color: #82aaff;
+}
+
+.toolchain-ok {
+    color: #c3e88d;
+}
+
+.toolchain-missing {
+    color: #ef5350;
+}
+
+.faceted-chip {
+    background: #1c2330;
+    color: #addb67;
+    padding: 0 1;
+}
+
+.faceted-chip.-active {
+    background: #addb67;
+    color: #0b0d10;
+}

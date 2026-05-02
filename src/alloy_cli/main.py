@@ -30,6 +30,7 @@ from alloy_cli.commands.debug import debug_command
 from alloy_cli.commands.devices import devices_command
 from alloy_cli.commands.flash import flash_command
 from alloy_cli.commands.new import new_command
+from alloy_cli.commands.ui import ui_command
 
 _BANNER = """\
 alloy — terminal-native developer surface for the Alloy embedded platform.
@@ -69,6 +70,7 @@ cli.add_command(debug_command)
 cli.add_command(boards_command)
 cli.add_command(devices_command)
 cli.add_command(add_command)
+cli.add_command(ui_command)
 
 
 def main(argv: list[str] | None = None) -> NoReturn:

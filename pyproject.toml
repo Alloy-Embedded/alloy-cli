@@ -89,6 +89,11 @@ extend-exclude = ["src/alloy_cli/_version.py"]  # hatch-vcs generated
 select = ["E", "F", "I", "B", "UP", "N", "RUF"]
 ignore = ["E501"]  # rely on formatter
 
+[tool.ruff.lint.per-file-ignores]
+# Textual idioms: BINDINGS / DEFAULT_CSS are framework-recognised class
+# attributes that are intentionally mutable list/str literals.
+"src/alloy_cli/tui/**/*.py" = ["RUF012"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
