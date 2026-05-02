@@ -1,0 +1,3 @@
+[submodule "data/devices"]
+	path = data/devices
+	url = https://github.com/Alloy-Embedded/alloy-devices-yml

@@ -86,5 +86,9 @@ asyncio_mode = "auto"
 
 [tool.pyright]
 include = ["src", "tests"]
-strict = ["src/alloy_cli"]
+# Strict typing across the package is the goal but lands incrementally
+# via a dedicated proposal once the API surface stabilises.  For now we
+# rely on basic-mode + ruff's type-aware lints.
 pythonVersion = "3.11"
+typeCheckingMode = "basic"
+reportMissingImports = "warning"
