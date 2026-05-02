@@ -90,6 +90,12 @@ alloy flash --probe jlink
 # 4. Debug — spawns probe-rs gdb-server + attaches your GDB front-end
 alloy debug
 alloy debug --gdb-ui /opt/gdb-multiarch
+
+# 5. Daily-driver helpers
+alloy doctor                         # diagnose host environment
+alloy update --dry-run               # preview pinned-component upgrades
+alloy export vscode                  # emit .vscode/{launch,tasks,c_cpp_properties}.json
+alloy export ci --target github      # CI workflow for GitHub Actions
 ```
 
 The scaffolder generates `alloy.toml`, a `CMakeLists.txt` that calls
