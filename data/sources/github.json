@@ -1,0 +1,148 @@
+{
+  "schema_version": "1.0.0",
+  "source": "github",
+  "_pending_verification": true,
+  "_notes": "URLs sourced from each upstream repo's GitHub release page.  picotool, esptool, dfu-util, tio.  Some upstreams do not ship windows binaries (tio is a POSIX-only project); they declare unsupported_hosts so the contract stays explicit.  SHA256 fields are zero-padded placeholders awaiting refresh_source_pins.py.",
+  "tools": [
+    {
+      "tool": "picotool",
+      "version": "2.0.0",
+      "hosts": {
+        "linux-x86_64": {
+          "url": "https://github.com/raspberrypi/pico-sdk-tools/releases/download/v2.0.0-1/picotool-2.0.0-x86_64-lin.tar.gz",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "tar.gz",
+          "binaries": ["picotool/picotool"]
+        },
+        "linux-arm64": {
+          "url": "https://github.com/raspberrypi/pico-sdk-tools/releases/download/v2.0.0-1/picotool-2.0.0-aarch64-lin.tar.gz",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "tar.gz",
+          "binaries": ["picotool/picotool"]
+        },
+        "macos-x86_64": {
+          "url": "https://github.com/raspberrypi/pico-sdk-tools/releases/download/v2.0.0-1/picotool-2.0.0-mac.zip",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "zip",
+          "binaries": ["picotool/picotool"]
+        },
+        "macos-arm64": {
+          "url": "https://github.com/raspberrypi/pico-sdk-tools/releases/download/v2.0.0-1/picotool-2.0.0-mac.zip",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "zip",
+          "binaries": ["picotool/picotool"]
+        },
+        "windows-x86_64": {
+          "url": "https://github.com/raspberrypi/pico-sdk-tools/releases/download/v2.0.0-1/picotool-2.0.0-x64-win.zip",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "zip",
+          "binaries": ["picotool/picotool.exe"]
+        }
+      }
+    },
+    {
+      "tool": "esptool",
+      "version": "4.7.0",
+      "hosts": {
+        "linux-x86_64": {
+          "url": "https://github.com/espressif/esptool/releases/download/v4.7.0/esptool-v4.7.0-linux-amd64.zip",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "zip",
+          "extract_to_subdir": "esptool-v4.7.0-linux-amd64",
+          "binaries": ["esptool", "espefuse", "espsecure"]
+        },
+        "linux-arm64": {
+          "url": "https://github.com/espressif/esptool/releases/download/v4.7.0/esptool-v4.7.0-linux-arm64.zip",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "zip",
+          "extract_to_subdir": "esptool-v4.7.0-linux-arm64",
+          "binaries": ["esptool", "espefuse", "espsecure"]
+        },
+        "macos-x86_64": {
+          "url": "https://github.com/espressif/esptool/releases/download/v4.7.0/esptool-v4.7.0-macos-amd64.zip",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "zip",
+          "extract_to_subdir": "esptool-v4.7.0-macos-amd64",
+          "binaries": ["esptool", "espefuse", "espsecure"]
+        },
+        "macos-arm64": {
+          "url": "https://github.com/espressif/esptool/releases/download/v4.7.0/esptool-v4.7.0-macos-arm64.zip",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "zip",
+          "extract_to_subdir": "esptool-v4.7.0-macos-arm64",
+          "binaries": ["esptool", "espefuse", "espsecure"]
+        },
+        "windows-x86_64": {
+          "url": "https://github.com/espressif/esptool/releases/download/v4.7.0/esptool-v4.7.0-win64.zip",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "zip",
+          "extract_to_subdir": "esptool-v4.7.0-win64",
+          "binaries": ["esptool.exe", "espefuse.exe", "espsecure.exe"]
+        }
+      }
+    },
+    {
+      "tool": "dfu-util",
+      "version": "0.11",
+      "hosts": {
+        "linux-x86_64": {
+          "url": "https://github.com/Stefan-Schmidt/dfu-util/releases/download/v0.11/dfu-util-0.11-linux-x86_64.tar.gz",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "tar.gz",
+          "extract_to_subdir": "dfu-util-0.11-linux-x86_64",
+          "binaries": ["dfu-util", "dfu-suffix", "dfu-prefix"]
+        },
+        "macos-x86_64": {
+          "url": "https://github.com/Stefan-Schmidt/dfu-util/releases/download/v0.11/dfu-util-0.11-darwin-x86_64.tar.gz",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "tar.gz",
+          "extract_to_subdir": "dfu-util-0.11-darwin-x86_64",
+          "binaries": ["dfu-util", "dfu-suffix", "dfu-prefix"]
+        },
+        "macos-arm64": {
+          "url": "https://github.com/Stefan-Schmidt/dfu-util/releases/download/v0.11/dfu-util-0.11-darwin-arm64.tar.gz",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "tar.gz",
+          "extract_to_subdir": "dfu-util-0.11-darwin-arm64",
+          "binaries": ["dfu-util", "dfu-suffix", "dfu-prefix"]
+        },
+        "windows-x86_64": {
+          "url": "https://github.com/Stefan-Schmidt/dfu-util/releases/download/v0.11/dfu-util-0.11-win64.zip",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "zip",
+          "extract_to_subdir": "dfu-util-0.11-win64",
+          "binaries": ["dfu-util.exe", "dfu-suffix.exe", "dfu-prefix.exe"]
+        }
+      },
+      "unsupported_hosts": ["linux-arm64"]
+    },
+    {
+      "tool": "tio",
+      "version": "2.7",
+      "hosts": {
+        "linux-x86_64": {
+          "url": "https://github.com/tio/tio/releases/download/v2.7/tio-2.7-linux-x86_64.tar.gz",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "tar.gz",
+          "extract_to_subdir": "tio-2.7-linux-x86_64",
+          "binaries": ["bin/tio"]
+        },
+        "macos-x86_64": {
+          "url": "https://github.com/tio/tio/releases/download/v2.7/tio-2.7-darwin-x86_64.tar.gz",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "tar.gz",
+          "extract_to_subdir": "tio-2.7-darwin-x86_64",
+          "binaries": ["bin/tio"]
+        },
+        "macos-arm64": {
+          "url": "https://github.com/tio/tio/releases/download/v2.7/tio-2.7-darwin-arm64.tar.gz",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "tar.gz",
+          "extract_to_subdir": "tio-2.7-darwin-arm64",
+          "binaries": ["bin/tio"]
+        }
+      },
+      "unsupported_hosts": ["linux-arm64", "windows-x86_64"]
+    }
+  ]
+}

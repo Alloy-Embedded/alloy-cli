@@ -1,0 +1,142 @@
+{
+  "schema_version": "1.0.0",
+  "source": "espressif",
+  "_pending_verification": true,
+  "_notes": "URLs sourced from the Espressif idf-tools index (https://dl.espressif.com/dl/idf/idf-tools/idf_tools.json) for IDF 5.3.x.  Espressif does not ship linux-arm64 binaries for the GCC tooling — declared as unsupported_hosts.  SHA256 fields are zero-padded placeholders awaiting refresh_source_pins.py.",
+  "tools": [
+    {
+      "tool": "xtensa-esp-elf-gcc",
+      "version": "14.2.0_20240906",
+      "hosts": {
+        "linux-x86_64": {
+          "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20240906/xtensa-esp-elf-14.2.0_20240906-x86_64-linux-gnu.tar.xz",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "tar.xz",
+          "extract_to_subdir": "xtensa-esp-elf",
+          "binaries": [
+            "bin/xtensa-esp-elf-gcc",
+            "bin/xtensa-esp-elf-g++",
+            "bin/xtensa-esp-elf-gdb",
+            "bin/xtensa-esp-elf-size",
+            "bin/xtensa-esp-elf-objcopy",
+            "bin/xtensa-esp-elf-objdump",
+            "bin/xtensa-esp-elf-ar",
+            "bin/xtensa-esp-elf-ranlib"
+          ]
+        },
+        "macos-x86_64": {
+          "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20240906/xtensa-esp-elf-14.2.0_20240906-x86_64-apple-darwin.tar.xz",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "tar.xz",
+          "extract_to_subdir": "xtensa-esp-elf",
+          "binaries": [
+            "bin/xtensa-esp-elf-gcc",
+            "bin/xtensa-esp-elf-g++",
+            "bin/xtensa-esp-elf-gdb",
+            "bin/xtensa-esp-elf-size",
+            "bin/xtensa-esp-elf-objcopy",
+            "bin/xtensa-esp-elf-objdump",
+            "bin/xtensa-esp-elf-ar",
+            "bin/xtensa-esp-elf-ranlib"
+          ]
+        },
+        "macos-arm64": {
+          "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20240906/xtensa-esp-elf-14.2.0_20240906-aarch64-apple-darwin.tar.xz",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "tar.xz",
+          "extract_to_subdir": "xtensa-esp-elf",
+          "binaries": [
+            "bin/xtensa-esp-elf-gcc",
+            "bin/xtensa-esp-elf-g++",
+            "bin/xtensa-esp-elf-gdb",
+            "bin/xtensa-esp-elf-size",
+            "bin/xtensa-esp-elf-objcopy",
+            "bin/xtensa-esp-elf-objdump",
+            "bin/xtensa-esp-elf-ar",
+            "bin/xtensa-esp-elf-ranlib"
+          ]
+        },
+        "windows-x86_64": {
+          "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20240906/xtensa-esp-elf-14.2.0_20240906-x86_64-w64-mingw32.zip",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "zip",
+          "extract_to_subdir": "xtensa-esp-elf",
+          "binaries": [
+            "bin/xtensa-esp-elf-gcc.exe",
+            "bin/xtensa-esp-elf-g++.exe",
+            "bin/xtensa-esp-elf-gdb.exe",
+            "bin/xtensa-esp-elf-size.exe",
+            "bin/xtensa-esp-elf-objcopy.exe",
+            "bin/xtensa-esp-elf-objdump.exe",
+            "bin/xtensa-esp-elf-ar.exe",
+            "bin/xtensa-esp-elf-ranlib.exe"
+          ]
+        }
+      },
+      "unsupported_hosts": ["linux-arm64"]
+    },
+    {
+      "tool": "riscv32-esp-elf-gcc",
+      "version": "14.2.0_20240906",
+      "hosts": {
+        "linux-x86_64": {
+          "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20240906/riscv32-esp-elf-14.2.0_20240906-x86_64-linux-gnu.tar.xz",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "tar.xz",
+          "extract_to_subdir": "riscv32-esp-elf",
+          "binaries": [
+            "bin/riscv32-esp-elf-gcc",
+            "bin/riscv32-esp-elf-g++",
+            "bin/riscv32-esp-elf-gdb",
+            "bin/riscv32-esp-elf-size",
+            "bin/riscv32-esp-elf-objcopy",
+            "bin/riscv32-esp-elf-objdump"
+          ]
+        },
+        "macos-x86_64": {
+          "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20240906/riscv32-esp-elf-14.2.0_20240906-x86_64-apple-darwin.tar.xz",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "tar.xz",
+          "extract_to_subdir": "riscv32-esp-elf",
+          "binaries": [
+            "bin/riscv32-esp-elf-gcc",
+            "bin/riscv32-esp-elf-g++",
+            "bin/riscv32-esp-elf-gdb",
+            "bin/riscv32-esp-elf-size",
+            "bin/riscv32-esp-elf-objcopy",
+            "bin/riscv32-esp-elf-objdump"
+          ]
+        },
+        "macos-arm64": {
+          "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20240906/riscv32-esp-elf-14.2.0_20240906-aarch64-apple-darwin.tar.xz",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "tar.xz",
+          "extract_to_subdir": "riscv32-esp-elf",
+          "binaries": [
+            "bin/riscv32-esp-elf-gcc",
+            "bin/riscv32-esp-elf-g++",
+            "bin/riscv32-esp-elf-gdb",
+            "bin/riscv32-esp-elf-size",
+            "bin/riscv32-esp-elf-objcopy",
+            "bin/riscv32-esp-elf-objdump"
+          ]
+        },
+        "windows-x86_64": {
+          "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20240906/riscv32-esp-elf-14.2.0_20240906-x86_64-w64-mingw32.zip",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "zip",
+          "extract_to_subdir": "riscv32-esp-elf",
+          "binaries": [
+            "bin/riscv32-esp-elf-gcc.exe",
+            "bin/riscv32-esp-elf-g++.exe",
+            "bin/riscv32-esp-elf-gdb.exe",
+            "bin/riscv32-esp-elf-size.exe",
+            "bin/riscv32-esp-elf-objcopy.exe",
+            "bin/riscv32-esp-elf-objdump.exe"
+          ]
+        }
+      },
+      "unsupported_hosts": ["linux-arm64"]
+    }
+  ]
+}

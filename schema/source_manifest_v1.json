@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://alloy-embedded.org/schema/source_manifest_v1.json",
+  "title": "alloy-cli source pin manifest v1",
+  "description": "Per-source-kind URL + SHA256 pin file consumed by alloy-cli's toolchain installer.  Lives under data/sources/<source>.json and ships inside the alloy-cli wheel.  This is the trust boundary: the runtime never opens a URL not declared here.",
+  "type": "object",
+  "required": ["schema_version", "source", "tools"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^1\\.[0-9]+\\.[0-9]+$",
+      "description": "SemVer of the manifest schema this file targets."
+    },
+    "source": {
+      "type": "string",
+      "enum": ["xpack", "github", "probe-rs", "espressif"],
+      "description": "Source kind.  Vendor-source tools are NEVER pinned here — their distribution is EULA-gated."
+    },
+    "_pending_verification": {
+      "type": "boolean",
+      "description": "When true, sha256 fields in this file are placeholders (zero-padded) awaiting a refresh_source_pins.py run.  Removing the flag is the contract for declaring a pin file production-ready."
+    },
+    "_notes": {
+      "type": "string",
+      "description": "Optional contributor-facing free-text note (e.g. how the URLs were sourced)."
+    },
+    "tools": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/tool_pin"}
+    }
+  },
+  "$defs": {
+    "host_triple": {
+      "type": "string",
+      "pattern": "^(linux|macos|windows)-(x86_64|arm64)$",
+      "description": "Composite os-arch identifier.  Closed enum; new arches require a schema bump."
+    },
+    "tool_pin": {
+      "type": "object",
+      "required": ["tool", "version", "hosts"],
+      "additionalProperties": false,
+      "properties": {
+        "tool": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9._-]*$",
+          "description": "Canonical tool name; must match the family manifest's `tool` field."
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+(\\.[0-9]+)?([-_][A-Za-z0-9._-]+)?$",
+          "description": "Exact SemVer-ish pin (no ranges).  Accepts both `-` and `_` as suffix separators so vendor-specific stamps like Espressif's `14.2.0_20240906` round-trip."
+        },
+        "udev_rules": {
+          "type": "string",
+          "description": "Linux udev rules text shipped with this tool's release.  Required when the family manifest declares `udev_required: true`; ignored otherwise."
+        },
+        "hosts": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {"$ref": "#/$defs/host_triple"},
+          "additionalProperties": {"$ref": "#/$defs/host_artifact"},
+          "description": "Per-host download definition.  At least one host triple must be present; missing hosts surface as `family-toolchain-installer-unsupported-host` at install time."
+        },
+        "unsupported_hosts": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/host_triple"},
+          "description": "Host triples upstream does not publish a release for (documented absence so contributors can tell 'missing pin' from 'no upstream binary')."
+        }
+      }
+    },
+    "host_artifact": {
+      "type": "object",
+      "required": ["url", "sha256", "archive_kind", "binaries"],
+      "additionalProperties": false,
+      "properties": {
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "Lower-case hex SHA-256 of the artefact at `url`.  Placeholder zero-padded value is allowed only when the parent file declares `_pending_verification: true`."
+        },
+        "archive_kind": {
+          "type": "string",
+          "enum": ["tar.xz", "tar.gz", "tar.bz2", "zip", "bin"],
+          "description": "How to unpack the artefact.  `bin` means single-file binary (e.g. probe-rs ships a static binary on some hosts) — copy-as-is into the store."
+        },
+        "extract_to_subdir": {
+          "type": "string",
+          "description": "Optional: if the archive contains a single top-level directory (e.g. xpack tarballs), name it here so the toolchain manager can flatten the extraction.  Empty / missing means 'extract at the store root'."
+        },
+        "binaries": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[^/].*"
+          },
+          "description": "Relative paths (within the extracted artefact, after `extract_to_subdir` flattening) of every binary callers will resolve.  The first entry is the canonical primary binary."
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Optional artefact size; used by `alloy toolchain install --dry-run` to print the planned download total without HEADing every URL."
+        }
+      }
+    }
+  }
+}

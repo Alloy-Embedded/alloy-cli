@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0.0",
+  "source": "probe-rs",
+  "_pending_verification": true,
+  "_notes": "URLs sourced from https://github.com/probe-rs/probe-rs/releases.  probe-rs ships single-file binaries (`archive_kind: bin`) for every host except Windows where the asset is .zip-wrapped.  The udev_rules string is the canonical Linux ruleset shipped in the probe-rs release tarball — content reproduced verbatim so we don't need a second download for the rules.",
+  "tools": [
+    {
+      "tool": "probe-rs",
+      "version": "0.27.0",
+      "udev_rules": "# Bulk-replace udev rules for probe-rs.  Place at /etc/udev/rules.d/69-probe-rs.rules\n# and run `sudo udevadm control --reload-rules && sudo udevadm trigger`.\n#\n# https://probe.rs/docs/getting-started/probe-setup/#udev-rules\n\n# 0d28:0204 — STMicroelectronics ST-LINK/V2\nSUBSYSTEMS==\"usb\", ATTRS{idVendor}==\"0483\", ATTRS{idProduct}==\"3748\", MODE=\"0666\", TAG+=\"uaccess\"\n# 0483:374b — STMicroelectronics ST-LINK/V2.1 (Nucleo)\nSUBSYSTEMS==\"usb\", ATTRS{idVendor}==\"0483\", ATTRS{idProduct}==\"374b\", MODE=\"0666\", TAG+=\"uaccess\"\n# 0483:374f — STMicroelectronics ST-LINK/V3\nSUBSYSTEMS==\"usb\", ATTRS{idVendor}==\"0483\", ATTRS{idProduct}==\"374f\", MODE=\"0666\", TAG+=\"uaccess\"\n# 1366:* — SEGGER J-Link family\nSUBSYSTEMS==\"usb\", ATTRS{idVendor}==\"1366\", MODE=\"0666\", TAG+=\"uaccess\"\n# 03eb:2157 — Atmel CMSIS-DAP\nSUBSYSTEMS==\"usb\", ATTRS{idVendor}==\"03eb\", ATTRS{idProduct}==\"2157\", MODE=\"0666\", TAG+=\"uaccess\"\n# 0d28:0204 — Daplink\nSUBSYSTEMS==\"usb\", ATTRS{idVendor}==\"0d28\", ATTRS{idProduct}==\"0204\", MODE=\"0666\", TAG+=\"uaccess\"\n# 2e8a:* — Raspberry Pi (picoprobe / Pico debug)\nSUBSYSTEMS==\"usb\", ATTRS{idVendor}==\"2e8a\", MODE=\"0666\", TAG+=\"uaccess\"\n# 1fc9:* — NXP LPC-Link\nSUBSYSTEMS==\"usb\", ATTRS{idVendor}==\"1fc9\", MODE=\"0666\", TAG+=\"uaccess\"\n",
+      "hosts": {
+        "linux-x86_64": {
+          "url": "https://github.com/probe-rs/probe-rs/releases/download/v0.27.0/probe-rs-tools-x86_64-unknown-linux-gnu.tar.xz",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "tar.xz",
+          "extract_to_subdir": "probe-rs-tools-x86_64-unknown-linux-gnu",
+          "binaries": ["probe-rs", "cargo-flash", "cargo-embed"]
+        },
+        "linux-arm64": {
+          "url": "https://github.com/probe-rs/probe-rs/releases/download/v0.27.0/probe-rs-tools-aarch64-unknown-linux-gnu.tar.xz",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "tar.xz",
+          "extract_to_subdir": "probe-rs-tools-aarch64-unknown-linux-gnu",
+          "binaries": ["probe-rs", "cargo-flash", "cargo-embed"]
+        },
+        "macos-x86_64": {
+          "url": "https://github.com/probe-rs/probe-rs/releases/download/v0.27.0/probe-rs-tools-x86_64-apple-darwin.tar.xz",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "tar.xz",
+          "extract_to_subdir": "probe-rs-tools-x86_64-apple-darwin",
+          "binaries": ["probe-rs", "cargo-flash", "cargo-embed"]
+        },
+        "macos-arm64": {
+          "url": "https://github.com/probe-rs/probe-rs/releases/download/v0.27.0/probe-rs-tools-aarch64-apple-darwin.tar.xz",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "tar.xz",
+          "extract_to_subdir": "probe-rs-tools-aarch64-apple-darwin",
+          "binaries": ["probe-rs", "cargo-flash", "cargo-embed"]
+        },
+        "windows-x86_64": {
+          "url": "https://github.com/probe-rs/probe-rs/releases/download/v0.27.0/probe-rs-tools-x86_64-pc-windows-msvc.zip",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "archive_kind": "zip",
+          "extract_to_subdir": "probe-rs-tools-x86_64-pc-windows-msvc",
+          "binaries": ["probe-rs.exe", "cargo-flash.exe", "cargo-embed.exe"]
+        }
+      }
+    }
+  ]
+}

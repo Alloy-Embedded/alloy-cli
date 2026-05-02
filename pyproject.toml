@@ -79,6 +79,7 @@ packages = ["src/alloy_cli"]
 "schema/alloy_toml_v1.json"        = "alloy_cli/schema/alloy_toml_v1.json"
 "schema/alloy_toml_v1_1.json"      = "alloy_cli/schema/alloy_toml_v1_1.json"
 "schema/family_toolchain_v1.json"  = "alloy_cli/schema/family_toolchain_v1.json"
+"schema/source_manifest_v1.json"   = "alloy_cli/schema/source_manifest_v1.json"
 "cmake/AlloyCli.cmake"             = "alloy_cli/cmake/AlloyCli.cmake"
 "data/families/arm-cortex-m.yml"   = "alloy_cli/data/families/arm-cortex-m.yml"
 "data/families/stm32f4.yml"        = "alloy_cli/data/families/stm32f4.yml"
@@ -86,11 +87,16 @@ packages = ["src/alloy_cli"]
 "data/families/rp2040.yml"         = "alloy_cli/data/families/rp2040.yml"
 "data/families/nrf52.yml"          = "alloy_cli/data/families/nrf52.yml"
 "data/families/esp32.yml"          = "alloy_cli/data/families/esp32.yml"
+"data/sources/xpack.json"          = "alloy_cli/data/sources/xpack.json"
+"data/sources/github.json"         = "alloy_cli/data/sources/github.json"
+"data/sources/probe-rs.json"       = "alloy_cli/data/sources/probe-rs.json"
+"data/sources/espressif.json"      = "alloy_cli/data/sources/espressif.json"
 
 [tool.hatch.build.targets.wheel.force-include]
 "schema/alloy_toml_v1.json"        = "src/alloy_cli/schema/alloy_toml_v1.json"
 "schema/alloy_toml_v1_1.json"      = "src/alloy_cli/schema/alloy_toml_v1_1.json"
 "schema/family_toolchain_v1.json"  = "src/alloy_cli/schema/family_toolchain_v1.json"
+"schema/source_manifest_v1.json"   = "src/alloy_cli/schema/source_manifest_v1.json"
 "cmake/AlloyCli.cmake"             = "src/alloy_cli/cmake/AlloyCli.cmake"
 "data/families/arm-cortex-m.yml"   = "src/alloy_cli/data/families/arm-cortex-m.yml"
 "data/families/stm32f4.yml"        = "src/alloy_cli/data/families/stm32f4.yml"
@@ -98,6 +104,10 @@ packages = ["src/alloy_cli"]
 "data/families/rp2040.yml"         = "src/alloy_cli/data/families/rp2040.yml"
 "data/families/nrf52.yml"          = "src/alloy_cli/data/families/nrf52.yml"
 "data/families/esp32.yml"          = "src/alloy_cli/data/families/esp32.yml"
+"data/sources/xpack.json"          = "src/alloy_cli/data/sources/xpack.json"
+"data/sources/github.json"         = "src/alloy_cli/data/sources/github.json"
+"data/sources/probe-rs.json"       = "src/alloy_cli/data/sources/probe-rs.json"
+"data/sources/espressif.json"      = "src/alloy_cli/data/sources/espressif.json"
 
 # `src/alloy_cli/integrations/opencode/` (templates, MCP recipes, system prompt)
 # ships automatically as package data via `packages = ["src/alloy_cli"]`.
