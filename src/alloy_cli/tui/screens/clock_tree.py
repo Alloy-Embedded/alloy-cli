@@ -2,19 +2,104 @@
 
 from __future__ import annotations
 
+import time
 from pathlib import Path
 from typing import ClassVar
 
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
-from textual.screen import Screen
-from textual.widgets import Footer, Header, Input, Static
+from textual.screen import ModalScreen, Screen
+from textual.widgets import Button, Footer, Header, Input, Static
 
+from alloy_cli.core import clocks as _clocks
+from alloy_cli.core.diagnostics import UnifiedDiff
 from alloy_cli.core.ir import DeviceIR
 from alloy_cli.core.project import ProjectConfig
 from alloy_cli.tui.registry import register_screen
 from alloy_cli.tui.widgets.clock_tree import ClockTreeWidget, compute_rates, violations
+from alloy_cli.tui.widgets.diff_widget import DiffModal
+
+# Sentinel cycled through when the user has unsaved overrides.
+_CUSTOM_LABEL = "(custom)"
+
+
+class _ProfileNameModal(ModalScreen[str | None]):
+    """Prompt for a profile name.
+
+    Returns the entered string on Save, ``None`` on Cancel.  A
+    blank name is treated as cancellation so the caller never has
+    to special-case empty input.
+    """
+
+    BINDINGS: ClassVar[list[Binding]] = [Binding("escape", "cancel", "Cancel")]
+
+    DEFAULT_CSS: ClassVar[str] = """
+    _ProfileNameModal {
+        align: center middle;
+    }
+    #profile-name-modal {
+        width: 60;
+        height: auto;
+        padding: 1 2;
+        border: tall $primary;
+        background: $surface;
+    }
+    #profile-name-actions {
+        height: 3;
+        align: right middle;
+    }
+    Button { margin: 0 1; }
+    """
+
+    def __init__(self, *, default: str = "", existing: tuple[str, ...] = ()) -> None:
+        super().__init__()
+        self._default = default
+        self._existing = set(existing)
+
+    def compose(self) -> ComposeResult:
+        with Vertical(id="profile-name-modal"):
+            yield Static("[bold]Save clock profile[/bold]")
+            yield Static("[dim]Letters / digits / underscores; must start with a letter.[/dim]")
+            yield Input(
+                value=self._default,
+                placeholder="profile name",
+                id="profile-name-input",
+            )
+            yield Static("", id="profile-name-error")
+            with Horizontal(id="profile-name-actions"):
+                yield Button("Save", id="save", variant="success")
+                yield Button("Cancel", id="cancel", variant="error")
+
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        self._submit(event.value)
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "save":
+            self._submit(self.query_one("#profile-name-input", Input).value)
+        elif event.button.id == "cancel":
+            self.dismiss(None)
+
+    def _submit(self, raw: str) -> None:
+        name = raw.strip()
+        if not name:
+            self._set_error("Name must not be empty.")
+            return
+        if name in self._existing:
+            self._set_error(f"Profile {name!r} already exists.")
+            return
+        try:
+            _clocks._validate_name(name)
+        except _clocks.InvalidProfileNameError as exc:
+            self._set_error(str(exc))
+            return
+        self.dismiss(name)
+
+    def _set_error(self, message: str) -> None:
+        self.query_one("#profile-name-error", Static).update(f"[red]{message}[/red]")
+
+    def action_cancel(self) -> None:
+        self.dismiss(None)
 
 
 class ClockTreeScreen(Screen[None]):
@@ -46,15 +131,24 @@ class ClockTreeScreen(Screen[None]):
         self._device_max_hz = device_max_hz
         self._project_dir = project_dir or Path.cwd()
         self._profile_index = 0
-        self._profiles = self._collect_profiles(config) if config is not None else ("default",)
+        self._profiles = self._collect_profiles(config)
 
     @staticmethod
-    def _collect_profiles(config: ProjectConfig) -> tuple[str, ...]:
-        names = list(config.clocks.get("profiles", []) or [])
+    def _collect_profiles(config: ProjectConfig | None) -> tuple[str, ...]:
+        if config is None:
+            return ("default", _CUSTOM_LABEL)
+        body = config.clocks.get("profiles") or {}
+        if isinstance(body, dict):
+            names = list(body.keys())
+        else:
+            names = []
         active = config.clocks.get("profile")
         if isinstance(active, str) and active not in names:
             names.append(active)
-        return tuple(names) or ("default",)
+        if not names:
+            names.append("default")
+        names.append(_CUSTOM_LABEL)
+        return tuple(names)
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=False)
@@ -132,11 +226,74 @@ class ClockTreeScreen(Screen[None]):
         )
 
     def action_save_profile(self) -> None:
-        self.notify(
-            "Saving custom profiles to alloy.toml lands together with the codegen "
-            "PLL algebra.  Today the override stays in-screen.",
-            severity="information",
+        if self._config is None:
+            self.notify(
+                "Saving profiles requires an open project.", severity="warning"
+            )
+            return
+        widget = self.query_one("#clock-widget", ClockTreeWidget)
+        overrides = dict(widget.overrides)
+        if not overrides:
+            self.notify(
+                "No overrides to save — type a NODE=RATE entry first.",
+                severity="warning",
+            )
+            return
+
+        existing = tuple((self._config.clocks.get("profiles") or {}).keys())
+        default_name = f"custom_{int(time.time())}"
+
+        def _on_name(name: str | None) -> None:
+            if name is None:
+                return
+            self._persist_profile(name, overrides)
+
+        self.app.push_screen(
+            _ProfileNameModal(default=default_name, existing=existing), _on_name
         )
+
+    def _persist_profile(self, name: str, overrides: dict[str, int]) -> None:
+        assert self._config is not None
+        body = _clocks.profile_from_rates(overrides)
+        try:
+            diff = _clocks.save_profile(self._config, name, body)
+        except _clocks.InvalidProfileNameError as exc:
+            self.notify(str(exc), severity="error")
+            return
+        self.app.push_screen(
+            DiffModal(diff, title=f"Save profile [bold]{name}[/bold]"),
+            lambda applied: self._on_save_diff_applied(name, diff, applied),
+        )
+
+    def _on_save_diff_applied(
+        self, name: str, diff: UnifiedDiff, applied: bool | None
+    ) -> None:
+        if not applied:
+            return
+        self._write_diff(diff)
+        # Refresh the in-screen profile rotation so `p` immediately
+        # reflects the new entry.
+        if self._config is not None:
+            from alloy_cli.core.project import read
+
+            try:
+                self._config = read(self._project_dir / "alloy.toml")
+            except Exception:
+                pass
+            self._profiles = self._collect_profiles(self._config)
+            self._profile_index = self._profiles.index(name) if name in self._profiles else 0
+            self.query_one("#clock-profile", Static).update(
+                f"profile: [magenta]{self.current_profile}[/magenta]"
+            )
+        self.notify(f"Saved profile {name!r}.", severity="information")
+
+    def _write_diff(self, diff: UnifiedDiff) -> None:
+        for patch in diff.patches:
+            if not patch.changed:
+                continue
+            target = self._project_dir / patch.path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(patch.after, encoding="utf-8")
 
 
 class _ClockTreePlaceholder(Screen[None]):

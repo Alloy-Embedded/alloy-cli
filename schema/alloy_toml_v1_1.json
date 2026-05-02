@@ -43,7 +43,27 @@
       "type": "object",
       "additionalProperties": true,
       "properties": {
-        "profile": {"type": "string"}
+        "profile": {"type": "string"},
+        "profiles": {
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[a-zA-Z][a-zA-Z0-9_]*$": {
+              "type": "object",
+              "required": ["source"],
+              "additionalProperties": true,
+              "properties": {
+                "source": {"type": "string"},
+                "pll_n": {"type": "integer", "minimum": 1},
+                "pll_r": {"type": "integer", "minimum": 1},
+                "sysclk_hz": {"type": "integer", "minimum": 1},
+                "hclk_div": {"type": "integer", "minimum": 1},
+                "apb1_div": {"type": "integer", "minimum": 1},
+                "apb2_div": {"type": "integer", "minimum": 1}
+              }
+            }
+          }
+        }
       }
     },
     "peripherals": {

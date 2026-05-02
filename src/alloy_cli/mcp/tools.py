@@ -692,10 +692,13 @@ def _tool_add_eth(
 
 
 def _tool_set_clock_profile(registry: ToolRegistry, *, profile: str) -> dict[str, Any]:
-    """Switch the project's active clock profile.
+    """Switch the project's active clock profile (legacy).
 
-    Today this updates ``alloy.toml [clocks].profile``; downstream
-    PLL algebra integration lands with the codegen runtime.
+    Lenient counterpart of ``activate_clock_profile``: writes
+    ``[clocks].profile`` without checking whether the name exists in
+    ``[clocks].profiles``.  Kept so existing 1.0.x flows keep working;
+    new code should prefer ``activate_clock_profile`` (which fails
+    fast on unknown names).
     """
     config = _read_project(registry.project_dir)
     new_clocks = dict(config.clocks)
@@ -728,6 +731,54 @@ def _tool_set_clock_profile(registry: ToolRegistry, *, profile: str) -> dict[str
         "diff_id": diff_id,
         "diff_text": diff.render(),
         "summary": {"clocks.profile": profile},
+    }
+
+
+def _tool_save_clock_profile(
+    registry: ToolRegistry, *, name: str, rates: Mapping[str, int]
+) -> dict[str, Any]:
+    """Persist the in-screen clock overrides as a named profile.
+
+    Preconditions: ``alloy.toml`` exists in the project dir.  Side
+    effects: caches a UnifiedDiff under ``diff_id`` (apply with
+    ``apply_diff``) — does not write the file directly.
+    """
+    from alloy_cli.core import clocks as _core_clocks
+
+    config = _read_project(registry.project_dir)
+    body = _core_clocks.profile_from_rates(rates)
+    try:
+        diff = _core_clocks.save_profile(config, name, body)
+    except _core_clocks.InvalidProfileNameError as exc:
+        raise ToolError(error_type="invalid-clock-profile-name", message=str(exc)) from exc
+    diff_id = registry.diff_cache.store(diff, {"clocks.profiles": name})
+    return {
+        "diff_id": diff_id,
+        "diff_text": diff.render(),
+        "summary": {"clocks.profiles": name, "rates": dict(rates)},
+    }
+
+
+def _tool_activate_clock_profile(registry: ToolRegistry, *, name: str) -> dict[str, Any]:
+    """Switch ``[clocks].profile`` to a profile that already exists.
+
+    Preconditions: ``alloy.toml`` declares a profile named ``name``
+    under ``[clocks].profiles``.  Side effects: caches a UnifiedDiff
+    under ``diff_id``.  Use ``set_clock_profile`` for the legacy
+    lenient variant that doesn't validate the reference.
+    """
+    from alloy_cli.core import clocks as _core_clocks
+
+    config = _read_project(registry.project_dir)
+    try:
+        diff = _core_clocks.activate_profile(config, name)
+    except _core_clocks.UnknownProfileError as exc:
+        raise ToolError(error_type="unknown-clock-profile", message=str(exc)) from exc
+    diff_id = registry.diff_cache.store(diff, {"clocks.profile": name})
+    return {
+        "diff_id": diff_id,
+        "diff_text": diff.render(),
+        "summary": {"clocks.profile": name},
     }
 
 
@@ -923,6 +974,8 @@ _PARAM_SCHEMA: dict[str, dict[str, Any]] = {
         "phy_address": "int?",
     },
     "set_clock_profile": {"profile": "string"},
+    "save_clock_profile": {"name": "string", "rates": "object<string,int>"},
+    "activate_clock_profile": {"name": "string"},
     "build": {"profile": "string"},
     "regenerate": {},
     "flash": {"elf": "string", "probe_kind": "string", "target": "string?"},
@@ -960,6 +1013,8 @@ def build_default_registry(
         "add_usb": _tool_add_usb,
         "add_eth": _tool_add_eth,
         "set_clock_profile": _tool_set_clock_profile,
+        "save_clock_profile": _tool_save_clock_profile,
+        "activate_clock_profile": _tool_activate_clock_profile,
         "build": _tool_build,
         "regenerate": _tool_regenerate,
         "flash": _tool_flash,

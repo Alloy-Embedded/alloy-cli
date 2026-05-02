@@ -147,6 +147,27 @@ def _check_schema_version(text_version: str) -> None:
         )
 
 
+def _check_clock_profile_reference(payload: dict[str, Any]) -> None:
+    """If [clocks].profile names a profile, the entry must exist.
+
+    Schema-side ``patternProperties`` validates names + bodies; the
+    cross-reference check is enforced here so the error message can
+    name the missing profile.
+    """
+    clocks = payload.get("clocks") or {}
+    if not isinstance(clocks, dict):
+        return
+    profile_name = clocks.get("profile")
+    profiles = clocks.get("profiles") or {}
+    if not isinstance(profile_name, str) or not isinstance(profiles, dict) or not profiles:
+        return
+    if profile_name not in profiles:
+        raise ProjectConfigError(
+            f"alloy.toml [clocks].profile = {profile_name!r} but "
+            f"[clocks].profiles has no entry by that name."
+        )
+
+
 def _decode_peripherals(raw: list[dict[str, Any]]) -> tuple[PeripheralEntry, ...]:
     items: list[PeripheralEntry] = []
     for entry in raw:
@@ -173,6 +194,8 @@ def parse(payload: dict[str, Any]) -> ProjectConfig:
             for err in errors
         )
         raise ProjectConfigError(f"alloy.toml failed schema validation:\n{details}")
+
+    _check_clock_profile_reference(payload)
 
     project_raw = payload.get("project", {})
     project = ProjectMeta(
@@ -251,15 +274,49 @@ def _toml_array(values: list[Any]) -> str:
 
 
 def emit_section(name: str, body: dict[str, Any]) -> list[str]:
+    """Render a top-level table.
+
+    Scalar / list / inline-table entries land directly under
+    ``[name]``.  When a value is itself a *dict-of-dicts* (e.g.
+    ``[clocks].profiles``), each entry is emitted as a nested
+    sub-table (``[name.key.subkey]``) so the file stays human-
+    readable instead of one giant inline-table line.
+    """
     if not body:
         return []
-    lines = [f"[{name}]"]
+
+    flat: list[tuple[str, Any]] = []
+    nested: list[tuple[str, dict[str, Any]]] = []
     for key, value in body.items():
-        if isinstance(value, list):
-            lines.append(f"{key} = {_toml_array(value)}")
+        if (
+            isinstance(value, dict)
+            and value
+            and all(isinstance(v, dict) for v in value.values())
+        ):
+            nested.append((key, value))
         else:
-            lines.append(f"{key} = {_toml_value(value)}")
-    lines.append("")
+            flat.append((key, value))
+
+    lines: list[str] = []
+    if flat:
+        lines.append(f"[{name}]")
+        for key, value in flat:
+            if isinstance(value, list):
+                lines.append(f"{key} = {_toml_array(value)}")
+            else:
+                lines.append(f"{key} = {_toml_value(value)}")
+        lines.append("")
+
+    for parent_key, table in nested:
+        for subkey, subvalue in table.items():
+            lines.append(f"[{name}.{parent_key}.{subkey}]")
+            for inner_key, inner_value in subvalue.items():
+                if isinstance(inner_value, list):
+                    lines.append(f"{inner_key} = {_toml_array(inner_value)}")
+                else:
+                    lines.append(f"{inner_key} = {_toml_value(inner_value)}")
+            lines.append("")
+
     return lines
 
 
