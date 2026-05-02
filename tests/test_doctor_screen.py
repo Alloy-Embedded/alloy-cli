@@ -158,8 +158,10 @@ def _stub_report(*checks: CheckResult) -> DiagnosticReport:
 
 
 def _stub_diagnose_factory(report: DiagnosticReport):
-    def _stub(*, project_dir: Path | None = None) -> DiagnosticReport:
-        del project_dir
+    def _stub(
+        *, project_dir: Path | None = None, family: str | None = None
+    ) -> DiagnosticReport:
+        del project_dir, family
         return report
 
     return _stub
@@ -274,8 +276,10 @@ async def test_doctor_screen_r_reruns_diagnose(tmp_path: Path) -> None:
         ]
     )
 
-    def _seq(*, project_dir: Path | None = None) -> DiagnosticReport:
-        del project_dir
+    def _seq(
+        *, project_dir: Path | None = None, family: str | None = None
+    ) -> DiagnosticReport:
+        del project_dir, family
         return next(reports)
 
     screen = DoctorScreen(project_dir=tmp_path, runner=FakeRunner(), diagnose_run=_seq)
@@ -330,8 +334,10 @@ def test_doctor_fix_runs_every_available_fixer(tmp_path: Path, monkeypatch) -> N
     )
     reports = iter([_stub_report(fixable), _stub_report(fixed)])
 
-    def _seq(*, project_dir: Path | None = None) -> DiagnosticReport:
-        del project_dir
+    def _seq(
+        *, project_dir: Path | None = None, family: str | None = None
+    ) -> DiagnosticReport:
+        del project_dir, family
         return next(reports)
 
     monkeypatch.setattr(_diagnose, "run", _seq)
@@ -372,8 +378,10 @@ def test_doctor_fix_exits_one_when_a_fixer_fails(tmp_path: Path, monkeypatch) ->
     # so the underlying state is unchanged.
     reports = iter([_stub_report(fixable), _stub_report(fixable)])
 
-    def _seq(*, project_dir: Path | None = None) -> DiagnosticReport:
-        del project_dir
+    def _seq(
+        *, project_dir: Path | None = None, family: str | None = None
+    ) -> DiagnosticReport:
+        del project_dir, family
         return next(reports)
 
     monkeypatch.setattr(_diagnose, "run", _seq)
@@ -389,8 +397,10 @@ def test_doctor_fix_exits_one_when_a_fixer_fails(tmp_path: Path, monkeypatch) ->
 def test_doctor_fix_emits_json_payload(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(_diagnose, "AUTO_FIXERS", {})
 
-    def _stub(*, project_dir: Path | None = None) -> DiagnosticReport:
-        del project_dir
+    def _stub(
+        *, project_dir: Path | None = None, family: str | None = None
+    ) -> DiagnosticReport:
+        del project_dir, family
         return _stub_report(
             CheckResult(name="cmake", ok=True, severity="info", message="cmake 3.28")
         )
