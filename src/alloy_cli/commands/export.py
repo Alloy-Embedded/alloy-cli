@@ -36,15 +36,28 @@ def _write_targets(project_dir: Path, files: dict[Path, str]) -> list[Path]:
     default=Path("."),
     show_default=True,
 )
-def export_command(kind: str, target: str | None, project_dir: Path) -> None:
+@click.option(
+    "--dry-run",
+    "dry_run",
+    is_flag=True,
+    default=False,
+    help="Print the generated content to stdout instead of writing files.",
+)
+def export_command(kind: str, target: str | None, project_dir: Path, dry_run: bool) -> None:
     project_dir = project_dir.resolve()
     config = read(project_dir / PROJECT_FILE)
     try:
         files = _export.emit(kind, config, target=target)
     except ValueError as exc:
         raise click.ClickException(str(exc)) from exc
-    written = _write_targets(project_dir, files)
+
     console = Console()
+    if dry_run:
+        for rel, content in files.items():
+            console.print(f"[bold cyan]# {rel}[/bold cyan]")
+            console.print(content, end="")
+        return
+    written = _write_targets(project_dir, files)
     for path in written:
         console.print(f"[green]+[/green] {path.relative_to(project_dir)}")
 

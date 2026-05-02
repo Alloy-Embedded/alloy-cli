@@ -229,7 +229,7 @@ def test_export_vscode_returns_three_files() -> None:
 def test_export_ci_github_default_target() -> None:
     config = _make_chip_config()
     files = _export.emit("ci", config)
-    assert Path(".github/workflows/build.yml") in files
+    assert Path(".github/workflows/firmware.yml") in files
 
 
 def test_export_ci_unknown_target_raises() -> None:

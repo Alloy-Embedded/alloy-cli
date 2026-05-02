@@ -5,7 +5,95 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from alloy_cli.core.errors import (
+    BoardNotFoundError,
+    DataRepoMissingError,
+    DeviceNotFoundError,
+)
 from alloy_cli.core.project import ProjectConfig
+
+# ---------------------------------------------------------------------------
+# Toolchain selection
+# ---------------------------------------------------------------------------
+
+
+def _core_from_device_name(device: str) -> str:
+    """Best-effort heuristic when an IR lookup isn't available.
+
+    The exhaustive list lives in alloy-devices-yml — this is just
+    the safety net so the workflow emitter always has *something*.
+    """
+    name = device.lower()
+    if "riscv" in name or name.startswith(("esp32-c", "esp32-h", "esp32-p", "ch32")):
+        return "riscv"
+    if name.startswith(("esp32-s", "esp32")):
+        # esp32 / esp32-s* are Xtensa.  Note the ordering: -c / -h /
+        # -p variants matched the RISC-V branch first.
+        return "xtensa"
+    return "cortex-m"  # ARM default — covers stm32, nrf, sam, rp2040.
+
+
+def _detect_core(config: ProjectConfig) -> str:
+    """Resolve the active core ID from the project config.
+
+    Preference order:
+    1. IR `identity.core` (most accurate).
+    2. Device-name prefix heuristic (works offline / on bulk
+       devices that haven't been admitted yet).
+    3. Empty string when neither chip nor board is set; the
+       caller treats that as "fall back to ARM".
+    """
+    from alloy_cli.core.ir import load_device
+
+    if config.chip is not None:
+        try:
+            ir = load_device(
+                vendor=config.chip.vendor,
+                family=config.chip.family,
+                device=config.chip.device,
+            )
+        except (DeviceNotFoundError, DataRepoMissingError):
+            return _core_from_device_name(config.chip.device)
+        return ir.identity.core or _core_from_device_name(config.chip.device)
+    if config.board is not None:
+        from alloy_cli.core import boards as _boards
+
+        try:
+            manifest = _boards.lookup(config.board.id)
+            ir = load_device(manifest.vendor, manifest.family, manifest.device)
+        except (BoardNotFoundError, DeviceNotFoundError, DataRepoMissingError):
+            return ""
+        return ir.identity.core or _core_from_device_name(manifest.device)
+    return ""
+
+
+def _toolchain_step(core: str) -> str:
+    """Return the YAML snippet that installs the right cross-compile toolchain."""
+    core = (core or "").lower()
+    if "riscv" in core or core.startswith("rv"):
+        # apt-get because there isn't a stable GH Action for the
+        # RISC-V toolchain; the package matrix Ubuntu ships covers
+        # the breadth we need (gcc-riscv64-unknown-elf).
+        return (
+            "      - name: Install RISC-V GCC\n"
+            "        run: |\n"
+            "          sudo apt-get update -qq\n"
+            "          sudo apt-get install -y --no-install-recommends gcc-riscv64-unknown-elf\n"
+        )
+    if "xtensa" in core or core.startswith("esp"):
+        return (
+            "      - name: Setup Xtensa toolchain (ESP-IDF)\n"
+            "        uses: espressif/install-esp-idf-action@v1\n"
+            "        with: { esp_idf_version: v5.1 }\n"
+        )
+    # Default: ARM.  carlosperate/arm-none-eabi-gcc-action is the
+    # canonical maintainer-blessed action for embedded ARM CI.
+    return (
+        "      - name: Setup arm-none-eabi-gcc\n"
+        "        uses: carlosperate/arm-none-eabi-gcc-action@v1\n"
+        "        with: { release: latest }\n"
+    )
+
 
 # ---------------------------------------------------------------------------
 # CI workflows
@@ -13,21 +101,64 @@ from alloy_cli.core.project import ProjectConfig
 
 
 def github_workflow(config: ProjectConfig) -> str:
+    """Emit a matrix-aware GitHub Actions workflow.
+
+    The workflow installs the right cross-compile toolchain
+    (arm-none-eabi-gcc / RISC-V / Xtensa), runs a debug + release
+    matrix, caches alloy-cli's pip dir per ``alloy.toml`` SHA, and
+    appends an ``alloy doctor --json`` step gated on
+    ``if: failure()`` so the captured log surfaces actionable
+    install hints when something goes sideways.
+    """
+    core = _detect_core(config)
+    toolchain_step = _toolchain_step(core)
+    profile_default = config.build.get("profile", "release")
     return (
-        "name: build\n"
+        "name: firmware\n"
         "on:\n"
         "  push:\n"
         "    branches: [main]\n"
         "  pull_request:\n"
+        "    branches: [main]\n"
         "jobs:\n"
         "  build:\n"
         "    runs-on: ubuntu-latest\n"
+        "    strategy:\n"
+        "      fail-fast: false\n"
+        "      matrix:\n"
+        "        profile: [debug, release]\n"
         "    steps:\n"
         "      - uses: actions/checkout@v4\n"
+        "        with:\n"
+        "          submodules: recursive\n"
+        "          fetch-depth: 0\n"
         "      - uses: actions/setup-python@v5\n"
-        "        with: { python-version: '3.12' }\n"
-        f"      - run: pip install alloy-cli\n"
-        f"      - run: alloy build --profile {config.build.get('profile', 'release')}\n"
+        "        with:\n"
+        "          python-version: '3.12'\n"
+        "          cache: pip\n"
+        f"{toolchain_step}"
+        "      - name: Cache alloy state\n"
+        "        uses: actions/cache@v4\n"
+        "        with:\n"
+        "          path: .alloy/cache\n"
+        "          key: alloy-${{ hashFiles('alloy.toml', '.alloy/version.lock') }}\n"
+        "      - name: Install alloy-cli\n"
+        "        run: pip install alloy-cli\n"
+        "      - name: Build (${{ matrix.profile }})\n"
+        f"        run: alloy build --profile ${{{{ matrix.profile }}}}\n"
+        "      - name: Upload firmware artifact\n"
+        "        if: success()\n"
+        "        uses: actions/upload-artifact@v4\n"
+        "        with:\n"
+        f"          name: firmware-${{{{ matrix.profile }}}}\n"
+        "          path: |\n"
+        "            .alloy/build/*.elf\n"
+        "            .alloy/build/*.map\n"
+        "          retention-days: 14\n"
+        "      - name: Diagnose on failure\n"
+        "        if: failure()\n"
+        "        run: alloy doctor --json\n"
+        f"# alloy.toml profile default: {profile_default}\n"
     )
 
 
@@ -175,7 +306,7 @@ def emit(kind: str, config: ProjectConfig, *, target: str | None = None) -> dict
     if kind == "ci":
         sub = (target or "github").lower()
         if sub == "github":
-            return {Path(".github/workflows/build.yml"): github_workflow(config)}
+            return {Path(".github/workflows/firmware.yml"): github_workflow(config)}
         if sub == "gitlab":
             return {Path(".gitlab-ci.yml"): gitlab_workflow(config)}
         if sub == "jenkins":
