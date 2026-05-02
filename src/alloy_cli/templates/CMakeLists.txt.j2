@@ -1,0 +1,23 @@
+cmake_minimum_required(VERSION 3.21)
+project({{ project_name }} LANGUAGES C CXX ASM)
+
+# Locate the alloy-cli helper.  When alloy-cli is installed from PyPI,
+# AlloyCli.cmake ships under <prefix>/share/alloy_cli/cmake/.  In a dev
+# checkout, the file lives at <repo>/cmake/AlloyCli.cmake.
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+if(NOT DEFINED ALLOY_CLI_CMAKE_DIR)
+    execute_process(
+        COMMAND "${Python3_EXECUTABLE}" -c
+                "import alloy_cli, pathlib; print(pathlib.Path(alloy_cli.__file__).parent / 'cmake')"
+        OUTPUT_VARIABLE ALLOY_CLI_CMAKE_DIR
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+endif()
+include("${ALLOY_CLI_CMAKE_DIR}/AlloyCli.cmake")
+
+alloy_cli_init()
+
+add_executable(${ALLOY_PROJECT_NAME}
+    src/main.cpp
+)
+alloy_cli_link(${ALLOY_PROJECT_NAME})

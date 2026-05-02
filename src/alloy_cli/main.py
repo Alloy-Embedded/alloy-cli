@@ -23,6 +23,7 @@ import click
 from rich.console import Console
 
 from alloy_cli import __version__
+from alloy_cli.commands.new import new_command
 
 _BANNER = """\
 alloy — terminal-native developer surface for the Alloy embedded platform.
@@ -53,6 +54,9 @@ def cli(ctx: click.Context) -> None:
         # then the standard Click usage line.
         Console().print(_BANNER)
         click.echo(ctx.get_usage())
+
+
+cli.add_command(new_command)
 
 
 def main(argv: list[str] | None = None) -> NoReturn:

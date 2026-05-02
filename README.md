@@ -51,7 +51,30 @@ See `docs/COMPARISON.md` for the side-by-side.
 ## Status
 
 Pre-zero.  The OpenSpec roadmap under `openspec/changes/` has the full
-plan — 15 proposals across 5 phases.  Implementation has not started.
+plan — 15 proposals across 5 phases.  Phase 1 is shipped (package
+skeleton, data-source integration, project format) and Phase 2 is
+underway (`alloy new` is implemented; build/flash/debug land next).
+
+## Quickstart
+
+```sh
+pip install alloy-cli  # (or `pip install -e .` from a dev checkout)
+
+# From a board id (run `alloy boards` once that command lands)
+alloy new firmware --board nucleo_g071rb
+
+cd firmware
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+cmake --build build
+
+# Or, for a chip-only project (no board defaults):
+alloy new raw --device st/stm32g0/stm32g071rb
+```
+
+The scaffolder generates `alloy.toml`, a `CMakeLists.txt` that calls
+`alloy_cli_init()`, a `src/main.cpp` that toggles the board's LED when
+one exists, plus `README.md`, `.gitignore`, and a `LICENSE` of your
+choice (`--license MIT|Apache-2.0|BSD-3`).
 
 ## Architecture (tl;dr)
 

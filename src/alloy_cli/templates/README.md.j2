@@ -1,0 +1,44 @@
+# {{ project_name }}
+
+Firmware project scaffolded by [`alloy-cli`]({{ alloy_cli_homepage }}).
+
+* Target: **{{ target_label }}**
+{% if has_debug_uart -%}
+* Debug UART: `{{ debug_uart_peripheral }}` on `{{ debug_uart_tx }}` / `{{ debug_uart_rx }}`
+{% endif -%}
+{% if has_led -%}
+* LED: `{{ led_pin }}` (toggled by the generated `main.cpp`)
+{% endif %}
+
+## Quickstart
+
+```sh
+# Configure + build (Debug)
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+cmake --build build
+
+# (Once add-cli-build-flash-debug ships)
+alloy build
+alloy flash
+```
+
+## Project layout
+
+```
+{{ project_name }}/
+├── alloy.toml         # the project manifest (read by every alloy command)
+├── CMakeLists.txt     # calls alloy_cli_init() to wire alloy.toml into CMake
+├── src/main.cpp       # your firmware entry point
+└── .alloy/            # generated artefacts (gitignored)
+```
+
+`alloy.toml` is the source of truth.  Edit it directly or use:
+
+```sh
+alloy add uart console --tx PA2 --rx PA3 --baud 115200
+alloy add gpio led --pin PD12 --mode output
+```
+
+## Licensing
+
+This project is licensed under **{{ license }}**.  See `LICENSE`.
