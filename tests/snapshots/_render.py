@@ -287,6 +287,23 @@ def seed_project(tmp_root: Path) -> ProjectConfig:
 # ---------------------------------------------------------------------------
 
 
+def stub_version(fixed: str = "0.0.0-snapshot") -> None:
+    """Pin ``alloy_cli.__version__`` to a deterministic string.
+
+    The Welcome / Dashboard screens embed the version in their
+    title.  Without this stub the snapshot diff fires on every
+    new commit (because hatch-vcs encodes ``HEAD`` into the dev
+    version).  The docs gallery script + the snapshot tests both
+    run through :func:`prepare_snapshot_environment`, so a single
+    rebind here is enough.
+    """
+    import alloy_cli
+    from alloy_cli.tui.screens import welcome as _welcome
+
+    alloy_cli.__version__ = fixed
+    _welcome.__version__ = fixed
+
+
 def stub_toolchains() -> None:
     """Pretend every toolchain is installed so the Dashboard pills all show."""
     from alloy_cli.core import toolchain
@@ -456,10 +473,23 @@ def build_app_for(name: str, *, project_root: Path) -> TuiApp:
 
 
 def prepare_snapshot_environment(tmp_root: Path) -> None:
-    """Seed the catalog + project + stub toolchains for snapshot rendering."""
+    """Seed the catalog + project + stub toolchains and version.
+
+    Every consumer (snapshot tests + docs gallery script) calls
+    this exactly once before rendering.  The combined effect:
+
+    - Curated boards exist on disk and the catalog cache is reset.
+    - The seeded ``alloy.toml`` carries deterministic peripherals
+      and a cached build summary.
+    - Toolchain detectors all return *present* so dashboard pills
+      render uniformly.
+    - ``alloy_cli.__version__`` is pinned so the Welcome banner
+      doesn't drift across commits.
+    """
     seed_board_catalog(tmp_root)
     seed_project(tmp_root)
     stub_toolchains()
+    stub_version()
 
 
 __all__ = [
@@ -472,4 +502,5 @@ __all__ = [
     "seed_board_catalog",
     "seed_project",
     "stub_toolchains",
+    "stub_version",
 ]

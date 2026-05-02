@@ -47,5 +47,11 @@ tests/_tmp/
 # Snapshot script scratch dir
 .tmp_screenshots/
 
+# Hatch-vcs writes this file at build time — should never be committed.
+src/alloy_cli/_version.py
+
+# Release smoke-test venv
+.release-smoke/
+
 # ccd-session worktrees (Claude Code dev)
 .claude/worktrees/

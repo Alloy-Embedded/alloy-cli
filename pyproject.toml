@@ -60,8 +60,10 @@ dev = [
 alloy = "alloy_cli.main:main"
 
 [project.urls]
-Homepage = "https://github.com/Alloy-Embedded"
+Homepage = "https://github.com/Alloy-Embedded/alloy-cli"
 Repository = "https://github.com/Alloy-Embedded/alloy-cli"
+Changelog = "https://github.com/Alloy-Embedded/alloy-cli/blob/main/CHANGELOG.md"
+Issues = "https://github.com/Alloy-Embedded/alloy-cli/issues"
 
 [tool.hatch.version]
 source = "vcs"
