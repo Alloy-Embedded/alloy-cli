@@ -14,6 +14,7 @@ from textual.widgets import Button, Footer, Header, Input, Static
 
 from alloy_cli.core import clocks as _clocks
 from alloy_cli.core.diagnostics import UnifiedDiff
+from alloy_cli.core.errors import ProjectConfigError
 from alloy_cli.core.ir import DeviceIR
 from alloy_cli.core.project import ProjectConfig
 from alloy_cli.tui.registry import register_screen
@@ -282,7 +283,7 @@ class ClockTreeScreen(Screen[None]):
 
             try:
                 self._config = read(self._project_dir / "alloy.toml")
-            except Exception:
+            except (ProjectConfigError, OSError):
                 pass
             self._profiles = self._collect_profiles(self._config)
             self._profile_index = self._profiles.index(name) if name in self._profiles else 0

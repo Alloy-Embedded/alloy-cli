@@ -14,7 +14,7 @@ def _try_import_mcp() -> tuple[Any, ...] | None:
     """Best-effort import of the official Anthropic MCP SDK."""
     try:
         import mcp  # type: ignore[import-not-found]
-    except Exception:
+    except (ImportError, ModuleNotFoundError):
         return None
     return (mcp,)
 

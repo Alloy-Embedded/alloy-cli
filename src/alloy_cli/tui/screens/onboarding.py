@@ -13,6 +13,7 @@ from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
 from textual.widgets import Button, Footer, Header, Input, Static
 
+from alloy_cli.core.errors import AlloyCliError
 from alloy_cli.core.scaffold import (
     PROJECT_NAME_RE,
     SUPPORTED_LICENSES,
@@ -209,7 +210,7 @@ class OnboardingScreen(Screen[_OnboardingState | None]):
             if value:
                 try:
                     validate_project_name(value)
-                except Exception as exc:
+                except ValueError as exc:
                     self.notify(str(exc), severity="error")
                     return
                 self._state.name = value
@@ -249,7 +250,7 @@ class OnboardingScreen(Screen[_OnboardingState | None]):
         )
         try:
             scaffold(request)
-        except Exception as exc:
+        except (AlloyCliError, OSError) as exc:
             self.notify(f"Scaffold failed: {exc}", severity="error")
             return False
         return True

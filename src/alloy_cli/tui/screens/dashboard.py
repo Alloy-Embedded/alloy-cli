@@ -14,6 +14,7 @@ from textual.screen import Screen
 from textual.widgets import Footer, Header, Static
 
 from alloy_cli.core import toolchain as _toolchain
+from alloy_cli.core.errors import ProjectConfigError
 from alloy_cli.core.project import PROJECT_FILE, AlloyDir, ProjectConfig, read
 from alloy_cli.core.toolchain import ToolchainStatus  # type re-export only
 from alloy_cli.tui.registry import register_screen
@@ -149,7 +150,7 @@ class DashboardScreen(Screen):
         self._error: str | None = None
         try:
             self._config = read(self._project_dir / PROJECT_FILE)
-        except Exception as exc:
+        except (ProjectConfigError, OSError) as exc:
             self._error = str(exc)
 
     # --- composition ---------------------------------------------------

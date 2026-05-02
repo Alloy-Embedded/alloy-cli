@@ -94,7 +94,7 @@ target-version = "py311"
 extend-exclude = ["src/alloy_cli/_version.py"]  # hatch-vcs generated
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "B", "UP", "N", "RUF"]
+select = ["E", "F", "I", "B", "UP", "N", "RUF", "BLE"]
 ignore = ["E501"]  # rely on formatter
 
 [tool.ruff.lint.per-file-ignores]

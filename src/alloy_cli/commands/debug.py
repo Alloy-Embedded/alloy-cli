@@ -12,7 +12,7 @@ from rich.console import Console
 
 from alloy_cli.core import debug as _debug
 from alloy_cli.core import flash as _flash
-from alloy_cli.core.errors import AlloyCliError
+from alloy_cli.core.errors import AlloyCliError, BoardNotFoundError
 from alloy_cli.core.project import PROJECT_FILE, AlloyDir, read
 
 
@@ -40,7 +40,7 @@ def _resolve_chip(project_dir: Path, target: str | None) -> str:
         try:
             manifest = _boards.lookup(config.board.id)
             return manifest.device
-        except Exception as exc:
+        except BoardNotFoundError as exc:
             raise click.ClickException(
                 f"Could not resolve chip from board {config.board.id!r}: {exc}.  "
                 "Pass --target <chip>."

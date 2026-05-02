@@ -22,6 +22,7 @@ from alloy_cli.core.diagnostic_parser import (
     editor_command,
     parse_line,
 )
+from alloy_cli.core.errors import AlloyCliError
 from alloy_cli.tui.registry import register_screen
 
 
@@ -114,7 +115,7 @@ class BuildLogScreen(Screen[BuildResult | None]):
                 on_line=on_line,
                 require_toolchain=False,
             )
-        except Exception as exc:
+        except (AlloyCliError, OSError) as exc:
             self._result = None
             self.query_one("#build-status", Static).update(f"[red]{exc}[/red]")
             return

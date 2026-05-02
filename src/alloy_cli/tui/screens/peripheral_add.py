@@ -14,6 +14,13 @@ from textual.widgets import Button, Footer, Header, Input, Static
 from alloy_cli.core import conflicts as _conflicts
 from alloy_cli.core import peripherals as _peripherals
 from alloy_cli.core.diagnostics import Diagnostic
+from alloy_cli.core.errors import (
+    AlloyCliError,
+    BoardNotFoundError,
+    DataRepoMissingError,
+    DeviceNotFoundError,
+    ProjectConfigError,
+)
 from alloy_cli.core.ir import DeviceIR, valid_pins_for
 from alloy_cli.core.peripherals import AddArgs, AddResult
 from alloy_cli.core.project import PROJECT_FILE, ProjectConfig, read
@@ -77,7 +84,7 @@ class PeripheralAddScreen(Screen[None]):
         if self._config is None:
             try:
                 self._config = read(self._project_dir / PROJECT_FILE)
-            except Exception as exc:
+            except (ProjectConfigError, OSError) as exc:
                 self._initial_load_error = f"Cannot read alloy.toml: {exc}"
         if self._device is None and self._config is not None:
             self._device = _resolve_device_for(self._config)
@@ -183,7 +190,7 @@ class PeripheralAddScreen(Screen[None]):
         args = AddArgs.of(name, **overrides)
         try:
             self._result = self._dispatch(self._config, self._device, args)
-        except Exception as exc:
+        except (AlloyCliError, KeyError, TypeError) as exc:
             self._set_status(f"add_{self._kind}: {exc}", is_error=True)
             self._toggle_apply(disabled=True)
             return
@@ -312,7 +319,7 @@ def _resolve_device_for(config: ProjectConfig) -> DeviceIR | None:
                 family=config.chip.family,
                 device=config.chip.device,
             )
-        except Exception:
+        except (DeviceNotFoundError, DataRepoMissingError):
             return None
     if config.board is not None:
         from alloy_cli.core import boards as _boards
@@ -320,7 +327,7 @@ def _resolve_device_for(config: ProjectConfig) -> DeviceIR | None:
         try:
             manifest = _boards.lookup(config.board.id)
             return _ir.load_device(manifest.vendor, manifest.family, manifest.device)
-        except Exception:
+        except (BoardNotFoundError, DeviceNotFoundError, DataRepoMissingError):
             return None
     return None
 

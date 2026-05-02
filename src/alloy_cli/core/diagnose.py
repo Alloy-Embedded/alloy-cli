@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Literal
 
 from alloy_cli.core import toolchain as _toolchain
+from alloy_cli.core.errors import ProjectConfigError
 from alloy_cli.core.process import CommandRunner
 from alloy_cli.core.process import runner as _default_runner
 from alloy_cli.core.project import PROJECT_FILE, read
@@ -98,7 +99,7 @@ def _project_check(project_dir: Path) -> CheckResult:
         )
     try:
         config = read(toml)
-    except Exception as exc:
+    except (ProjectConfigError, OSError) as exc:
         return CheckResult(
             name="alloy.toml",
             ok=False,

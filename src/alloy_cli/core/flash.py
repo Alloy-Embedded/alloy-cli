@@ -16,7 +16,7 @@ from pathlib import Path
 
 from alloy_cli.core import process
 from alloy_cli.core import toolchain as _toolchain
-from alloy_cli.core.errors import AlloyCliError, ToolchainMissingError
+from alloy_cli.core.errors import AlloyCliError, BoardNotFoundError, ToolchainMissingError
 from alloy_cli.core.events import record_event
 from alloy_cli.core.project import AlloyDir, ProjectConfig
 
@@ -190,7 +190,7 @@ def _target_for(config: ProjectConfig) -> str | None:
         try:
             manifest = _boards.lookup(config.board.id)
             return manifest.device
-        except Exception:
+        except BoardNotFoundError:
             return None
     return None
 

@@ -114,7 +114,7 @@ def discover_codegen_entry() -> CodegenEntry | None:
     """
     try:
         module = importlib.import_module("alloy_codegen")
-    except Exception:
+    except (ImportError, ModuleNotFoundError):
         logger.debug("alloy_codegen is not importable; codegen will be skipped.")
         return None
     callable_obj = getattr(module, "generate", None)
@@ -267,7 +267,13 @@ def _run_entry(
     written_before = _snapshot_files(out_dir)
     try:
         entry.callable(config, out_dir)
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 -- third-party callable, kind unknown
+        # ``entry.callable`` is alloy-codegen's user-facing entry
+        # point; we genuinely can't predict the exception type
+        # ahead of time (vendor adapters raise vendor-specific
+        # errors).  Log the suppressed exception so a maintainer
+        # can grep the codegen log later.
+        logger.warning("alloy-codegen entry callable raised: %s", exc)
         if on_line is not None:
             on_line(f"[codegen] failed: {exc}")
         return RegenResult(

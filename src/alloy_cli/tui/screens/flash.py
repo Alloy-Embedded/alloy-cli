@@ -14,6 +14,7 @@ from textual.widgets import Button, Footer, Header, ProgressBar, RichLog, Static
 
 from alloy_cli.core import flash as _flash
 from alloy_cli.core import process as _process
+from alloy_cli.core.errors import AlloyCliError
 from alloy_cli.core.flash import FlashResult, ProbeInfo
 from alloy_cli.core.project import ProjectConfig
 from alloy_cli.tui.registry import register_screen
@@ -152,7 +153,7 @@ class FlashScreen(Screen[FlashResult | None]):
                 on_line=on_line,
                 require_toolchain=False,
             )
-        except Exception as exc:
+        except (AlloyCliError, OSError) as exc:
             self._result = None
             status.update(f"[red]✗ {exc}[/red]\nRun `alloy doctor`.")
             return
@@ -177,7 +178,7 @@ class FlashScreen(Screen[FlashResult | None]):
             try:
                 self._runner.run(["probe-rs", "reset"])
                 self._reset_done = True
-            except Exception as exc:
+            except OSError as exc:
                 self.notify(f"Reset failed: {exc}", severity="error")
         self.dismiss(self._result)
 

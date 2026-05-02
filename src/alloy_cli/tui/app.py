@@ -97,7 +97,17 @@ class TuiApp(App[None]):
             return
         try:
             screen = entry.factory()
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 -- factory is user-registered; type unknown
+            # ``entry.factory`` is registered by arbitrary screen
+            # modules; we genuinely don't know what they raise on
+            # construction failure.  Surface the error inline + log
+            # so the user sees what happened without crashing the
+            # whole app.
+            from alloy_cli.core.log import get_logger
+
+            get_logger("alloy_cli.tui.app").exception(
+                "screen factory %r raised", entry.name
+            )
             self.notify(f"Could not open {entry.name}: {exc}", severity="error")
             return
         self.push_screen(screen)
