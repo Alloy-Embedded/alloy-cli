@@ -1,0 +1,47 @@
+# Espressif ESP32 (original Xtensa LX6 dual-core).
+#
+# Stands alone — does NOT extend the arm-cortex-m base because the
+# build/flash/debug toolchain is entirely separate (Xtensa cross-gcc,
+# UART bootloader instead of SWD, esptool instead of probe-rs).
+#
+# `xtensa-esp-elf-gcc` (and the matching gdb) ship through Espressif's
+# index server; Wave 2's `espressif` source adapter resolves the right
+# tarball for the host triple.
+
+schema_version: "1.0.0"
+family_id: esp32
+core: xtensa-lx6
+arch: xtensa
+# (no `extends:` — the Xtensa toolchain is incompatible with arm-cortex-m)
+
+required:
+  - tool: xtensa-esp-elf-gcc
+    version: ">=14"
+    source: espressif
+    capabilities: [build, debug]
+    bundles:
+      - xtensa-esp-elf-gdb
+      - xtensa-esp-elf-size
+      - xtensa-esp-elf-objcopy
+      - xtensa-esp-elf-objdump
+
+  - tool: cmake
+    version: ">=3.25"
+    source: xpack
+    capabilities: [build]
+
+  - tool: ninja
+    version: ">=1.11"
+    source: xpack
+    capabilities: [build]
+
+  - tool: esptool
+    version: ">=4.7"
+    source: github:espressif/esptool
+    capabilities: [flash, reset, recovery]
+
+recommended:
+  - tool: tio
+    version: ">=2.7"
+    source: github:tio/tio
+    capabilities: [serial]

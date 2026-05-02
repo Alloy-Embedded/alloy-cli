@@ -1,0 +1,32 @@
+# STMicroelectronics STM32F4 family.
+#
+# Cortex-M4 with FPU.  Inherits the Cortex-M base for arm-gcc + cmake +
+# ninja + probe-rs.  Adds STM32CubeProgrammer as a `recommended` vendor
+# tool — needed for option-byte programming, USB DFU bootloader, and
+# chip-level recovery when probe-rs cannot connect (e.g. RDP locked).
+
+schema_version: "1.0.0"
+family_id: stm32f4
+core: cortex-m4f
+arch: armv7em
+extends: arm-cortex-m
+
+recommended:
+  - tool: STM32CubeProgrammer
+    version: ">=2.16"
+    source: vendor
+    capabilities: [flash, recovery, register-debug]
+    install_docs:
+      linux: https://www.st.com/en/development-tools/stm32cubeprog.html
+      macos: https://www.st.com/en/development-tools/stm32cubeprog.html
+      windows: https://www.st.com/en/development-tools/stm32cubeprog.html
+
+  - tool: dfu-util
+    version: ">=0.11"
+    source: github:Stefan-Schmidt/dfu-util
+    capabilities: [flash]
+
+  - tool: tio
+    version: ">=2.7"
+    source: github:tio/tio
+    capabilities: [serial]

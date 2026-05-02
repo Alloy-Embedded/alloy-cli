@@ -1,0 +1,32 @@
+# STMicroelectronics STM32G0 family.
+#
+# Cortex-M0+, no FPU.  Inherits the Cortex-M base.  Same recovery story
+# as STM32F4: STM32CubeProgrammer is the canonical tool for option
+# bytes + USB DFU + RDP recovery, but it is EULA-gated so we only link
+# the install docs.
+
+schema_version: "1.0.0"
+family_id: stm32g0
+core: cortex-m0plus
+arch: armv6m
+extends: arm-cortex-m
+
+recommended:
+  - tool: STM32CubeProgrammer
+    version: ">=2.16"
+    source: vendor
+    capabilities: [flash, recovery, register-debug]
+    install_docs:
+      linux: https://www.st.com/en/development-tools/stm32cubeprog.html
+      macos: https://www.st.com/en/development-tools/stm32cubeprog.html
+      windows: https://www.st.com/en/development-tools/stm32cubeprog.html
+
+  - tool: dfu-util
+    version: ">=0.11"
+    source: github:Stefan-Schmidt/dfu-util
+    capabilities: [flash]
+
+  - tool: tio
+    version: ">=2.7"
+    source: github:tio/tio
+    capabilities: [serial]

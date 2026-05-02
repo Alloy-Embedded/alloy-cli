@@ -76,14 +76,28 @@ version-file = "src/alloy_cli/_version.py"
 packages = ["src/alloy_cli"]
 
 [tool.hatch.build.targets.wheel.shared-data]
-"schema/alloy_toml_v1.json"   = "alloy_cli/schema/alloy_toml_v1.json"
-"schema/alloy_toml_v1_1.json" = "alloy_cli/schema/alloy_toml_v1_1.json"
-"cmake/AlloyCli.cmake"        = "alloy_cli/cmake/AlloyCli.cmake"
+"schema/alloy_toml_v1.json"        = "alloy_cli/schema/alloy_toml_v1.json"
+"schema/alloy_toml_v1_1.json"      = "alloy_cli/schema/alloy_toml_v1_1.json"
+"schema/family_toolchain_v1.json"  = "alloy_cli/schema/family_toolchain_v1.json"
+"cmake/AlloyCli.cmake"             = "alloy_cli/cmake/AlloyCli.cmake"
+"data/families/arm-cortex-m.yml"   = "alloy_cli/data/families/arm-cortex-m.yml"
+"data/families/stm32f4.yml"        = "alloy_cli/data/families/stm32f4.yml"
+"data/families/stm32g0.yml"        = "alloy_cli/data/families/stm32g0.yml"
+"data/families/rp2040.yml"         = "alloy_cli/data/families/rp2040.yml"
+"data/families/nrf52.yml"          = "alloy_cli/data/families/nrf52.yml"
+"data/families/esp32.yml"          = "alloy_cli/data/families/esp32.yml"
 
 [tool.hatch.build.targets.wheel.force-include]
-"schema/alloy_toml_v1.json"   = "src/alloy_cli/schema/alloy_toml_v1.json"
-"schema/alloy_toml_v1_1.json" = "src/alloy_cli/schema/alloy_toml_v1_1.json"
-"cmake/AlloyCli.cmake"        = "src/alloy_cli/cmake/AlloyCli.cmake"
+"schema/alloy_toml_v1.json"        = "src/alloy_cli/schema/alloy_toml_v1.json"
+"schema/alloy_toml_v1_1.json"      = "src/alloy_cli/schema/alloy_toml_v1_1.json"
+"schema/family_toolchain_v1.json"  = "src/alloy_cli/schema/family_toolchain_v1.json"
+"cmake/AlloyCli.cmake"             = "src/alloy_cli/cmake/AlloyCli.cmake"
+"data/families/arm-cortex-m.yml"   = "src/alloy_cli/data/families/arm-cortex-m.yml"
+"data/families/stm32f4.yml"        = "src/alloy_cli/data/families/stm32f4.yml"
+"data/families/stm32g0.yml"        = "src/alloy_cli/data/families/stm32g0.yml"
+"data/families/rp2040.yml"         = "src/alloy_cli/data/families/rp2040.yml"
+"data/families/nrf52.yml"          = "src/alloy_cli/data/families/nrf52.yml"
+"data/families/esp32.yml"          = "src/alloy_cli/data/families/esp32.yml"
 
 # `src/alloy_cli/integrations/opencode/` (templates, MCP recipes, system prompt)
 # ships automatically as package data via `packages = ["src/alloy_cli"]`.

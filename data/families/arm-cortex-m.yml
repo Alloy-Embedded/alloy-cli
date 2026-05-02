@@ -1,0 +1,43 @@
+# Shared base manifest for ARM Cortex-M families.
+#
+# Other families (stm32f4, stm32g0, rp2040, nrf52, samd, kinetis, …)
+# `extends:` this file to inherit the common Cortex-M build/flash/debug
+# tooling without re-declaring it.  Override or extend per family by
+# adding tools to the same array under `required` / `recommended` /
+# `optional` — child entries with the same `tool` name win.
+#
+# `core` and `arch` here are placeholders so the schema validates;
+# every concrete child manifest re-declares them with the actual
+# Cortex-M variant (cortex-m0plus, cortex-m4f, cortex-m33, …).
+
+schema_version: "1.0.0"
+family_id: arm-cortex-m
+core: cortex-m
+arch: armv6m
+
+required:
+  - tool: arm-none-eabi-gcc
+    version: ">=13,<16"
+    source: xpack
+    capabilities: [build, debug]
+    bundles:
+      - arm-none-eabi-gdb
+      - arm-none-eabi-size
+      - arm-none-eabi-objcopy
+      - arm-none-eabi-objdump
+
+  - tool: cmake
+    version: ">=3.25"
+    source: xpack
+    capabilities: [build]
+
+  - tool: ninja
+    version: ">=1.11"
+    source: xpack
+    capabilities: [build]
+
+  - tool: probe-rs
+    version: ">=0.27"
+    source: probe-rs-installer
+    capabilities: [flash, debug, reset]
+    udev_required: true

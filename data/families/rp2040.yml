@@ -1,0 +1,27 @@
+# Raspberry Pi RP2040 (dual Cortex-M0+).
+#
+# Inherits the Cortex-M base.  Adds picotool as `required` because:
+#   * It is the canonical way to enter / exit BOOTSEL bootloader mode
+#     without physically pressing the button.
+#   * `picotool reboot -f -u` is the supported reset path for boards
+#     with no separate debug probe attached.
+# probe-rs (inherited) handles SWD-based flash/debug via Picoprobe or
+# any CMSIS-DAP adapter.
+
+schema_version: "1.0.0"
+family_id: rp2040
+core: cortex-m0plus
+arch: armv6m
+extends: arm-cortex-m
+
+required:
+  - tool: picotool
+    version: ">=2.0"
+    source: github:raspberrypi/picotool
+    capabilities: [flash, reset]
+
+recommended:
+  - tool: tio
+    version: ">=2.7"
+    source: github:tio/tio
+    capabilities: [serial]

@@ -1,0 +1,32 @@
+# Nordic Semiconductor nRF52 family.
+#
+# Cortex-M4F with FPU.  Inherits the Cortex-M base.  Adds Nordic's
+# "nRF Command Line Tools" (nrfjprog + mergehex) as `recommended`
+# because:
+#   * `nrfjprog --recover` is the only supported way to recover an
+#     nRF52 whose APPROTECT register has locked the debug interface
+#     (very common after enabling the soft device).
+#   * Some Nordic-specific protected memory regions need nrfjprog
+#     even when probe-rs handles regular flash/debug.
+# Tools are EULA-gated (Nordic license terms), so we link the docs.
+
+schema_version: "1.0.0"
+family_id: nrf52
+core: cortex-m4f
+arch: armv7em
+extends: arm-cortex-m
+
+recommended:
+  - tool: nrfjprog
+    version: ">=10.24"
+    source: vendor
+    capabilities: [recovery, flash]
+    install_docs:
+      linux: https://www.nordicsemi.com/Products/Development-tools/nrf-command-line-tools/download
+      macos: https://www.nordicsemi.com/Products/Development-tools/nrf-command-line-tools/download
+      windows: https://www.nordicsemi.com/Products/Development-tools/nrf-command-line-tools/download
+
+  - tool: tio
+    version: ">=2.7"
+    source: github:tio/tio
+    capabilities: [serial]

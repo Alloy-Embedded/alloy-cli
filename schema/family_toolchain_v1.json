@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://alloy-embedded.org/schema/family_toolchain_v1.json",
+  "title": "alloy-cli per-family toolchain manifest v1",
+  "description": "Declarative per-MCU-family host toolchain manifest consumed by alloy-cli's toolchain registry.  Lives under data/families/<family_id>.yml and ships inside the alloy-cli wheel.",
+  "type": "object",
+  "required": ["schema_version", "family_id", "core"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^1\\.[0-9]+\\.[0-9]+$",
+      "description": "SemVer of the manifest schema this file targets.  Major bump is breaking."
+    },
+    "family_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Kebab-case family identifier — must match the YAML filename stem."
+    },
+    "core": {
+      "type": "string",
+      "pattern": "^[a-z0-9._+-]+$",
+      "description": "CPU core string (e.g. cortex-m4f, cortex-m0plus, xtensa-lx6, riscv32imac)."
+    },
+    "arch": {
+      "type": "string",
+      "pattern": "^[a-z0-9._+-]+$",
+      "description": "Optional architecture identifier (e.g. armv7em, armv6m, xtensa, rv32imac)."
+    },
+    "extends": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Optional parent family id whose required/recommended/optional lists this manifest inherits."
+    },
+    "required": {
+      "type": "array",
+      "description": "Tools the family CANNOT build/flash/debug without.",
+      "items": { "$ref": "#/$defs/tool_requirement" }
+    },
+    "recommended": {
+      "type": "array",
+      "description": "Tools that materially improve UX (recovery, alt flashers, serial monitors).",
+      "items": { "$ref": "#/$defs/tool_requirement" }
+    },
+    "optional": {
+      "type": "array",
+      "description": "Power-user tools (alternative debuggers, register-aware SVD packs, etc.).",
+      "items": { "$ref": "#/$defs/tool_requirement" }
+    }
+  },
+  "$defs": {
+    "tool_requirement": {
+      "type": "object",
+      "required": ["tool", "version", "source", "capabilities"],
+      "additionalProperties": false,
+      "properties": {
+        "tool": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9._-]*$",
+          "description": "Canonical tool name (kebab-case for CLIs; PascalCase tolerated for vendor GUIs like STM32CubeProgrammer)."
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "description": "SemVer-style range (e.g. \">=14,<16\") evaluated by the installer in Wave 2."
+        },
+        "source": {
+          "type": "string",
+          "pattern": "^(xpack|github:[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9_.-]+|probe-rs-installer|espressif|vendor)$",
+          "description": "Where Wave 2 fetches the binary from.  `github:` owner+repo follow GitHub's username rules (alphanumeric + hyphens, case-preserving).  `vendor` means EULA-gated — never auto-installed; the manifest carries `install_docs` instead."
+        },
+        "capabilities": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "build",
+              "flash",
+              "debug",
+              "reset",
+              "recovery",
+              "serial",
+              "register-debug"
+            ]
+          },
+          "description": "Closed enum of capabilities this tool exposes; alloy maps verbs (`alloy flash`, `alloy reset`, …) to the first tool advertising the matching capability."
+        },
+        "bundles": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9._-]*$"
+          },
+          "description": "Extra binaries shipped alongside the primary tool (e.g. arm-none-eabi-gdb ships with arm-none-eabi-gcc).  The registry flattens these into the capability map so `tool_for_capability(\"debug\")` resolves to the gcc bundle when no standalone gdb is declared."
+        },
+        "udev_required": {
+          "type": "boolean",
+          "description": "Linux-only hint: the tool needs udev rules to access USB probes without sudo.  Wave 1 only renders an info row; Wave 2 emits the rules with explicit consent."
+        },
+        "install_docs": {
+          "type": "object",
+          "description": "Per-OS install documentation.  REQUIRED when `source = \"vendor\"`; ignored otherwise.",
+          "additionalProperties": false,
+          "properties": {
+            "linux":   { "type": "string", "format": "uri" },
+            "macos":   { "type": "string", "format": "uri" },
+            "windows": { "type": "string", "format": "uri" }
+          },
+          "minProperties": 1
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "source": { "const": "vendor" } }
+          },
+          "then": {
+            "required": ["install_docs"]
+          }
+        }
+      ]
+    }
+  }
+}
