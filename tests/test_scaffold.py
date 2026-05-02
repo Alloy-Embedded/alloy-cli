@@ -321,12 +321,17 @@ def test_scaffold_unknown_board_raises(tmp_path, board_catalog) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_scaffold_with_device_produces_chip_only_project(tmp_path, board_catalog) -> None:
-    """A device known to alloy-devices-yml yields a ``[chip]`` project
-    with no LED / debug-UART defaults."""
-    # Use a device that exists in the alloy-devices-yml submodule shipped
-    # in the dev checkout.  We probe the registry to pick something
-    # admitted.
+def test_scaffold_with_device_raises_pending_chip_only_followup(
+    tmp_path, board_catalog
+) -> None:
+    """Chip-only scaffolds are deliberately rejected after #wire-alloy-hal-fetchcontent.
+
+    The CMakeLists template flows ALLOY_BOARD down to alloy/'s
+    CMake to pick the linker / startup, so today only board-driven
+    projects can produce a buildable tree.  A follow-up
+    `wire-chip-only-projects` proposal will resolve the
+    chip → board metadata directly.
+    """
     from alloy_cli.core import ir
 
     registry = ir.discovered_device_registry()
@@ -341,18 +346,19 @@ def test_scaffold_with_device_produces_chip_only_project(tmp_path, board_catalog
         device=(vendor, family, device),
         init_git=False,
     )
-    result = scaffold(req)
-    assert result.config.chip is not None
-    assert result.config.chip.vendor == vendor
-    assert result.config.chip.family == family
-    assert result.config.chip.device == device
-    assert result.config.board is None
-    assert result.config.peripherals == ()
-    main = (result.destination / "src" / "main.cpp").read_text(encoding="utf-8")
-    assert "while (true)" in main
+    with pytest.raises(ScaffoldError) as exc:
+        scaffold(req)
+    assert "chip-only" in str(exc.value).lower()
+    assert "wire-chip-only-projects" in str(exc.value)
 
 
 def test_scaffold_unknown_device_raises(tmp_path, board_catalog) -> None:
+    """Both unknown-device + chip-only paths raise ScaffoldError today.
+
+    The chip-only refusal fires before the registry lookup, so any
+    device triple now flows through the same error.  Until the
+    chip-only follow-up lands this is the correct contract.
+    """
     req = ScaffoldRequest(
         name="raw",
         destination=tmp_path / "raw",

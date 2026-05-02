@@ -88,11 +88,30 @@ function(alloy_cli_init)
 endfunction()
 
 # ----------------------------------------------------------------------------
+# alloy_cli_resolve_alloy_tag(<output_var>)
+#
+# Resolves the GIT_TAG to pin the alloy HAL at.  Reads
+# ``ALLOY_PROJECT_ALLOY`` (set by alloy_cli_init from
+# alloy.toml [project].alloy) and falls back to ``main`` when no
+# version is pinned.
+# ----------------------------------------------------------------------------
+function(alloy_cli_resolve_alloy_tag output_var)
+  if(ALLOY_PROJECT_ALLOY)
+    set(${output_var} "${ALLOY_PROJECT_ALLOY}" PARENT_SCOPE)
+  else()
+    set(${output_var} "main" PARENT_SCOPE)
+  endif()
+endfunction()
+
+# ----------------------------------------------------------------------------
 # alloy_cli_link(<target>)
 #
 # Wires the generated ``.alloy/generated/include`` directory into ``target``'s
-# include path.  Linker flags / extra libraries are intentionally NOT touched
-# yet — alloy-codegen will land those in a later proposal.
+# include path.  When the alloy HAL is also available (FetchContent /
+# add_subdirectory / find_package), alloy_add_runtime_executable already
+# linked it; we just layer the codegen output on top.  Projects that consume
+# alloy-cli without alloy/ get a friendly warning instead of a hard error
+# so existing CI configurations keep working through this transition.
 # ----------------------------------------------------------------------------
 function(alloy_cli_link target)
   if(NOT TARGET ${target})
@@ -101,4 +120,11 @@ function(alloy_cli_link target)
   target_include_directories(${target} PRIVATE
     "${CMAKE_SOURCE_DIR}/.alloy/generated/include"
   )
+  if(NOT TARGET Alloy::hal AND NOT _ALLOY_CLI_LINK_NO_HAL_WARNED)
+    message(WARNING
+      "alloy_cli_link: target Alloy::hal is missing.  Did the project's "
+      "CMakeLists drop the FetchContent_Declare(alloy ...) block?  "
+      "alloy_cli_link will only add the codegen include path.")
+    set(_ALLOY_CLI_LINK_NO_HAL_WARNED TRUE PARENT_SCOPE)
+  endif()
 endfunction()

@@ -281,7 +281,15 @@ def scaffold(req: ScaffoldRequest) -> ScaffoldResult:
         config, board_context = _config_from_board(req.name, req.board_id)
     else:
         assert req.device is not None
-        config, board_context = _config_from_device(req.name, req.device)
+        # The current scaffold expects [board] so the generated
+        # CMakeLists can flow ALLOY_BOARD down to alloy/.  Chip-only
+        # support needs a follow-up proposal that picks the board's
+        # linker / startup metadata directly from a chip identifier.
+        raise ScaffoldError(
+            "alloy new --device (chip-only) is not yet wired through to "
+            "the alloy HAL.  Pass --board <id> instead, or wait for the "
+            "follow-up `wire-chip-only-projects` proposal."
+        )
 
     dest = req.destination.resolve()
     _validate_destination(dest, force=req.force)

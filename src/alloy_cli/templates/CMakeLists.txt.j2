@@ -1,14 +1,24 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.25)
 project({{ project_name }} LANGUAGES C CXX ASM)
 
 # Locate the alloy-cli helper.  When alloy-cli is installed from PyPI,
-# AlloyCli.cmake ships under <prefix>/share/alloy_cli/cmake/.  In a dev
-# checkout, the file lives at <repo>/cmake/AlloyCli.cmake.
+# AlloyCli.cmake ships next to the package; in a `pip install -e .`
+# dev checkout it sits at `<repo>/cmake/AlloyCli.cmake`.  We try the
+# wheel layout first and fall back to the dev path so contributors
+# don't need to symlink.
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 if(NOT DEFINED ALLOY_CLI_CMAKE_DIR)
     execute_process(
-        COMMAND "${Python3_EXECUTABLE}" -c
-                "import alloy_cli, pathlib; print(pathlib.Path(alloy_cli.__file__).parent / 'cmake')"
+        COMMAND "${Python3_EXECUTABLE}" -c "
+import alloy_cli, pathlib
+mod = pathlib.Path(alloy_cli.__file__).parent
+for cand in (mod / 'cmake', mod.parents[1] / 'cmake'):
+    if (cand / 'AlloyCli.cmake').exists():
+        print(cand)
+        break
+else:
+    raise SystemExit('AlloyCli.cmake not found next to alloy_cli')
+"
         OUTPUT_VARIABLE ALLOY_CLI_CMAKE_DIR
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
@@ -17,7 +27,57 @@ include("${ALLOY_CLI_CMAKE_DIR}/AlloyCli.cmake")
 
 alloy_cli_init()
 
-add_executable(${ALLOY_PROJECT_NAME}
-    src/main.cpp
+# ---------------------------------------------------------------------------
+# Pull the alloy C++ HAL via FetchContent.
+#
+# Pin the version through `alloy.toml [project].alloy` (alloy_cli_init
+# exposes that as ALLOY_PROJECT_ALLOY).  Override the source location
+# during HAL development with -DALLOY_SOURCE_OVERRIDE=<path>.
+# ---------------------------------------------------------------------------
+
+include(FetchContent)
+
+set(ALLOY_GIT_REPOSITORY
+    "https://github.com/Alloy-Embedded/alloy.git"
+    CACHE STRING
+    "Git URL for the alloy HAL.  Override for forks / mirrors.")
+
+alloy_cli_resolve_alloy_tag(ALLOY_GIT_TAG)
+
+if(ALLOY_SOURCE_OVERRIDE)
+    message(STATUS "alloy: using local checkout at ${ALLOY_SOURCE_OVERRIDE}")
+    FetchContent_Declare(alloy
+        SOURCE_DIR "${ALLOY_SOURCE_OVERRIDE}"
+    )
+else()
+    message(STATUS "alloy: fetching ${ALLOY_GIT_REPOSITORY}@${ALLOY_GIT_TAG}")
+    FetchContent_Declare(alloy
+        GIT_REPOSITORY "${ALLOY_GIT_REPOSITORY}"
+        GIT_TAG        "${ALLOY_GIT_TAG}"
+    )
+endif()
+
+# Pass our board id down so alloy auto-resolves platform / linker / startup.
+if(NOT ALLOY_BOARD_ID)
+    message(FATAL_ERROR
+        "alloy.toml has no [board] entry — chip-only projects need a "
+        "follow-up `wire-chip-only-projects` proposal before alloy "
+        "can pick the right linker script and startup code.")
+endif()
+set(ALLOY_BOARD "${ALLOY_BOARD_ID}" CACHE STRING "" FORCE)
+
+FetchContent_MakeAvailable(alloy)
+
+# ---------------------------------------------------------------------------
+# Build the firmware target.
+#
+# alloy_add_runtime_executable() is alloy's canonical helper — it links
+# Alloy::hal, points at the board's startup + linker script, and applies
+# the right C++23 flags.  alloy_cli_link() layers the codegen include
+# directory on top.
+# ---------------------------------------------------------------------------
+
+alloy_add_runtime_executable(${ALLOY_PROJECT_NAME}
+    SOURCES src/main.cpp
 )
 alloy_cli_link(${ALLOY_PROJECT_NAME})
