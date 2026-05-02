@@ -55,6 +55,22 @@ plan — 15 proposals across 5 phases.  Phase 1 is shipped (package
 skeleton, data-source integration, project format) and Phase 2 is
 underway (`alloy new` is implemented; build/flash/debug land next).
 
+## AI integration
+
+```sh
+# Recommended host: opencode.  See docs/AI_INTEGRATION.md.
+brew install sst/tap/opencode
+alloy chat
+# Or wire any other MCP client:
+alloy chat --client claude-code
+alloy chat --client cursor
+```
+
+`alloy chat` registers `alloy mcp serve` as the opencode MCP
+source and loads our system prompt.  Type `"blink the LED"` →
+the agent calls `list_boards → suggest_pins → add_gpio →
+apply_diff → build` end-to-end.
+
 ## Quickstart
 
 ```sh

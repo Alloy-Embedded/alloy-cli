@@ -80,6 +80,10 @@ packages = ["src/alloy_cli"]
 "schema/alloy_toml_v1.json" = "src/alloy_cli/schema/alloy_toml_v1.json"
 "cmake/AlloyCli.cmake"      = "src/alloy_cli/cmake/AlloyCli.cmake"
 
+# Templates + TUI themes + MCP integration recipes ship as package data.
+[tool.hatch.build.targets.wheel.shared-data."alloy_cli/integrations"]
+"src/alloy_cli/integrations/opencode" = "alloy_cli/integrations/opencode"
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"

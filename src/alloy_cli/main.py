@@ -26,6 +26,7 @@ from alloy_cli import __version__
 from alloy_cli.commands.add import add_command
 from alloy_cli.commands.boards import boards_command
 from alloy_cli.commands.build import build_command
+from alloy_cli.commands.chat import chat_command
 from alloy_cli.commands.debug import debug_command
 from alloy_cli.commands.devices import devices_command
 from alloy_cli.commands.flash import flash_command
@@ -73,6 +74,7 @@ cli.add_command(devices_command)
 cli.add_command(add_command)
 cli.add_command(ui_command)
 cli.add_command(mcp_command)
+cli.add_command(chat_command)
 
 
 def main(argv: list[str] | None = None) -> NoReturn:

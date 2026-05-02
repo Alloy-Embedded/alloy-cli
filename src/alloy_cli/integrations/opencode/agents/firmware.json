@@ -1,0 +1,9 @@
+{
+  "$schema": "https://schemas.opencode.ai/agent.json",
+  "name": "alloy-firmware",
+  "description": "Embedded firmware assistant for the Alloy ecosystem.  Uses the alloy MCP server to query device IR, propose IR-validated peripheral wiring, build, and flash.",
+  "system_prompt_path": "../system_prompt.md",
+  "tools": ["alloy"],
+  "default_provider": "anthropic",
+  "default_model": "claude-3-7-sonnet-latest"
+}

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://schemas.opencode.ai/mcp_servers.json",
+  "mcpServers": {
+    "alloy": {
+      "command": "alloy",
+      "args": ["mcp", "serve"],
+      "description": "alloy-cli — embedded firmware tools for the Alloy ecosystem.",
+      "env": {}
+    }
+  }
+}
