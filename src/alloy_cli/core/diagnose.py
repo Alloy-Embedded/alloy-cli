@@ -3,30 +3,47 @@
 Beyond the read-only check surface, this module also ships an
 :data:`AUTO_FIXERS` registry that the TUI ``DoctorScreen`` and the
 ``alloy doctor --fix`` CLI both consume.  Auto-fixers run via
-:class:`alloy_cli.core.process.CommandRunner` so tests share the
+:class:`alloy_cli_core_process_CommandRunner` so tests share the
 same subprocess seam as the rest of the codebase.
+
+Wave-1 of the toolchain-management track makes :func:`run`
+*family-aware*: when an MCU family resolves (from ``alloy.toml`` or
+the explicit ``family=...`` argument), the toolchain check list
+comes from ``data/families/<family_id>.yml`` instead of the legacy
+hard-coded set.  Projects without a resolvable family see the
+exact same generic checks the pre-Wave-1 doctor produced.
 """
 
 from __future__ import annotations
 
 import importlib.util
+import platform
+import shutil
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
+from typing import Literal, cast
 
 from alloy_cli.core import toolchain as _toolchain
-from alloy_cli.core.errors import ProjectConfigError
+from alloy_cli.core import toolchain_registry as _registry
+from alloy_cli.core.errors import BoardNotFoundError, FamilyToolchainError, ProjectConfigError
 from alloy_cli.core.process import CommandRunner
 from alloy_cli.core.process import runner as _default_runner
-from alloy_cli.core.project import PROJECT_FILE, read
+from alloy_cli.core.project import PROJECT_FILE, ProjectConfig, read
 
 CheckSeverity = Literal["info", "warning", "error"]
 
 
 @dataclass(frozen=True, slots=True)
 class CheckResult:
-    """One row in the diagnostic report."""
+    """One row in the diagnostic report.
+
+    ``source`` answers "where would this tool come from?" for
+    toolchain rows: ``"system"`` (already on PATH), ``"xpack"``,
+    ``"github:<owner>/<repo>"``, ``"probe-rs-installer"``,
+    ``"espressif"``, or ``"vendor (EULA — install manually)"``.
+    Non-toolchain rows leave it ``None``.
+    """
 
     name: str
     ok: bool
@@ -34,6 +51,7 @@ class CheckResult:
     message: str
     install_hint: str | None = None
     auto_fix: str | None = None
+    source: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,8 +65,12 @@ class DiagnosticReport:
         return any(c.severity == "error" and not c.ok for c in self.checks)
 
     def to_dict(self) -> dict[str, object]:
+        # ``schema_version`` bumped to 1.1 in Wave-1: every check
+        # entry now carries a `source` key (`null` for non-toolchain
+        # rows).  Older clients reading 1.0 keep working — every
+        # 1.0 field is preserved verbatim.
         return {
-            "schema_version": "1.0",
+            "schema_version": "1.1",
             "ok": not self.has_errors,
             "checks": [
                 {
@@ -58,6 +80,7 @@ class DiagnosticReport:
                     "message": c.message,
                     "install_hint": c.install_hint,
                     "auto_fix": c.auto_fix,
+                    "source": c.source,
                 }
                 for c in self.checks
             ],
@@ -65,11 +88,156 @@ class DiagnosticReport:
 
 
 # ---------------------------------------------------------------------------
-# Checks
+# Detector dispatcher (family-aware path)
+# ---------------------------------------------------------------------------
+
+
+_VENDOR_SOURCE_LABEL = "vendor (EULA — install manually)"
+
+
+# Tool name → name of the typed detector in ``core.toolchain``.
+# Stored as a string (not a function reference) so monkeypatching
+# ``_toolchain.detect_*`` in tests is picked up at call time
+# instead of being frozen at import.  Adding a detector here is
+# opt-in: only binaries whose name on PATH matches the manifest's
+# ``tool`` field get richer output (version string, OS-specific
+# install hint).  Everything else flows through
+# :func:`_check_generic_tool` which falls back to ``shutil.which``.
+_DEDICATED_DETECTORS: dict[str, str] = {
+    "arm-none-eabi-gcc": "detect_arm_gcc",
+    "cmake": "detect_cmake",
+    "ninja": "detect_ninja",
+    "probe-rs": "detect_probe_rs",
+    "openocd": "detect_openocd",
+}
+
+
+def _resolve_dedicated_detector(
+    tool_name: str,
+) -> Callable[[], _toolchain.ToolchainStatus] | None:
+    """Late-bind the detector so test monkeypatches on
+    ``_toolchain.detect_*`` are honoured.
+    """
+    attr = _DEDICATED_DETECTORS.get(tool_name)
+    if attr is None:
+        return None
+    fn = getattr(_toolchain, attr, None)
+    if not callable(fn):
+        return None
+    return cast(Callable[[], _toolchain.ToolchainStatus], fn)
+
+
+_OS_DOC_KEYS: dict[str, str] = {
+    "darwin": "macos",
+    "linux": "linux",
+    "windows": "windows",
+}
+
+
+def _per_os_install_doc(tool_req: _registry.ToolRequirement) -> str | None:
+    """Pick the install doc URL for the active OS, falling back to any URL."""
+    if not tool_req.install_docs:
+        return None
+    os_key = _OS_DOC_KEYS.get(platform.system().lower())
+    if os_key and os_key in tool_req.install_docs:
+        return tool_req.install_docs[os_key]
+    # Fallback: return any URL so the user has *something* clickable.
+    return next(iter(tool_req.install_docs.values()), None)
+
+
+def _from_dedicated_detector(
+    tool_req: _registry.ToolRequirement,
+    status: _toolchain.ToolchainStatus,
+) -> CheckResult:
+    """Project a typed :class:`ToolchainStatus` to a :class:`CheckResult`."""
+    if status.present:
+        version = f" {status.version}" if status.version else ""
+        return CheckResult(
+            name=tool_req.tool,
+            ok=True,
+            severity="info",
+            message=f"{tool_req.tool}{version} at {status.path}",
+            source="system",
+        )
+    return CheckResult(
+        name=tool_req.tool,
+        ok=False,
+        severity="error",
+        message=f"{tool_req.tool} is not on PATH.",
+        install_hint=status.install_hint,
+        source=tool_req.source,
+    )
+
+
+def _check_generic_tool(tool_req: _registry.ToolRequirement) -> CheckResult:
+    """Detect a tool that has no dedicated ``core.toolchain`` helper.
+
+    Vendor-source missing tools surface as ``severity="info"`` with the
+    OS-appropriate install doc URL — never as errors, since we cannot
+    redistribute EULA-gated binaries.
+    """
+    path = shutil.which(tool_req.tool)
+    if path is not None:
+        return CheckResult(
+            name=tool_req.tool,
+            ok=True,
+            severity="info",
+            message=f"{tool_req.tool} at {path}",
+            source="system",
+        )
+    if tool_req.is_vendor:
+        doc_url = _per_os_install_doc(tool_req)
+        return CheckResult(
+            name=tool_req.tool,
+            ok=False,
+            severity="info",
+            message=f"{tool_req.tool} not on PATH (EULA-gated; install manually).",
+            install_hint=doc_url,
+            source=_VENDOR_SOURCE_LABEL,
+        )
+    # Non-vendor missing tool: red row, but Wave-1 has no installer.
+    return CheckResult(
+        name=tool_req.tool,
+        ok=False,
+        severity="error",
+        message=f"{tool_req.tool} not on PATH.",
+        install_hint=f"Wave-2 will install via {tool_req.source}.",
+        source=tool_req.source,
+    )
+
+
+def _check_for_tool(tool_req: _registry.ToolRequirement) -> CheckResult:
+    detector = _resolve_dedicated_detector(tool_req.tool)
+    if detector is not None:
+        return _from_dedicated_detector(tool_req, detector())
+    return _check_generic_tool(tool_req)
+
+
+def _checks_from_manifest(manifest: _registry.FamilyManifest) -> list[CheckResult]:
+    """Run every required + recommended + optional tool through the dispatcher.
+
+    Order is preserved so the doctor table reads "required first,
+    then recommended, then optional" — easy to scan.
+    """
+    out: list[CheckResult] = []
+    for tier in (manifest.required, manifest.recommended, manifest.optional):
+        for tool_req in tier:
+            out.append(_check_for_tool(tool_req))
+    return out
+
+
+# ---------------------------------------------------------------------------
+# Legacy generic toolchain checks (no family resolved)
 # ---------------------------------------------------------------------------
 
 
 def _toolchain_check(name: str, status_fn: Callable[[], _toolchain.ToolchainStatus]) -> CheckResult:
+    """Pre-Wave-1 detector wrapper, used when no family resolves.
+
+    Output stays byte-identical to the legacy doctor except for the
+    new ``source`` field (always ``None`` — the legacy path doesn't
+    know the manifest's source vocabulary).
+    """
     status = status_fn()
     if status.present:
         return CheckResult(
@@ -85,6 +253,20 @@ def _toolchain_check(name: str, status_fn: Callable[[], _toolchain.ToolchainStat
         message=f"{name} is not on PATH.",
         install_hint=status.install_hint,
     )
+
+
+def _legacy_toolchain_checks() -> list[CheckResult]:
+    return [
+        _toolchain_check("cmake", _toolchain.detect_cmake),
+        _toolchain_check("ninja", _toolchain.detect_ninja),
+        _toolchain_check("arm-none-eabi-gcc", _toolchain.detect_arm_gcc),
+        _toolchain_check("probe-rs", _toolchain.detect_probe_rs),
+    ]
+
+
+# ---------------------------------------------------------------------------
+# Project / submodule / extras / accessibility checks
+# ---------------------------------------------------------------------------
 
 
 def _project_check(project_dir: Path) -> CheckResult:
@@ -182,20 +364,123 @@ def _accessibility_check() -> CheckResult:
     )
 
 
-def run(*, project_dir: Path | None = None) -> DiagnosticReport:
-    """Aggregate every diagnostic check into a single report."""
+# ---------------------------------------------------------------------------
+# Family resolution
+# ---------------------------------------------------------------------------
+
+
+def _resolve_family_for_run(
+    project_dir: Path, family_override: str | None
+) -> tuple[_registry.FamilyManifest | None, CheckResult | None]:
+    """Pick the manifest the toolchain section will be built from.
+
+    Returns ``(manifest, note)`` where ``note`` is an info/error
+    :class:`CheckResult` rendered alongside the toolchain rows when
+    family resolution failed in a way the user should hear about
+    (explicit override pointed at an unknown family; project's
+    chip/board resolved to a family with no shipped manifest).
+    """
+    if family_override is not None:
+        try:
+            return _registry.load_family(family_override), None
+        except FamilyToolchainError as exc:
+            return None, CheckResult(
+                name="toolchain-family",
+                ok=False,
+                severity="error",
+                message=f"--for {family_override!r}: {exc}",
+                install_hint=(
+                    f"Known families: {', '.join(_registry.known_families())}"
+                ),
+                source=None,
+            )
+
+    toml = project_dir / PROJECT_FILE
+    if not toml.exists():
+        return None, None
+    try:
+        config = read(toml)
+    except (ProjectConfigError, OSError):
+        return None, None
+
+    family_id = _project_family_id(config)
+    if family_id is None:
+        return None, None
+
+    try:
+        return _registry.load_family(family_id), None
+    except FamilyToolchainError:
+        return None, CheckResult(
+            name="toolchain-family",
+            ok=True,
+            severity="info",
+            message=(
+                f"No toolchain manifest for family {family_id!r}; "
+                "falling back to generic checks."
+            ),
+            install_hint=(
+                "Add a manifest under data/families/ — see "
+                "docs/TOOLCHAIN_REGISTRY.md."
+            ),
+            source=None,
+        )
+
+
+def _project_family_id(config: ProjectConfig) -> str | None:
+    """Mirror the precedence in ``toolchain_registry.resolve_for_project``."""
+    if config.chip is not None:
+        return config.chip.family or None
+    if config.board is not None:
+        from alloy_cli.core import boards as _boards
+
+        try:
+            return _boards.lookup(config.board.id).family or None
+        except BoardNotFoundError:
+            return None
+    return None
+
+
+# ---------------------------------------------------------------------------
+# Public entry point
+# ---------------------------------------------------------------------------
+
+
+def run(
+    *,
+    project_dir: Path | None = None,
+    family: str | None = None,
+) -> DiagnosticReport:
+    """Aggregate every diagnostic check into a single report.
+
+    ``family`` overrides the project's resolved family (useful before
+    scaffolding when no ``alloy.toml`` exists yet).  When neither
+    ``family`` nor a project-derived family resolves, the legacy
+    generic check list runs — output shape stays byte-compatible
+    with the pre-Wave-1 doctor except for the new ``source`` field
+    (``None`` everywhere on the legacy path).
+    """
     project_dir = (project_dir or Path.cwd()).resolve()
-    checks: list[CheckResult] = [
-        _toolchain_check("cmake", _toolchain.detect_cmake),
-        _toolchain_check("ninja", _toolchain.detect_ninja),
-        _toolchain_check("arm-none-eabi-gcc", _toolchain.detect_arm_gcc),
-        _toolchain_check("probe-rs", _toolchain.detect_probe_rs),
+
+    manifest, family_note = _resolve_family_for_run(project_dir, family)
+
+    if manifest is not None:
+        toolchain_checks = _checks_from_manifest(manifest)
+    else:
+        toolchain_checks = _legacy_toolchain_checks()
+
+    other_checks: list[CheckResult] = [
         _devices_submodule_check(),
         _mcp_extras_check(),
         _project_check(project_dir),
         _accessibility_check(),
     ]
-    return DiagnosticReport(checks=tuple(checks))
+
+    all_checks: list[CheckResult] = list(toolchain_checks)
+    if family_note is not None:
+        all_checks.append(family_note)
+    all_checks.extend(other_checks)
+
+    return DiagnosticReport(checks=tuple(all_checks))
 
 
 # ---------------------------------------------------------------------------

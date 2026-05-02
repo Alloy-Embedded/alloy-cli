@@ -73,7 +73,7 @@ def test_diagnose_to_dict_emits_schema_version(tmp_path) -> None:
     _seed_project(tmp_path)
     report = _diagnose.run(project_dir=tmp_path)
     payload = report.to_dict()
-    assert payload["schema_version"] == "1.0"
+    assert payload["schema_version"] == "1.1"
     assert isinstance(payload["checks"], list)
 
 
@@ -88,7 +88,7 @@ def test_alloy_doctor_json_emits_decoded_payload(tmp_path) -> None:
     runner = CliRunner()
     result = runner.invoke(cli, ["doctor", "--json", "--project-dir", str(tmp_path)])
     payload = json.loads(result.output)
-    assert payload["schema_version"] == "1.0"
+    assert payload["schema_version"] == "1.1"
 
 
 def test_alloy_doctor_exits_nonzero_when_check_fails(tmp_path, monkeypatch) -> None:
