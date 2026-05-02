@@ -45,6 +45,10 @@ def pytest_configure(config: pytest.Config) -> None:
         "markers",
         "snapshot: pin a TUI screen's SVG render against tests/snapshots/.",
     )
+    config.addinivalue_line(
+        "markers",
+        "perf: performance benchmark gated by ARCHITECTURE.md budgets.",
+    )
 
 
 @pytest.fixture

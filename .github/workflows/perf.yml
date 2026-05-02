@@ -1,0 +1,48 @@
+name: Perf
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    # Initially `continue-on-error: true` while we tune the
+    # benchmark thresholds against shared GitHub runner noise.
+    # Flip to false once the suite has settled (one release cycle).
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Setup Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dev deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run perf suite
+        env:
+          # Slight extra slack on shared runners; locals run at 1.0× by default.
+          ALLOY_PERF_TOLERANCE: "1.5"
+        run: pytest -m perf --benchmark-json=benchmark.json
+
+      - name: Upload benchmark JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-${{ github.sha }}
+          path: benchmark.json
+          retention-days: 30
