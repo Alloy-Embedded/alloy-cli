@@ -230,7 +230,7 @@ def _toml_array(values: list[Any]) -> str:
     return "[" + ", ".join(_toml_value(v) for v in values) + "]"
 
 
-def _emit_section(name: str, body: dict[str, Any]) -> list[str]:
+def emit_section(name: str, body: dict[str, Any]) -> list[str]:
     if not body:
         return []
     lines = [f"[{name}]"]
@@ -243,7 +243,7 @@ def _emit_section(name: str, body: dict[str, Any]) -> list[str]:
     return lines
 
 
-def _emit_peripheral(entry: PeripheralEntry) -> list[str]:
+def emit_peripheral(entry: PeripheralEntry) -> list[str]:
     lines = ["[[peripherals]]"]
     payload = dict(entry.payload)
     payload.setdefault("kind", entry.kind)
@@ -291,13 +291,13 @@ def write(path: Path, config: ProjectConfig) -> None:
             ]
         )
 
-    lines.extend(_emit_section("clocks", config.clocks))
+    lines.extend(emit_section("clocks", config.clocks))
 
     for peripheral in config.peripherals:
-        lines.extend(_emit_peripheral(peripheral))
+        lines.extend(emit_peripheral(peripheral))
 
-    lines.extend(_emit_section("build", config.build))
-    lines.extend(_emit_section("flash", config.flash))
+    lines.extend(emit_section("build", config.build))
+    lines.extend(emit_section("flash", config.flash))
 
     text = "\n".join(lines).rstrip() + "\n"
     path.parent.mkdir(parents=True, exist_ok=True)

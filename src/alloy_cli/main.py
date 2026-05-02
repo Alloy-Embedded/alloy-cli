@@ -23,6 +23,7 @@ import click
 from rich.console import Console
 
 from alloy_cli import __version__
+from alloy_cli.commands.add import add_command
 from alloy_cli.commands.boards import boards_command
 from alloy_cli.commands.build import build_command
 from alloy_cli.commands.debug import debug_command
@@ -67,6 +68,7 @@ cli.add_command(flash_command)
 cli.add_command(debug_command)
 cli.add_command(boards_command)
 cli.add_command(devices_command)
+cli.add_command(add_command)
 
 
 def main(argv: list[str] | None = None) -> NoReturn:
