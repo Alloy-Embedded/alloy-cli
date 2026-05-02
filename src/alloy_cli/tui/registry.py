@@ -49,6 +49,14 @@ class ScreenRegistry:
     def names(self) -> tuple[str, ...]:
         return tuple(sorted(self._entries))
 
+    def remove(self, name: str) -> ScreenEntry | None:
+        """Unregister + return the entry for ``name`` (or ``None``).
+
+        Useful for tests that register a fixture screen and want
+        to clean up afterwards without touching ``_entries``.
+        """
+        return self._entries.pop(name, None)
+
     def clear(self) -> None:
         self._entries.clear()
 

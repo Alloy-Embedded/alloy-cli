@@ -305,11 +305,9 @@ def stub_toolchains() -> None:
     toolchain.detect_cmake = lambda: _ok("cmake", "3.27.0")
     toolchain.detect_ninja = lambda: _ok("ninja", "1.11.1")
 
-    from alloy_cli.tui.screens import dashboard as _dashboard
-
-    _dashboard.detect_arm_gcc = toolchain.detect_arm_gcc
-    _dashboard.detect_cmake = toolchain.detect_cmake
-    _dashboard.detect_probe_rs = toolchain.detect_probe_rs
+    # The dashboard now goes through `_toolchain.detect_*` so a
+    # single rebind here propagates everywhere; no per-module
+    # monkey-patching needed.
 
 
 # ---------------------------------------------------------------------------

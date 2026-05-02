@@ -124,8 +124,8 @@ def test_register_screen_decorator_returns_factory_unchanged() -> None:
 
     assert global_registry.get("t-noop") is not None
     assert factory() is not None
-    # Cleanup so other tests aren't affected.
-    global_registry._entries.pop("t-noop", None)  # type: ignore[attr-defined]
+    # Cleanup so other tests aren't affected — public API now.
+    global_registry.remove("t-noop")
 
 
 # ---------------------------------------------------------------------------

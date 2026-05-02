@@ -25,8 +25,7 @@ from alloy_cli.core.project import (
     PROJECT_FILE,
     PeripheralEntry,
     ProjectConfig,
-    emit_peripheral,
-    emit_section,
+    dumps,
 )
 
 # ---------------------------------------------------------------------------
@@ -56,47 +55,6 @@ class PeripheralAddError(AlloyCliError):
 # ---------------------------------------------------------------------------
 
 
-def _emit_toml(config: ProjectConfig) -> str:
-    """Emit alloy.toml content from ``config`` without touching disk.
-
-    Mirrors :func:`project.write` byte-for-byte using the public
-    ``emit_section`` / ``emit_peripheral`` helpers.
-    """
-    lines: list[str] = [
-        f'schema_version = "{config.schema_version}"',
-        "",
-        "[project]",
-        f'name = "{config.project.name}"',
-    ]
-    if config.project.alloy_cli is not None:
-        lines.append(f'alloy-cli = "{config.project.alloy_cli}"')
-    if config.project.alloy is not None:
-        lines.append(f'alloy = "{config.project.alloy}"')
-    if config.project.alloy_codegen is not None:
-        lines.append(f'alloy-codegen = "{config.project.alloy_codegen}"')
-    if config.project.alloy_devices_yml is not None:
-        lines.append(f'alloy-devices-yml = "{config.project.alloy_devices_yml}"')
-    lines.append("")
-    if config.board is not None:
-        lines.extend(["[board]", f'id = "{config.board.id}"', ""])
-    if config.chip is not None:
-        lines.extend(
-            [
-                "[chip]",
-                f'vendor = "{config.chip.vendor}"',
-                f'family = "{config.chip.family}"',
-                f'device = "{config.chip.device}"',
-                "",
-            ]
-        )
-    lines.extend(emit_section("clocks", config.clocks))
-    for peripheral in config.peripherals:
-        lines.extend(emit_peripheral(peripheral))
-    lines.extend(emit_section("build", config.build))
-    lines.extend(emit_section("flash", config.flash))
-    return "\n".join(lines).rstrip() + "\n"
-
-
 def _replace_peripherals(config: ProjectConfig, *, append: PeripheralEntry) -> ProjectConfig:
     return ProjectConfig(
         schema_version=config.schema_version,
@@ -122,8 +80,8 @@ def _build_diff(
         patches=(
             FilePatch(
                 path=Path(PROJECT_FILE),
-                before=_emit_toml(config),
-                after=_emit_toml(next_config),
+                before=dumps(config),
+                after=dumps(next_config),
             ),
             FilePatch(
                 path=Path("src/peripherals.cpp"),

@@ -128,6 +128,26 @@ class ToolRegistry:
     def names(self) -> tuple[str, ...]:
         return tuple(sorted(self._tools))
 
+    def get_tool(self, name: str) -> Tool:
+        """Return the registered :class:`Tool` for ``name``.
+
+        Raises :class:`ToolError(error_type="tool-not-found")`
+        when the name isn't registered.  Tests + the stdio
+        server both reach for this — accessing ``_tools``
+        directly is no longer necessary.
+        """
+        if name not in self._tools:
+            raise ToolError(error_type="tool-not-found", message=f"Unknown tool {name!r}.")
+        return self._tools[name]
+
+    def pop_tool(self, name: str) -> Tool | None:
+        """Unregister + return the tool for ``name`` (or ``None``).
+
+        Useful for tests that need to swap a tool with a stub
+        and restore it afterwards.
+        """
+        return self._tools.pop(name, None)
+
     def call(self, tool_name: str, /, **kwargs: Any) -> Any:
         if tool_name not in self._tools:
             raise ToolError(error_type="tool-not-found", message=f"Unknown tool {tool_name!r}.")
@@ -715,14 +735,14 @@ def _tool_set_clock_profile(registry: ToolRegistry, *, profile: str) -> dict[str
         raw=config.raw,
     )
     from alloy_cli.core.diagnostics import FilePatch
-    from alloy_cli.core.peripherals import _emit_toml  # type: ignore[attr-defined]
+    from alloy_cli.core.project import dumps
 
     diff = UnifiedDiff(
         patches=(
             FilePatch(
                 path=Path(PROJECT_FILE),
-                before=_emit_toml(config),
-                after=_emit_toml(new_config),
+                before=dumps(config),
+                after=dumps(new_config),
             ),
         )
     )

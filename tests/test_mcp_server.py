@@ -152,7 +152,8 @@ def test_default_registry_lists_required_tools(tmp_path) -> None:
 def test_every_tool_has_non_empty_description(tmp_path) -> None:
     registry = build_default_registry(project_dir=tmp_path)
     for name in registry.names():
-        assert registry._tools[name].description.strip(), f"Tool {name} missing description"
+        tool = registry.get_tool(name)
+        assert tool.description.strip(), f"Tool {name} missing description"
 
 
 def test_register_rejects_empty_description(tmp_path) -> None:
@@ -232,7 +233,7 @@ def test_set_clock_profile_caches_diff(tmp_path) -> None:
 def test_default_registry_lists_regenerate_tool(tmp_path) -> None:
     registry = build_default_registry(project_dir=tmp_path)
     assert "regenerate" in registry.names()
-    descriptor = next(s for s in registry._tools.values() if s.name == "regenerate")
+    descriptor = registry.get_tool("regenerate")
     assert descriptor.description.strip()
 
 

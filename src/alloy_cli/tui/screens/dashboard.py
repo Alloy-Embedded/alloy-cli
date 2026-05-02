@@ -13,8 +13,9 @@ from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
 from textual.widgets import Footer, Header, Static
 
+from alloy_cli.core import toolchain as _toolchain
 from alloy_cli.core.project import PROJECT_FILE, AlloyDir, ProjectConfig, read
-from alloy_cli.core.toolchain import ToolchainStatus, detect_arm_gcc, detect_cmake, detect_probe_rs
+from alloy_cli.core.toolchain import ToolchainStatus  # type re-export only
 from alloy_cli.tui.registry import register_screen
 from alloy_cli.tui.theme import GLYPH_FAIL, GLYPH_OK
 
@@ -73,7 +74,13 @@ def _read_events(layout: AlloyDir, limit: int = 5) -> tuple[str, ...]:
 
 
 def _toolchain_summary() -> tuple[ToolchainStatus, ...]:
-    return (detect_arm_gcc(), detect_cmake(), detect_probe_rs())
+    # Module-relative lookups so tests can stub _toolchain.detect_*
+    # without rebinding the dashboard module's locals.
+    return (
+        _toolchain.detect_arm_gcc(),
+        _toolchain.detect_cmake(),
+        _toolchain.detect_probe_rs(),
+    )
 
 
 def _render_status_pill(status: ToolchainStatus) -> str:

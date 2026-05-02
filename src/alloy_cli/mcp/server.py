@@ -83,7 +83,7 @@ def _list_tools(registry: ToolRegistry) -> list[dict[str, Any]]:
             "description": tool.description,
             "parameters": dict(tool.parameter_schema),
         }
-        for name, tool in sorted((n, registry._tools[n]) for n in registry.names())
+        for name, tool in sorted((n, registry.get_tool(n)) for n in registry.names())
     ]
 
 

@@ -337,8 +337,13 @@ def emit_peripheral(entry: PeripheralEntry) -> list[str]:
     return lines
 
 
-def write(path: Path, config: ProjectConfig) -> None:
-    """Serialise a ``ProjectConfig`` to a deterministic TOML file."""
+def dumps(config: ProjectConfig) -> str:
+    """Render a ``ProjectConfig`` to a deterministic TOML string.
+
+    The single source of truth for ``alloy.toml`` emission.
+    Both :func:`write` and the ``add_*`` diff path in
+    :mod:`core.peripherals` consume this so they never drift.
+    """
     lines: list[str] = [
         f'schema_version = "{config.schema_version}"',
         "",
@@ -376,7 +381,17 @@ def write(path: Path, config: ProjectConfig) -> None:
     lines.extend(emit_section("build", config.build))
     lines.extend(emit_section("flash", config.flash))
 
-    text = "\n".join(lines).rstrip() + "\n"
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def write(path: Path, config: ProjectConfig) -> None:
+    """Serialise a ``ProjectConfig`` to a deterministic TOML file.
+
+    Thin wrapper over :func:`dumps`; kept as a separate entry
+    point so callers don't have to bring :mod:`pathlib` in just
+    to write a file.
+    """
+    text = dumps(config)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
 
@@ -422,6 +437,7 @@ __all__ = [
     "PeripheralEntry",
     "ProjectConfig",
     "ProjectMeta",
+    "dumps",
     "parse",
     "read",
     "write",

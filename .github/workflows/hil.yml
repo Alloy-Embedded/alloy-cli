@@ -1,0 +1,66 @@
+name: HIL
+
+# Hardware-in-the-loop CI: scaffold + build a real firmware on a
+# self-hosted runner that has the embedded toolchain installed.
+# Failure here blocks releases (release.yml waits on this job).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [labeled]
+
+permissions:
+  contents: read
+
+jobs:
+  scaffold-and-build:
+    # Only run on PRs that opt in via the `hil` label, plus every push to main.
+    if: ${{ github.event_name == 'push' || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'hil')) }}
+    runs-on: [self-hosted, hil]
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        board:
+          - nucleo_g071rb
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
+      - name: Verify toolchain
+        run: |
+          arm-none-eabi-gcc --version
+          cmake --version
+          ninja --version
+          probe-rs --version
+
+      - name: Sync dev environment
+        run: uv sync --extra dev
+
+      - name: Scaffold firmware fixture
+        run: |
+          uv run alloy new firmware-${{ matrix.board }} \
+            --board ${{ matrix.board }} \
+            --no-install --no-git
+        working-directory: ${{ runner.temp }}
+
+      - name: Build firmware fixture
+        # The build doesn't flash hardware — it only verifies that
+        # the cross-compile pipeline produces an ELF.  Tighter
+        # hardware tests land in a follow-up proposal.
+        run: uv run alloy build --profile debug
+        working-directory: ${{ runner.temp }}/firmware-${{ matrix.board }}
+
+      - name: Assert ELF exists
+        run: |
+          test -f .alloy/build/firmware-${{ matrix.board }}.elf \
+            || (echo "::error::missing ELF after build" && ls -R .alloy/build && exit 1)
+        working-directory: ${{ runner.temp }}/firmware-${{ matrix.board }}

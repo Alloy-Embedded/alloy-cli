@@ -226,16 +226,15 @@ def _diff(config: ProjectConfig, new_clocks: dict[str, Any]) -> UnifiedDiff:
         flash=config.flash,
         raw=config.raw,
     )
-    # Imported lazily — peripherals is a heavier module and we don't
-    # want clocks ↔ peripherals to be a hard top-level cycle.
-    from alloy_cli.core.peripherals import _emit_toml
+    # ``core.project.dumps`` is the single canonical TOML emitter.
+    from alloy_cli.core.project import dumps as _dumps
 
     return UnifiedDiff(
         patches=(
             FilePatch(
                 path=Path(PROJECT_FILE),
-                before=_emit_toml(config),
-                after=_emit_toml(new_config),
+                before=_dumps(config),
+                after=_dumps(new_config),
             ),
         )
     )
