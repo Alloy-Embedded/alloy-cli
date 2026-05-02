@@ -1,0 +1,264 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://alloy-embedded.org/schema/alloy_toml_v1_1.json",
+  "title": "alloy.toml v1.1",
+  "description": "Project manifest schema for alloy-cli projects (additive over v1.0).",
+  "type": "object",
+  "required": ["schema_version", "project"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^1\\.[0-9]+\\.[0-9]+$"
+    },
+    "project": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string", "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$"},
+        "alloy-cli": {"type": "string"},
+        "alloy": {"type": "string"},
+        "alloy-codegen": {"type": "string"},
+        "alloy-devices-yml": {"type": "string"}
+      }
+    },
+    "board": {
+      "type": "object",
+      "required": ["id"],
+      "additionalProperties": false,
+      "properties": {"id": {"type": "string"}}
+    },
+    "chip": {
+      "type": "object",
+      "required": ["vendor", "family", "device"],
+      "additionalProperties": false,
+      "properties": {
+        "vendor": {"type": "string"},
+        "family": {"type": "string"},
+        "device": {"type": "string"}
+      }
+    },
+    "clocks": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "profile": {"type": "string"}
+      }
+    },
+    "peripherals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "name"],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "uart", "gpio", "spi", "i2c", "timer", "pwm", "adc",
+              "dac", "can", "dma", "rtc", "watchdog", "qspi",
+              "sdmmc", "usb", "eth"
+            ]
+          },
+          "name": {"type": "string"}
+        },
+        "allOf": [
+          {
+            "if": {"properties": {"kind": {"const": "uart"}}},
+            "then": {
+              "required": ["peripheral", "tx", "rx"],
+              "properties": {
+                "peripheral": {"type": "string"},
+                "tx": {"type": "string"},
+                "rx": {"type": "string"},
+                "baud": {"type": "integer", "minimum": 1},
+                "data_bits": {"type": "integer", "enum": [7, 8, 9]},
+                "stop_bits": {"type": "string", "enum": ["1", "0.5", "1.5", "2"]},
+                "parity": {"type": "string", "enum": ["none", "even", "odd"]},
+                "dma": {"type": "boolean"},
+                "tx_dma": {"type": "string"},
+                "rx_dma": {"type": "string"}
+              }
+            }
+          },
+          {
+            "if": {"properties": {"kind": {"const": "gpio"}}},
+            "then": {
+              "required": ["pin", "mode"],
+              "properties": {
+                "pin": {"type": "string"},
+                "mode": {"type": "string", "enum": ["input", "output", "od", "analog", "alternate"]},
+                "pull": {"type": "string", "enum": ["none", "up", "down"]},
+                "speed": {"type": "string", "enum": ["low", "medium", "high", "very_high"]},
+                "label": {"type": "string"},
+                "initial": {"type": "integer", "enum": [0, 1]}
+              }
+            }
+          },
+          {
+            "if": {"properties": {"kind": {"const": "spi"}}},
+            "then": {
+              "required": ["peripheral", "sck", "miso", "mosi"],
+              "properties": {
+                "peripheral": {"type": "string"},
+                "sck": {"type": "string"},
+                "miso": {"type": "string"},
+                "mosi": {"type": "string"},
+                "cs": {"type": "string"},
+                "cs_software": {"type": "boolean"},
+                "mode": {"type": "integer", "enum": [0, 1, 2, 3]},
+                "frame": {"type": "integer", "enum": [8, 16]},
+                "dma": {"type": "boolean"},
+                "tx_dma": {"type": "string"},
+                "rx_dma": {"type": "string"},
+                "prescaler": {"type": "integer"}
+              }
+            }
+          },
+          {
+            "if": {"properties": {"kind": {"const": "i2c"}}},
+            "then": {
+              "required": ["peripheral", "sda", "scl"],
+              "properties": {
+                "peripheral": {"type": "string"},
+                "sda": {"type": "string"},
+                "scl": {"type": "string"},
+                "speed": {"type": "string", "enum": ["standard", "fast", "fast-plus"]},
+                "addressing": {"type": "integer", "enum": [7, 10]},
+                "dma": {"type": "boolean"},
+                "tx_dma": {"type": "string"},
+                "rx_dma": {"type": "string"}
+              }
+            }
+          },
+          {
+            "if": {"properties": {"kind": {"const": "timer"}}},
+            "then": {
+              "required": ["peripheral", "period_ns"],
+              "properties": {
+                "peripheral": {"type": "string"},
+                "period_ns": {"type": "integer", "minimum": 1},
+                "divider": {"type": "integer", "minimum": 1},
+                "mode": {"type": "string", "enum": ["one_shot", "continuous", "encoder"]},
+                "interrupt": {"type": "boolean"}
+              }
+            }
+          },
+          {
+            "if": {"properties": {"kind": {"const": "pwm"}}},
+            "then": {
+              "required": ["peripheral", "channel", "pin"],
+              "properties": {
+                "peripheral": {"type": "string"},
+                "channel": {"type": "integer", "minimum": 1, "maximum": 8},
+                "pin": {"type": "string"},
+                "frequency_hz": {"type": "integer", "minimum": 1},
+                "duty_cycle": {"type": "number", "minimum": 0, "maximum": 1},
+                "polarity": {"type": "string", "enum": ["high", "low"]}
+              }
+            }
+          },
+          {
+            "if": {"properties": {"kind": {"const": "adc"}}},
+            "then": {
+              "required": ["peripheral", "channels"],
+              "properties": {
+                "peripheral": {"type": "string"},
+                "channels": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "required": ["channel", "pin"],
+                    "properties": {
+                      "channel": {"type": "integer", "minimum": 0},
+                      "pin": {"type": "string"}
+                    }
+                  }
+                },
+                "resolution": {"type": "integer", "enum": [8, 10, 12, 14, 16]},
+                "sample_time_cycles": {"type": "integer", "minimum": 1},
+                "dma": {"type": "boolean"}
+              }
+            }
+          },
+          {
+            "if": {"properties": {"kind": {"const": "dac"}}},
+            "then": {
+              "required": ["peripheral", "channel", "pin"],
+              "properties": {
+                "peripheral": {"type": "string"},
+                "channel": {"type": "integer", "minimum": 1, "maximum": 4},
+                "pin": {"type": "string"},
+                "output_buffer": {"type": "boolean"},
+                "trigger": {"type": "string"}
+              }
+            }
+          },
+          {
+            "if": {"properties": {"kind": {"const": "can"}}},
+            "then": {
+              "required": ["peripheral", "tx", "rx"],
+              "properties": {
+                "peripheral": {"type": "string"},
+                "tx": {"type": "string"},
+                "rx": {"type": "string"},
+                "bitrate": {"type": "integer", "minimum": 1},
+                "sample_point": {"type": "number", "minimum": 0, "maximum": 1},
+                "fd": {"type": "boolean"}
+              }
+            }
+          },
+          {
+            "if": {"properties": {"kind": {"const": "usb"}}},
+            "then": {
+              "required": ["peripheral", "mode"],
+              "properties": {
+                "peripheral": {"type": "string"},
+                "mode": {"type": "string", "enum": ["device", "host", "otg"]},
+                "vbus_sense": {"type": "boolean"},
+                "speed": {"type": "string", "enum": ["full", "high"]}
+              }
+            }
+          },
+          {
+            "if": {"properties": {"kind": {"const": "eth"}}},
+            "then": {
+              "required": ["peripheral", "interface"],
+              "properties": {
+                "peripheral": {"type": "string"},
+                "interface": {"type": "string", "enum": ["mii", "rmii"]},
+                "phy_address": {"type": "integer", "minimum": 0, "maximum": 31},
+                "tx_pins": {"type": "array", "items": {"type": "string"}},
+                "rx_pins": {"type": "array", "items": {"type": "string"}},
+                "mdc": {"type": "string"},
+                "mdio": {"type": "string"}
+              }
+            }
+          }
+        ]
+      }
+    },
+    "build": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "profile": {"type": "string", "enum": ["debug", "release", "relwithdebinfo"]},
+        "optimization": {"type": "string", "enum": ["size", "speed", "debug"]},
+        "lto": {"type": "boolean"}
+      }
+    },
+    "flash": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "probe": {"type": "string"},
+        "openocd_config": {"type": "string"}
+      }
+    }
+  },
+  "oneOf": [
+    {"required": ["board"]},
+    {"required": ["chip"]}
+  ]
+}

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable
+from dataclasses import dataclass
 
 from alloy_cli.core import conflicts as _conflicts
 from alloy_cli.core.ir import (
@@ -21,6 +22,19 @@ from alloy_cli.core.ir import (
     peripherals_with_class,
 )
 from alloy_cli.core.project import PeripheralEntry
+
+
+@dataclass(frozen=True, slots=True)
+class DmaPair:
+    """One TX / RX DMA-channel allocation for a peripheral."""
+
+    tx: str | None
+    rx: str | None
+
+    @property
+    def both_assigned(self) -> bool:
+        return self.tx is not None and self.rx is not None
+
 
 _INSTANCE_TRAILING_NUMBER = re.compile(r"(\d+)$")
 
@@ -109,6 +123,44 @@ def suggest_dma(
     return None
 
 
+def suggest_dma_pair(
+    ir: DeviceIR,
+    *,
+    peripheral: str,
+    existing: Iterable[PeripheralEntry],
+) -> DmaPair:
+    """Pick free DMA channels for a peripheral's TX + RX sides.
+
+    Honours channels already claimed in ``existing``.  Picks the
+    TX channel first, then the RX channel from the remaining
+    routes, so the two never alias.
+    """
+    cached = list(existing)
+    in_use = set(_conflicts.existing_dma_claims(cached).keys())
+
+    def _pick(direction: str, exclude: set[str]) -> str | None:
+        routes = dma_routes(ir, peripheral=peripheral, direction=direction) or dma_routes(
+            ir, peripheral=peripheral, direction="common"
+        )
+        sorted_routes = sorted(routes, key=lambda r: (r.controller, r.request_value or 0))
+        for route in sorted_routes:
+            chan = (
+                f"{route.controller}#{route.request_value}"
+                if route.request_value is not None
+                else route.controller
+            )
+            if chan not in exclude:
+                return chan
+        return None
+
+    used_after_tx = set(in_use)
+    tx = _pick("TX", used_after_tx)
+    if tx is not None:
+        used_after_tx.add(tx)
+    rx = _pick("RX", used_after_tx)
+    return DmaPair(tx=tx, rx=rx)
+
+
 def candidate_pins(
     ir: DeviceIR, *, peripheral: str, signal: str
 ) -> tuple[ConnectionCandidateView, ...]:
@@ -117,8 +169,10 @@ def candidate_pins(
 
 
 __all__ = [
+    "DmaPair",
     "candidate_pins",
     "suggest_dma",
+    "suggest_dma_pair",
     "suggest_peripheral",
     "suggest_pin",
     "suggest_pin_set",

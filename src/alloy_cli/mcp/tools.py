@@ -379,6 +379,13 @@ _KIND_DISPATCH = {
     "gpio": _peripherals.add_gpio,
     "spi": _peripherals.add_spi,
     "i2c": _peripherals.add_i2c,
+    "timer": _peripherals.add_timer,
+    "pwm": _peripherals.add_pwm,
+    "adc": _peripherals.add_adc,
+    "dac": _peripherals.add_dac,
+    "can": _peripherals.add_can,
+    "usb": _peripherals.add_usb,
+    "eth": _peripherals.add_eth,
 }
 
 
@@ -526,6 +533,161 @@ def _tool_add_i2c(
             payload[key] = value
     return _store_and_summarise(
         registry, _preview(registry, kind="i2c", name=name, payload=payload)
+    )
+
+
+def _tool_add_timer(
+    registry: ToolRegistry,
+    *,
+    name: str,
+    period_ns: int,
+    peripheral: str | None = None,
+    divider: int | None = None,
+    mode: str | None = None,
+) -> dict[str, Any]:
+    """Preview adding a timer peripheral.
+
+    Preconditions: ``period_ns`` is required and must be positive.
+    """
+    payload: dict[str, Any] = {"period_ns": period_ns}
+    if peripheral:
+        payload["peripheral"] = peripheral
+    if divider is not None:
+        payload["divider"] = divider
+    if mode is not None:
+        payload["mode"] = mode
+    return _store_and_summarise(
+        registry, _preview(registry, kind="timer", name=name, payload=payload)
+    )
+
+
+def _tool_add_pwm(
+    registry: ToolRegistry,
+    *,
+    name: str,
+    channel: int,
+    pin: str,
+    peripheral: str | None = None,
+    frequency_hz: int | None = None,
+    duty_cycle: float | None = None,
+) -> dict[str, Any]:
+    """Preview adding a PWM channel; pin is validated against the IR."""
+    payload: dict[str, Any] = {"channel": channel, "pin": pin}
+    if peripheral:
+        payload["peripheral"] = peripheral
+    if frequency_hz is not None:
+        payload["frequency_hz"] = frequency_hz
+    if duty_cycle is not None:
+        payload["duty_cycle"] = duty_cycle
+    return _store_and_summarise(
+        registry, _preview(registry, kind="pwm", name=name, payload=payload)
+    )
+
+
+def _tool_add_adc(
+    registry: ToolRegistry,
+    *,
+    name: str,
+    channels: list[dict[str, Any]],
+    peripheral: str | None = None,
+    resolution: int | None = None,
+    dma: bool | None = None,
+) -> dict[str, Any]:
+    """Preview adding an ADC peripheral; channels are validated per-pin."""
+    payload: dict[str, Any] = {"channels": channels}
+    if peripheral:
+        payload["peripheral"] = peripheral
+    if resolution is not None:
+        payload["resolution"] = resolution
+    if dma is not None:
+        payload["dma"] = dma
+    return _store_and_summarise(
+        registry, _preview(registry, kind="adc", name=name, payload=payload)
+    )
+
+
+def _tool_add_dac(
+    registry: ToolRegistry,
+    *,
+    name: str,
+    channel: int,
+    pin: str,
+    peripheral: str | None = None,
+    output_buffer: bool | None = None,
+) -> dict[str, Any]:
+    """Preview adding a DAC channel."""
+    payload: dict[str, Any] = {"channel": channel, "pin": pin}
+    if peripheral:
+        payload["peripheral"] = peripheral
+    if output_buffer is not None:
+        payload["output_buffer"] = output_buffer
+    return _store_and_summarise(
+        registry, _preview(registry, kind="dac", name=name, payload=payload)
+    )
+
+
+def _tool_add_can(
+    registry: ToolRegistry,
+    *,
+    name: str,
+    peripheral: str | None = None,
+    tx: str | None = None,
+    rx: str | None = None,
+    bitrate: int | None = None,
+    fd: bool | None = None,
+) -> dict[str, Any]:
+    """Preview adding a CAN bus peripheral."""
+    payload: dict[str, Any] = {}
+    if peripheral:
+        payload["peripheral"] = peripheral
+    if tx:
+        payload["tx"] = tx
+    if rx:
+        payload["rx"] = rx
+    if bitrate is not None:
+        payload["bitrate"] = bitrate
+    if fd is not None:
+        payload["fd"] = fd
+    return _store_and_summarise(
+        registry, _preview(registry, kind="can", name=name, payload=payload)
+    )
+
+
+def _tool_add_usb(
+    registry: ToolRegistry,
+    *,
+    name: str,
+    mode: str,
+    peripheral: str | None = None,
+    speed: str | None = None,
+) -> dict[str, Any]:
+    """Preview adding a USB peripheral.  Mode must be one of: device, host, otg."""
+    payload: dict[str, Any] = {"mode": mode}
+    if peripheral:
+        payload["peripheral"] = peripheral
+    if speed:
+        payload["speed"] = speed
+    return _store_and_summarise(
+        registry, _preview(registry, kind="usb", name=name, payload=payload)
+    )
+
+
+def _tool_add_eth(
+    registry: ToolRegistry,
+    *,
+    name: str,
+    interface: str,
+    peripheral: str | None = None,
+    phy_address: int | None = None,
+) -> dict[str, Any]:
+    """Preview adding an Ethernet peripheral.  Interface is one of: mii, rmii."""
+    payload: dict[str, Any] = {"interface": interface}
+    if peripheral:
+        payload["peripheral"] = peripheral
+    if phy_address is not None:
+        payload["phy_address"] = phy_address
+    return _store_and_summarise(
+        registry, _preview(registry, kind="eth", name=name, payload=payload)
     )
 
 
@@ -711,6 +873,55 @@ _PARAM_SCHEMA: dict[str, dict[str, Any]] = {
         "sda": "string?",
         "scl": "string?",
     },
+    "add_timer": {
+        "name": "string",
+        "period_ns": "int",
+        "peripheral": "string?",
+        "divider": "int?",
+        "mode": "string?",
+    },
+    "add_pwm": {
+        "name": "string",
+        "channel": "int",
+        "pin": "string",
+        "peripheral": "string?",
+        "frequency_hz": "int?",
+        "duty_cycle": "number?",
+    },
+    "add_adc": {
+        "name": "string",
+        "channels": "array<object>",
+        "peripheral": "string?",
+        "resolution": "int?",
+        "dma": "bool?",
+    },
+    "add_dac": {
+        "name": "string",
+        "channel": "int",
+        "pin": "string",
+        "peripheral": "string?",
+        "output_buffer": "bool?",
+    },
+    "add_can": {
+        "name": "string",
+        "peripheral": "string?",
+        "tx": "string?",
+        "rx": "string?",
+        "bitrate": "int?",
+        "fd": "bool?",
+    },
+    "add_usb": {
+        "name": "string",
+        "mode": "string",
+        "peripheral": "string?",
+        "speed": "string?",
+    },
+    "add_eth": {
+        "name": "string",
+        "interface": "string",
+        "peripheral": "string?",
+        "phy_address": "int?",
+    },
     "set_clock_profile": {"profile": "string"},
     "build": {"profile": "string"},
     "regenerate": {},
@@ -741,6 +952,13 @@ def build_default_registry(
         "add_gpio": _tool_add_gpio,
         "add_spi": _tool_add_spi,
         "add_i2c": _tool_add_i2c,
+        "add_timer": _tool_add_timer,
+        "add_pwm": _tool_add_pwm,
+        "add_adc": _tool_add_adc,
+        "add_dac": _tool_add_dac,
+        "add_can": _tool_add_can,
+        "add_usb": _tool_add_usb,
+        "add_eth": _tool_add_eth,
         "set_clock_profile": _tool_set_clock_profile,
         "build": _tool_build,
         "regenerate": _tool_regenerate,

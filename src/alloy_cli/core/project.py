@@ -20,7 +20,10 @@ from jsonschema import Draft202012Validator
 from alloy_cli.core.errors import ProjectConfigError, ProjectConfigVersionError
 
 PROJECT_FILE = "alloy.toml"
-SCHEMA_VERSION = "1.0.0"
+# Bump to 1.1.0 — additive over 1.0.x: typed sub-schemas for timer / pwm /
+# adc / dac / can / usb / eth.  Old projects continue to load through the
+# same validator (the new sub-schemas only fire when their `kind` matches).
+SCHEMA_VERSION = "1.1.0"
 
 
 # ---------------------------------------------------------------------------
@@ -83,26 +86,35 @@ class ProjectConfig:
 # ---------------------------------------------------------------------------
 
 
+_SCHEMA_FILES: tuple[str, ...] = ("alloy_toml_v1_1.json", "alloy_toml_v1.json")
+
+
 def _load_schema() -> dict[str, Any]:
-    """Load ``schema/alloy_toml_v1.json`` from the repo or installed package."""
-    # Repo-local path first (development): schema/alloy_toml_v1.json
+    """Load the latest ``alloy.toml`` JSON Schema bundled with alloy-cli.
+
+    The v1.1 schema is additive over v1.0; we always validate against
+    v1.1 when the file is shipped, falling back to v1.0 only on
+    older installations that haven't picked up the bump yet.
+    """
     repo_root = Path(__file__).resolve().parents[3]
-    repo_schema = repo_root / "schema" / "alloy_toml_v1.json"
-    if repo_schema.exists():
-        return json.loads(repo_schema.read_text(encoding="utf-8"))
+    for filename in _SCHEMA_FILES:
+        repo_schema = repo_root / "schema" / filename
+        if repo_schema.exists():
+            return json.loads(repo_schema.read_text(encoding="utf-8"))
     # Fallback: try to locate via installed package data.
-    try:
-        with (
-            resources.files("alloy_cli")
-            .joinpath("schema/alloy_toml_v1.json")
-            .open("r", encoding="utf-8") as fp
-        ):
-            return json.load(fp)
-    except (FileNotFoundError, ModuleNotFoundError) as exc:
-        raise ProjectConfigError(
-            "alloy.toml schema file not found.  "
-            "Reinstall alloy-cli or check the development checkout."
-        ) from exc
+    for filename in _SCHEMA_FILES:
+        try:
+            with (
+                resources.files("alloy_cli")
+                .joinpath(f"schema/{filename}")
+                .open("r", encoding="utf-8") as fp
+            ):
+                return json.load(fp)
+        except (FileNotFoundError, ModuleNotFoundError):
+            continue
+    raise ProjectConfigError(
+        "alloy.toml schema file not found.  Reinstall alloy-cli or check the development checkout."
+    )
 
 
 _VALIDATOR: Draft202012Validator | None = None
@@ -212,7 +224,12 @@ def read(path: Path) -> ProjectConfig:
 
 
 def _toml_value(value: Any) -> str:
-    """Render a Python value as a TOML scalar (no compound types)."""
+    """Render a Python value as a TOML value.
+
+    Supports scalars (bool / int / float / str) and inline tables
+    (dicts of scalars) so v1.1 payloads like ADC channel objects can
+    round-trip through ``write``.
+    """
     if isinstance(value, bool):
         return "true" if value else "false"
     if isinstance(value, int):
@@ -223,6 +240,9 @@ def _toml_value(value: Any) -> str:
         # naive quoting; alloy.toml rarely contains backslashes
         escaped = value.replace("\\", "\\\\").replace('"', '\\"')
         return f'"{escaped}"'
+    if isinstance(value, dict):
+        body = ", ".join(f"{key} = {_toml_value(value[key])}" for key in sorted(value))
+        return "{ " + body + " }"
     raise TypeError(f"Cannot render {type(value).__name__} as TOML scalar")
 
 

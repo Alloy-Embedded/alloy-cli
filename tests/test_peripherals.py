@@ -269,15 +269,14 @@ def test_add_i2c_picks_default_pins() -> None:
 
 
 def test_add_generic_writes_kind_and_name() -> None:
+    """Generic add still works for kinds without a typed wrapper (rtc/qspi/...)."""
     config = _empty_config()
     ir = _make_ir()
-    result = add_generic(
-        config, ir, "timer", AddArgs.of("tim2", instance="TIM2", period_ns=1_000_000)
-    )
+    result = add_generic(config, ir, "rtc", AddArgs.of("rtc0", source="LSI"))
     assert not result.has_errors
     assert result.proposed is not None
-    assert result.proposed.kind == "timer"
-    assert result.proposed.payload["instance"] == "TIM2"
+    assert result.proposed.kind == "rtc"
+    assert result.proposed.payload["source"] == "LSI"
 
 
 # ---------------------------------------------------------------------------

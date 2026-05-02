@@ -247,7 +247,7 @@ def test_write_then_read_roundtrip_preserves_structure(tmp_path) -> None:
 
     text = out.read_text(encoding="utf-8")
     # Sanity-check deterministic output starts with schema_version
-    assert text.startswith('schema_version = "1.0.0"\n'), text[:80]
+    assert text.startswith(f'schema_version = "{SCHEMA_VERSION}"\n'), text[:80]
 
     decoded = read(out)
     assert decoded.schema_version == cfg.schema_version

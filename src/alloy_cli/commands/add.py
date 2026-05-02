@@ -291,4 +291,270 @@ def i2c(
     _execute(project_dir=project_dir, do_apply=do_apply, result=result)
 
 
+@add_command.command("timer", help="Add a timer peripheral.")
+@click.option("--name", required=True)
+@click.option("--peripheral", default=None)
+@click.option("--period-ns", "period_ns", type=int, required=True)
+@click.option("--divider", type=int, default=None)
+@click.option("--mode", type=click.Choice(["one_shot", "continuous", "encoder"]), default=None)
+@click.option("--interrupt", is_flag=True, default=False)
+@_common_options
+def timer(
+    name: str,
+    peripheral: str | None,
+    period_ns: int,
+    divider: int | None,
+    mode: str | None,
+    interrupt: bool,
+    do_apply: bool,
+    diff_only: bool,
+    project_dir: Path,
+) -> None:
+    _ = diff_only
+    project_dir = project_dir.resolve()
+    config, device = _load_context(project_dir)
+    overrides: dict[str, Any] = {"peripheral": peripheral, "period_ns": period_ns}
+    if divider is not None:
+        overrides["divider"] = divider
+    if mode is not None:
+        overrides["mode"] = mode
+    if interrupt:
+        overrides["interrupt"] = True
+    result = _peripherals.add_timer(
+        config, device, AddArgs.of(name, **{k: v for k, v in overrides.items() if v is not None})
+    )
+    _execute(project_dir=project_dir, do_apply=do_apply, result=result)
+
+
+@add_command.command("pwm", help="Add a PWM channel.")
+@click.option("--name", required=True)
+@click.option("--peripheral", default=None)
+@click.option("--channel", type=int, required=True)
+@click.option("--pin", required=True)
+@click.option("--frequency-hz", "frequency_hz", type=int, default=None)
+@click.option("--duty-cycle", "duty_cycle", type=float, default=None)
+@click.option("--polarity", type=click.Choice(["high", "low"]), default=None)
+@_common_options
+def pwm(
+    name: str,
+    peripheral: str | None,
+    channel: int,
+    pin: str,
+    frequency_hz: int | None,
+    duty_cycle: float | None,
+    polarity: str | None,
+    do_apply: bool,
+    diff_only: bool,
+    project_dir: Path,
+) -> None:
+    _ = diff_only
+    project_dir = project_dir.resolve()
+    config, device = _load_context(project_dir)
+    overrides: dict[str, Any] = {"peripheral": peripheral, "channel": channel, "pin": pin}
+    if frequency_hz is not None:
+        overrides["frequency_hz"] = frequency_hz
+    if duty_cycle is not None:
+        overrides["duty_cycle"] = duty_cycle
+    if polarity is not None:
+        overrides["polarity"] = polarity
+    result = _peripherals.add_pwm(
+        config, device, AddArgs.of(name, **{k: v for k, v in overrides.items() if v is not None})
+    )
+    _execute(project_dir=project_dir, do_apply=do_apply, result=result)
+
+
+@add_command.command("adc", help="Add an ADC peripheral with one or more channels.")
+@click.option("--name", required=True)
+@click.option("--peripheral", default=None)
+@click.option(
+    "--channel",
+    "channels",
+    multiple=True,
+    metavar="N:PIN",
+    help="Repeatable; e.g. --channel 0:PA0 --channel 1:PA1.",
+)
+@click.option("--resolution", type=click.Choice(["8", "10", "12", "14", "16"]), default=None)
+@click.option("--sample-time-cycles", "sample_time_cycles", type=int, default=None)
+@click.option("--dma", is_flag=True, default=False)
+@_common_options
+def adc(
+    name: str,
+    peripheral: str | None,
+    channels: tuple[str, ...],
+    resolution: str | None,
+    sample_time_cycles: int | None,
+    dma: bool,
+    do_apply: bool,
+    diff_only: bool,
+    project_dir: Path,
+) -> None:
+    _ = diff_only
+    project_dir = project_dir.resolve()
+    config, device = _load_context(project_dir)
+    parsed: list[dict[str, Any]] = []
+    for spec in channels:
+        if ":" not in spec:
+            raise click.BadParameter(f"--channel {spec!r} must be N:PIN.")
+        ch, pin = spec.split(":", 1)
+        try:
+            parsed.append({"channel": int(ch), "pin": pin})
+        except ValueError as exc:
+            raise click.BadParameter(f"--channel {spec!r} must be N:PIN.") from exc
+    overrides: dict[str, Any] = {"peripheral": peripheral, "channels": parsed}
+    if resolution is not None:
+        overrides["resolution"] = int(resolution)
+    if sample_time_cycles is not None:
+        overrides["sample_time_cycles"] = sample_time_cycles
+    if dma:
+        overrides["dma"] = True
+    result = _peripherals.add_adc(
+        config, device, AddArgs.of(name, **{k: v for k, v in overrides.items() if v is not None})
+    )
+    _execute(project_dir=project_dir, do_apply=do_apply, result=result)
+
+
+@add_command.command("dac", help="Add a DAC channel.")
+@click.option("--name", required=True)
+@click.option("--peripheral", default=None)
+@click.option("--channel", type=int, required=True)
+@click.option("--pin", required=True)
+@click.option("--output-buffer/--no-output-buffer", "output_buffer", default=None)
+@click.option("--trigger", default=None)
+@_common_options
+def dac(
+    name: str,
+    peripheral: str | None,
+    channel: int,
+    pin: str,
+    output_buffer: bool | None,
+    trigger: str | None,
+    do_apply: bool,
+    diff_only: bool,
+    project_dir: Path,
+) -> None:
+    _ = diff_only
+    project_dir = project_dir.resolve()
+    config, device = _load_context(project_dir)
+    overrides: dict[str, Any] = {"peripheral": peripheral, "channel": channel, "pin": pin}
+    if output_buffer is not None:
+        overrides["output_buffer"] = output_buffer
+    if trigger is not None:
+        overrides["trigger"] = trigger
+    result = _peripherals.add_dac(
+        config, device, AddArgs.of(name, **{k: v for k, v in overrides.items() if v is not None})
+    )
+    _execute(project_dir=project_dir, do_apply=do_apply, result=result)
+
+
+@add_command.command("can", help="Add a CAN bus peripheral.")
+@click.option("--name", required=True)
+@click.option("--peripheral", default=None)
+@click.option("--tx", default=None)
+@click.option("--rx", default=None)
+@click.option("--bitrate", type=int, default=None)
+@click.option("--sample-point", "sample_point", type=float, default=None)
+@click.option("--fd/--no-fd", "fd", default=None)
+@_common_options
+def can(
+    name: str,
+    peripheral: str | None,
+    tx: str | None,
+    rx: str | None,
+    bitrate: int | None,
+    sample_point: float | None,
+    fd: bool | None,
+    do_apply: bool,
+    diff_only: bool,
+    project_dir: Path,
+) -> None:
+    _ = diff_only
+    project_dir = project_dir.resolve()
+    config, device = _load_context(project_dir)
+    overrides: dict[str, Any] = {"peripheral": peripheral, "tx": tx, "rx": rx}
+    if bitrate is not None:
+        overrides["bitrate"] = bitrate
+    if sample_point is not None:
+        overrides["sample_point"] = sample_point
+    if fd is not None:
+        overrides["fd"] = fd
+    result = _peripherals.add_can(
+        config, device, AddArgs.of(name, **{k: v for k, v in overrides.items() if v is not None})
+    )
+    _execute(project_dir=project_dir, do_apply=do_apply, result=result)
+
+
+@add_command.command("usb", help="Add a USB peripheral (device / host / otg).")
+@click.option("--name", required=True)
+@click.option("--peripheral", default=None)
+@click.option(
+    "--mode",
+    type=click.Choice(["device", "host", "otg"], case_sensitive=False),
+    required=True,
+)
+@click.option("--vbus-sense/--no-vbus-sense", "vbus_sense", default=None)
+@click.option("--speed", type=click.Choice(["full", "high"]), default=None)
+@_common_options
+def usb(
+    name: str,
+    peripheral: str | None,
+    mode: str,
+    vbus_sense: bool | None,
+    speed: str | None,
+    do_apply: bool,
+    diff_only: bool,
+    project_dir: Path,
+) -> None:
+    _ = diff_only
+    project_dir = project_dir.resolve()
+    config, device = _load_context(project_dir)
+    overrides: dict[str, Any] = {"peripheral": peripheral, "mode": mode.lower()}
+    if vbus_sense is not None:
+        overrides["vbus_sense"] = vbus_sense
+    if speed is not None:
+        overrides["speed"] = speed
+    result = _peripherals.add_usb(
+        config, device, AddArgs.of(name, **{k: v for k, v in overrides.items() if v is not None})
+    )
+    _execute(project_dir=project_dir, do_apply=do_apply, result=result)
+
+
+@add_command.command("eth", help="Add an Ethernet peripheral (MII / RMII).")
+@click.option("--name", required=True)
+@click.option("--peripheral", default=None)
+@click.option(
+    "--interface",
+    type=click.Choice(["mii", "rmii"], case_sensitive=False),
+    required=True,
+)
+@click.option("--phy-address", "phy_address", type=int, default=None)
+@click.option("--mdc", default=None)
+@click.option("--mdio", default=None)
+@_common_options
+def eth(
+    name: str,
+    peripheral: str | None,
+    interface: str,
+    phy_address: int | None,
+    mdc: str | None,
+    mdio: str | None,
+    do_apply: bool,
+    diff_only: bool,
+    project_dir: Path,
+) -> None:
+    _ = diff_only
+    project_dir = project_dir.resolve()
+    config, device = _load_context(project_dir)
+    overrides: dict[str, Any] = {"peripheral": peripheral, "interface": interface.lower()}
+    if phy_address is not None:
+        overrides["phy_address"] = phy_address
+    if mdc is not None:
+        overrides["mdc"] = mdc
+    if mdio is not None:
+        overrides["mdio"] = mdio
+    result = _peripherals.add_eth(
+        config, device, AddArgs.of(name, **{k: v for k, v in overrides.items() if v is not None})
+    )
+    _execute(project_dir=project_dir, do_apply=do_apply, result=result)
+
+
 __all__ = ["add_command"]
