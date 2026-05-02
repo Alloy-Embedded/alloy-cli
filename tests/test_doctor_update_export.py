@@ -130,7 +130,8 @@ def test_resolve_upgrades_lists_change(tmp_path) -> None:
     assert not by_component["alloy-cli"].is_change()
 
 
-def test_apply_upgrades_writes_new_lockfile(tmp_path) -> None:
+def test_apply_upgrades_writes_new_lockfile(tmp_path, monkeypatch) -> None:
+    """apply_upgrades returns an UpgradeReport whose .new_lock is the rewrite."""
     config = _seed_project(tmp_path)
     layout = AlloyDir(root=tmp_path)
     layout.ensure()
@@ -154,8 +155,21 @@ def test_apply_upgrades_writes_new_lockfile(tmp_path) -> None:
             alloy_cli="0.5.0",
         ),
     )
-    new_lock = _update.apply_upgrades(tmp_path, upgrades=upgrades, config=config)
-    assert new_lock.alloy == "0.7.5"
+
+    # Stub every upgrader to a no-op success — focus the test on the
+    # lockfile-rewrite contract.
+    def _ok(_upgrade, _ctx):
+        return _update.UpgradeOutcome(ok=True, log="ok")
+
+    monkeypatch.setattr(
+        _update,
+        "UPGRADERS",
+        {name: _ok for name in _update.DEPENDENCY_ORDER},
+    )
+    report = _update.apply_upgrades(tmp_path, upgrades=upgrades, config=config)
+    assert report.aborted is False
+    assert report.new_lock is not None
+    assert report.new_lock.alloy == "0.7.5"
 
 
 def test_alloy_update_dry_run_does_not_modify_lockfile(tmp_path) -> None:

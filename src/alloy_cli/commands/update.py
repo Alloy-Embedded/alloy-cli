@@ -69,11 +69,25 @@ def update_command(dry_run: bool, frozen: bool, project_dir: Path) -> None:
         console.print("[dim]--dry-run: lockfile not modified.[/dim]")
         return
 
-    new_lock = _update.apply_upgrades(project_dir, upgrades=upgrades, config=config, dry_run=False)
-    console.print(
-        f"[green]✓ Updated[/green] {layout.lockfile} (alloy={new_lock.alloy}, "
-        f"alloy-codegen={new_lock.alloy_codegen})"
-    )
+    report = _update.apply_upgrades(project_dir, upgrades=upgrades, config=config, dry_run=False)
+    for upgrade, outcome in report.outcomes:
+        glyph = "[green]✓[/green]" if outcome.ok else "[red]✗[/red]"
+        console.print(f"  {glyph} {upgrade.component}: {outcome.log or '-'}")
+    if report.aborted:
+        raise click.ClickException(
+            f"Upgrade aborted at {report.failure_component}; lockfile unchanged."
+        )
+    new_lock = report.new_lock
+    if new_lock is not None:
+        console.print(
+            f"[green]✓ Updated[/green] {layout.lockfile} (alloy={new_lock.alloy}, "
+            f"alloy-codegen={new_lock.alloy_codegen})"
+        )
+    if report.restart_required:
+        console.print(
+            "[yellow]i alloy-cli was upgraded.[/yellow]  Re-launch `alloy` so the "
+            "new version is on PATH before running another command."
+        )
 
 
 __all__ = ["update_command"]
