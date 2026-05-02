@@ -39,4 +39,5 @@ def test_detect_arm_gcc_status_shape() -> None:
     if status.present:
         assert status.path is not None
     else:
+        assert status.install_hint is not None
         assert "arm-none-eabi" in status.install_hint or "https://" in status.install_hint
