@@ -11,8 +11,12 @@ Keeping it free of Click / Rich / Textual makes it cheap to reuse.
 
 from __future__ import annotations
 
+import dataclasses
 import functools
+import json
+import os
 import re
+import subprocess
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
@@ -23,6 +27,9 @@ import yaml
 from alloy_cli.core import boards as _boards
 from alloy_cli.core import ir as _ir
 from alloy_cli.core.boards import BoardSummary
+from alloy_cli.core.log import get_logger
+
+_log = get_logger(__name__)
 
 # ---------------------------------------------------------------------------
 # Device summary (lighter than DeviceIR — no peripheral / pin payload)
@@ -183,8 +190,138 @@ def _summary_from_yaml(path: Path, *, admitted: bool, fast: bool = False) -> Dev
     )
 
 
+def _bulk_cache_dir() -> Path:
+    """Return ``.alloy/cache/bulk_search`` under the alloy-cli repo root."""
+    return _ir.repo_root() / ".alloy" / "cache" / "bulk_search"
+
+
+def _submodule_sha() -> str | None:
+    """Return the alloy-devices-yml submodule SHA, or ``None`` when unknown.
+
+    We shell out to ``git rev-parse`` so we don't drag a Python git
+    library in.  Failure cases (no git on PATH, the directory isn't
+    a git repo, the submodule is detached without a SHA) all return
+    ``None``, which the rest of the cache treats as "disabled".
+    """
+    devices_root = _ir.data_devices_root()
+    if not devices_root.exists():
+        return None
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(devices_root), "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=2.0,
+            check=False,
+        )
+    except (FileNotFoundError, OSError):
+        return None
+    if result.returncode != 0:
+        return None
+    sha = result.stdout.strip()
+    return sha or None
+
+
+_MAX_CACHED_SHAS = 3
+
+
+@dataclass(frozen=True, slots=True)
+class _BulkCache:
+    """SHA-keyed disk cache for bulk-admitted device summaries.
+
+    The on-disk format is a single JSON file per SHA, holding the
+    full :class:`DeviceSummary` list.  Misses fall through to the
+    YAML parser and re-populate the cache; writes are atomic
+    (temp file + ``os.replace``).
+    """
+
+    directory: Path
+
+    def read(self, sha: str) -> tuple[DeviceSummary, ...] | None:
+        path = self.directory / f"{sha}.json"
+        if not path.exists():
+            return None
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            _log.warning("Bulk cache at %s is unreadable: %s", path, exc)
+            return None
+        if not isinstance(payload, list):
+            return None
+        out: list[DeviceSummary] = []
+        for entry in payload:
+            if not isinstance(entry, dict):
+                continue
+            try:
+                out.append(
+                    DeviceSummary(
+                        vendor=str(entry["vendor"]),
+                        family=str(entry["family"]),
+                        device=str(entry["device"]),
+                        package=str(entry.get("package", "")),
+                        core=str(entry.get("core", "")),
+                        summary=str(entry.get("summary", "")),
+                        admitted=bool(entry.get("admitted", False)),
+                        has_features=tuple(entry.get("has_features", ()) or ()),
+                    )
+                )
+            except KeyError:
+                # Schema drift — bail and let the caller re-parse.
+                return None
+        return tuple(out)
+
+    def write(self, sha: str, summaries: tuple[DeviceSummary, ...]) -> None:
+        try:
+            self.directory.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            _log.warning("Cannot create bulk cache dir %s: %s", self.directory, exc)
+            return
+        target = self.directory / f"{sha}.json"
+        tmp = target.with_suffix(".json.tmp")
+        encoded = [dataclasses.asdict(s) for s in summaries]
+        # Tuples become lists in asdict; that's fine for JSON.
+        try:
+            tmp.write_text(json.dumps(encoded, ensure_ascii=False), encoding="utf-8")
+            os.replace(tmp, target)
+        except OSError as exc:
+            _log.warning("Bulk cache write failed for %s: %s", target, exc)
+            tmp.unlink(missing_ok=True)
+            return
+        self._prune()
+
+    def _prune(self) -> None:
+        try:
+            entries = sorted(
+                self.directory.glob("*.json"),
+                key=lambda p: p.stat().st_mtime,
+                reverse=True,
+            )
+        except OSError:
+            return
+        for stale in entries[_MAX_CACHED_SHAS:]:
+            stale.unlink(missing_ok=True)
+
+    def clear(self) -> None:
+        if not self.directory.exists():
+            return
+        for entry in self.directory.glob("*.json"):
+            entry.unlink(missing_ok=True)
+
+
 def _bulk_summaries_from_index() -> tuple[DeviceSummary, ...]:
-    """Read the pre-built ``bulk-admitted/index.yml`` summary."""
+    """Read the pre-built ``bulk-admitted/index.yml`` summary.
+
+    Consults a disk cache keyed on the ``alloy-devices-yml`` submodule
+    SHA before parsing the YAML — second invocations land in <100ms
+    instead of paying the ~7s parse cost.
+    """
+    sha = _submodule_sha()
+    cache = _BulkCache(directory=_bulk_cache_dir()) if sha else None
+    if cache is not None:
+        cached = cache.read(sha)  # type: ignore[arg-type]
+        if cached is not None:
+            return cached
+
     index_path = _ir.data_devices_root() / "bulk-admitted" / "index.yml"
     if not index_path.exists():
         return ()
@@ -217,7 +354,10 @@ def _bulk_summaries_from_index() -> tuple[DeviceSummary, ...]:
                 has_features=(),
             )
         )
-    return tuple(out)
+    parsed = tuple(out)
+    if cache is not None and sha is not None:
+        cache.write(sha, parsed)
+    return parsed
 
 
 @functools.lru_cache(maxsize=1)
@@ -257,6 +397,7 @@ def reset_caches() -> None:
     """Drop all cached IR walks (used by tests + when SDK paths change)."""
     _device_index.cache_clear()
     _bulk_root.cache_clear()
+    _BulkCache(directory=_bulk_cache_dir()).clear()
 
 
 # ---------------------------------------------------------------------------
