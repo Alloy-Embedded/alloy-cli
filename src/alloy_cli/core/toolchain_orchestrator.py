@@ -33,7 +33,7 @@ from alloy_cli.core.errors import (
     FamilyToolchainInstallerUnsupportedHostError,
 )
 from alloy_cli.core.project import AlloyDir
-from alloy_cli.core.tool_sources import Downloader, HostTriple
+from alloy_cli.core.tool_sources import Downloader, HostTriple, SourceArtifact
 from alloy_cli.core.toolchain_registry import (
     FamilyManifest,
     ToolRequirement,
@@ -196,6 +196,116 @@ class InstallReport:
     @property
     def vendor_skipped(self) -> tuple[InstallOutcome, ...]:
         return tuple(o for o in self.outcomes if o.state == _STATE_VENDOR)
+
+
+# ---------------------------------------------------------------------------
+# Plan items (preview-only walk surfaced before any download starts)
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class InstallPlanItem:
+    """One row of a preview plan.
+
+    UIs render this BEFORE asking the user to confirm.  The plan walk
+    resolves every non-vendor tool against the active host triple, so
+    the table can show URLs + sizes + the per-OS install_doc hint for
+    vendor tools — without spawning a download.
+    """
+
+    tool: ToolRequirement
+    tier: str  # "required" | "recommended" | "optional"
+    artifact: SourceArtifact | None  # None for vendor / unsupported-host
+    skip_reason: str  # "" when actionable
+    install_doc_url: str | None  # populated for vendor tools
+
+    @property
+    def is_actionable(self) -> bool:
+        """True iff a real download would happen for this row."""
+        return self.artifact is not None
+
+
+def plan_install(
+    manifest: FamilyManifest,
+    *,
+    include_optional: bool = False,
+) -> tuple[list[InstallPlanItem], list[str]]:
+    """Return the plan ``install_family`` would execute, without doing it.
+
+    UI shells (the ``alloy new`` prompt, the TUI OnboardingScreen, the
+    MCP ``toolchain_install_plan`` tool) call this to render a Rich
+    table / Textual grid / JSON payload BEFORE any download starts.
+
+    Returns ``(items, soft_warnings)``.  ``soft_warnings`` carries
+    non-fatal resolve issues (e.g. unsupported-host on an optional
+    tool) the UI surfaces but doesn't block on.
+    """
+    items: list[InstallPlanItem] = []
+    warnings: list[str] = []
+    host = _ts.host_triple()
+
+    tiers: list[tuple[str, tuple[ToolRequirement, ...]]] = [
+        ("required", manifest.required),
+        ("recommended", manifest.recommended),
+    ]
+    if include_optional:
+        tiers.append(("optional", manifest.optional))
+
+    for tier_name, tools in tiers:
+        for tool in tools:
+            if tool.is_vendor:
+                doc = _per_os_install_doc(dict(tool.install_docs))
+                items.append(
+                    InstallPlanItem(
+                        tool=tool,
+                        tier=tier_name,
+                        artifact=None,
+                        skip_reason=f"vendor — install manually: {doc or '(see family manifest)'}",
+                        install_doc_url=doc,
+                    )
+                )
+                continue
+            try:
+                adapter = _ts.adapter_for(tool.source)
+                artifact = adapter.resolve(tool, host)
+            except FamilyToolchainInstallerUnsupportedHostError as exc:
+                warnings.append(str(exc))
+                items.append(
+                    InstallPlanItem(
+                        tool=tool,
+                        tier=tier_name,
+                        artifact=None,
+                        skip_reason=f"unsupported host — {exc}",
+                        install_doc_url=None,
+                    )
+                )
+                continue
+            except FamilyToolchainInstallerError as exc:
+                # Resolve-time errors (unknown source, bad pin file) are
+                # surfaced as a non-actionable row + soft warning so the
+                # UI can render the plan + complain about ONE bad pin
+                # without aborting the whole preview.
+                warnings.append(str(exc))
+                items.append(
+                    InstallPlanItem(
+                        tool=tool,
+                        tier=tier_name,
+                        artifact=None,
+                        skip_reason=str(exc),
+                        install_doc_url=None,
+                    )
+                )
+                continue
+            items.append(
+                InstallPlanItem(
+                    tool=tool,
+                    tier=tier_name,
+                    artifact=artifact,
+                    skip_reason="",
+                    install_doc_url=None,
+                )
+            )
+    return items, warnings
 
 
 # ---------------------------------------------------------------------------
@@ -533,6 +643,7 @@ __all__ = [
     "VALID_STATES",
     "InstallEvent",
     "InstallOutcome",
+    "InstallPlanItem",
     "InstallReport",
     "ToolDownloaded",
     "ToolFailed",
@@ -541,4 +652,5 @@ __all__ = [
     "ToolSkippedVendor",
     "ToolStarted",
     "install_family",
+    "plan_install",
 ]

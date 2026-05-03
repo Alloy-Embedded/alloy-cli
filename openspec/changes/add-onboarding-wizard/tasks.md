@@ -9,12 +9,12 @@
 
 ## 2. `alloy new` post-scaffold prompt
 
-- [ ] 2.1 Refactor `commands/new.py` to dispatch the install through `toolchain_orchestrator.install_family` after `scaffold(...)` returns.  Add `--install-toolchain` / `--no-install-toolchain` Click flags and an `--auto` flag that suppresses every interactive confirmation.
-- [ ] 2.2 Implement `_should_offer_install(install_flag, tty)` matching design D3: explicit flag wins; default Y in TTY, default N otherwise.  Pin it via a unit test that exercises every (flag, tty) combination.
-- [ ] 2.3 Print the install plan (Rich table) before the prompt so the user knows what they're saying Y/N to.  Use `_plan_for_family` helper from `commands/toolchain.py` (refactor to a shared helper if necessary, or expose it via `toolchain_orchestrator`).
-- [ ] 2.4 Always print the next-step command at the end of the run — even when the install was skipped.  When skipped, the message names `alloy toolchain install` explicitly.
-- [ ] 2.5 Wire `OnboardingCancelledError` to exit code 130 in the CLI wrapper; the partial outcomes get summarised before exit.
-- [ ] 2.6 Update `tests/test_command_new.py` (existing) with new tests: `--install-toolchain --auto` writes the lockfile + populates the store; `--no-install-toolchain` writes nothing; TTY default with simulated `Y` proceeds; TTY default with simulated `n` skips; non-TTY without flag skips; the install plan prints before the prompt.
+- [x] 2.1 Refactor `commands/new.py` to dispatch the install through `toolchain_orchestrator.install_family` after `scaffold(...)` returns.  Add `--install-toolchain` / `--no-install-toolchain` Click flags and an `--auto` flag that suppresses every interactive confirmation.
+- [x] 2.2 Implement `_should_offer_install(install_flag, tty)` matching design D3: explicit flag wins; default Y in TTY, default N otherwise.  Pin it via a unit test that exercises every (flag, tty) combination.
+- [x] 2.3 Print the install plan (Rich table) before the prompt so the user knows what they're saying Y/N to.  Use `_plan_for_family` helper from `commands/toolchain.py` (refactor to a shared helper if necessary, or expose it via `toolchain_orchestrator`).
+- [x] 2.4 Always print the next-step command at the end of the run — even when the install was skipped.  When skipped, the message names `alloy toolchain install` explicitly.
+- [x] 2.5 Wire `OnboardingCancelledError` to exit code 130 in the CLI wrapper; the partial outcomes get summarised before exit.
+- [x] 2.6 Update `tests/test_command_new.py` (existing) with new tests: `--install-toolchain --auto` writes the lockfile + populates the store; `--no-install-toolchain` writes nothing; TTY default with simulated `Y` proceeds; TTY default with simulated `n` skips; non-TTY without flag skips; the install plan prints before the prompt.
 
 ## 3. `alloy doctor --fix` toolchain extension
 

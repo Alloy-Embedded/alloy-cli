@@ -1,15 +1,36 @@
-"""``alloy new`` — scaffold a fresh project from a board or chip."""
+"""``alloy new`` — scaffold a fresh project from a board or chip.
+
+Wave 3 extends the verb with a post-scaffold install prompt: when
+STDIN is a TTY (or ``--install-toolchain`` is explicit) the command
+offers to download + verify + extract the family's required tier
+right after the scaffold lands, dispatching through
+:func:`alloy_cli.core.toolchain_orchestrator.install_family` so the
+walk shares one source of truth with ``alloy doctor --fix``,
+``alloy setup``, the TUI Onboarding screen, and the MCP
+``toolchain_apply_install_plan`` tool.
+"""
 
 from __future__ import annotations
 
 import subprocess
+import sys
 from pathlib import Path
 
 import click
 from rich.console import Console
 from rich.panel import Panel
 
-from alloy_cli.core.errors import AlloyCliError
+from alloy_cli.commands._install_view import (
+    make_event_logger,
+    render_install_plan,
+    render_install_summary,
+)
+from alloy_cli.core import toolchain_orchestrator as _orch
+from alloy_cli.core import toolchain_registry as _registry
+from alloy_cli.core.errors import (
+    AlloyCliError,
+    OnboardingCancelledError,
+)
 from alloy_cli.core.project import PROJECT_FILE, parse, read, write
 from alloy_cli.core.scaffold import (
     SUPPORTED_LICENSES,
@@ -18,6 +39,7 @@ from alloy_cli.core.scaffold import (
     ScaffoldResult,
     scaffold,
 )
+from alloy_cli.core.toolchain_registry import FamilyManifest
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _EXAMPLES_ROOT = _REPO_ROOT / "docs" / "EXAMPLES"
@@ -96,6 +118,115 @@ def _git_init(dest: Path) -> bool:
         return False
 
 
+# ---------------------------------------------------------------------------
+# Post-scaffold toolchain install (Wave 3)
+# ---------------------------------------------------------------------------
+
+
+def _is_stdin_tty() -> bool:
+    """TTY probe broken out as a module-level helper so tests can
+    monkeypatch it without having to swap ``sys.stdin`` (which Click's
+    :class:`CliRunner` already owns during ``invoke()``).
+    """
+    try:
+        return sys.stdin.isatty()
+    except (AttributeError, ValueError):
+        return False
+
+
+def _should_offer_install(*, install_flag: bool | None, tty: bool) -> bool:
+    """Decide whether to run the post-scaffold toolchain install.
+
+    Matches design D3:
+    - explicit ``--install-toolchain`` / ``--no-install-toolchain``
+      always wins.
+    - default Y in a TTY (the user can answer the prompt).
+    - default N otherwise (CI, subprocess piping — never block).
+
+    Returning True means "we will dispatch the install (after a
+    confirmation prompt unless ``--auto`` is set)".  Returning False
+    means "skip silently and tell the user how to install later".
+    """
+    if install_flag is True:
+        return True
+    if install_flag is False:
+        return False
+    return tty
+
+
+def _resolve_family_for_project(destination: Path) -> FamilyManifest | None:
+    """Look up the family manifest for the project we just scaffolded.
+
+    Returns ``None`` when the alloy.toml doesn't pin a known family
+    (e.g. chip-only project for a family we don't ship a manifest
+    for) — in that case we silently skip the install offer.
+    """
+    toml_path = destination / PROJECT_FILE
+    if not toml_path.exists():
+        return None
+    try:
+        config = read(toml_path)
+        return _registry.resolve_for_project(config)
+    except AlloyCliError:
+        return None
+
+
+def _run_post_scaffold_install(
+    *,
+    console: Console,
+    project_root: Path,
+    manifest: FamilyManifest,
+    auto: bool,
+    interactive: bool,
+) -> _orch.InstallReport | None:
+    """Render the plan, prompt (when interactive + not auto), dispatch.
+
+    Returns the :class:`InstallReport` on a real install, or ``None``
+    when the user answered N at the prompt.  Raises
+    :class:`OnboardingCancelledError` when SIGINT lands mid-install
+    (the caller maps that to exit 130).
+    """
+    plan, warnings = _orch.plan_install(manifest)
+    if not plan:
+        # Empty manifest: nothing to do.
+        return None
+
+    render_install_plan(console, manifest, plan, title=f"Install plan for {manifest.family_id}")
+    for warning in warnings:
+        console.print(f"[yellow]warning:[/yellow] {warning}")
+
+    actionable_count = sum(1 for item in plan if item.is_actionable)
+    skipped_count = len(plan) - actionable_count
+
+    if interactive and not auto:
+        proceed = click.confirm(
+            f"Install now? ({actionable_count} tool(s) to download, "
+            f"{skipped_count} skipped)",
+            default=True,
+        )
+        if not proceed:
+            return None
+
+    console.print(f"\n[bold]Installing toolchain for {manifest.family_id}…[/bold]")
+    try:
+        report = _orch.install_family(
+            manifest,
+            project_root=project_root,
+            on_event=make_event_logger(console),
+        )
+    except KeyboardInterrupt as exc:  # pragma: no cover — SIGINT path
+        raise OnboardingCancelledError(
+            "Interrupted before the install completed.",
+        ) from exc
+    render_install_summary(console, report)
+    return report
+
+
+# ---------------------------------------------------------------------------
+# Click command
+# ---------------------------------------------------------------------------
+
+
 @click.command("new", help="Scaffold a new alloy-cli firmware project.")
 @click.argument("name")
 @click.option(
@@ -156,6 +287,24 @@ def _git_init(dest: Path) -> bool:
         "02-uart-echo).  Mutually exclusive with --board / --device."
     ),
 )
+@click.option(
+    "--install-toolchain/--no-install-toolchain",
+    "install_flag",
+    default=None,
+    help=(
+        "Install the family's toolchain after scaffolding.  Default "
+        "in a TTY: Y (prompts unless --auto).  Default elsewhere: N."
+    ),
+)
+@click.option(
+    "--auto",
+    is_flag=True,
+    default=False,
+    help=(
+        "Skip every interactive confirmation.  Combine with "
+        "--install-toolchain to perform the install non-interactively."
+    ),
+)
 def new_command(
     name: str,
     board_id: str | None,
@@ -166,6 +315,8 @@ def new_command(
     force: bool,
     path_override: Path | None,
     from_example: str | None,
+    install_flag: bool | None,
+    auto: bool,
 ) -> None:
     """Generate a complete project tree from board, chip, or example."""
     console = Console()
@@ -231,16 +382,62 @@ def new_command(
         if result.destination.is_relative_to(Path.cwd())
         else result.destination
     )
-    next_steps = (
+
+    # ---- Wave 3: post-scaffold toolchain install --------------------
+    install_ran = False
+    install_skipped_explicitly = install_flag is False
+    tty = _is_stdin_tty()
+    if _should_offer_install(install_flag=install_flag, tty=tty):
+        manifest = _resolve_family_for_project(result.destination)
+        if manifest is not None:
+            try:
+                report = _run_post_scaffold_install(
+                    console=console,
+                    project_root=result.destination,
+                    manifest=manifest,
+                    auto=auto,
+                    interactive=tty,
+                )
+            except OnboardingCancelledError as exc:
+                console.print(f"\n[yellow]Onboarding cancelled:[/yellow] {exc}")
+                console.print(
+                    "[dim]Resume any time with [bold]alloy toolchain install[/bold] "
+                    f"in {rel}.[/dim]"
+                )
+                sys.exit(130)
+            install_ran = report is not None
+
+    # ---- Always-printed next-steps panel ----------------------------
+    next_steps_lines = [
         f"[bold]Done![/bold]  Project [cyan]{result.name}[/cyan] scaffolded at "
-        f"[green]{rel}[/green].\n\n"
-        f"Target: {result.target_label}\n\n"
-        f"Next steps:\n"
-        f"  cd {rel}\n"
-        f"  cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug\n"
-        f"  cmake --build build\n"
+        f"[green]{rel}[/green].",
+        "",
+        f"Target: {result.target_label}",
+        "",
+        "Next steps:",
+        f"  cd {rel}",
+    ]
+    if not install_ran:
+        if install_skipped_explicitly:
+            next_steps_lines.append(
+                "  alloy toolchain install   [dim]# you passed --no-install-toolchain[/dim]"
+            )
+        elif not tty:
+            next_steps_lines.append(
+                "  alloy toolchain install   [dim]# non-TTY: install was deferred[/dim]"
+            )
+        else:
+            # User answered N at the prompt OR no manifest resolved.
+            next_steps_lines.append(
+                "  alloy toolchain install   [dim]# install the family's toolchain[/dim]"
+            )
+    next_steps_lines.extend(
+        [
+            "  alloy build",
+            "  alloy flash",
+        ]
     )
-    console.print(Panel.fit(next_steps, border_style="cyan", title="alloy new"))
+    console.print(Panel.fit("\n".join(next_steps_lines), border_style="cyan", title="alloy new"))
 
 
 __all__ = ["new_command"]

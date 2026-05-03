@@ -290,6 +290,8 @@ Options:
   - `--force` — Allow scaffolding into a non-empty directory.
   - `--path` — Destination directory.  Defaults to ./<NAME>.
   - `--from-example` — Scaffold from a docs/EXAMPLES entry (e.g. 01-blinky, 02-uart-echo).  Mutually exclusive with --board / --device.
+  - `--install-toolchain, --no-install-toolchain` — Install the family's toolchain after scaffolding.  Default in a TTY: Y (prompts unless --auto).  Default elsewhere: N.
+  - `--auto` — Skip every interactive confirmation.  Combine with --install-toolchain to perform the install non-interactively.
 
 ## `alloy toolchain install`
 
