@@ -251,6 +251,17 @@ Options:
   - `--for` — Inspect the toolchain for a specific MCU family (e.g. stm32g0, rp2040, esp32) instead of inferring it from the project's alloy.toml.  Useful before scaffolding.
   - `--project-dir` — Project root containing alloy.toml.
 
+## `alloy erase`
+
+Erase the chip's flash through the lockfile-pinned probe-rs.  Gated behind a TTY confirmation prompt; pass --auto / --yes to bypass in CI or non-interactive contexts.  Pass --region <name|range> to erase only part of the flash.
+
+Options:
+  - `--region` — Region to erase.  Repeat for multiple regions.  Names (``bootloader``, ``appslot-a``, …) resolve via the device IR; ``0xBASE-0xEND`` ranges pass through unchanged.  Default: chip-wide erase.
+  - `--auto` — Skip the confirmation prompt.  Required in non-TTY contexts.
+  - `--yes` — Alias for --auto (matches the common `apt`/`dnf` convention).
+  - `--probe` — Explicit probe selector.  Same shape as `alloy reset --probe`.
+  - `--project-dir` — Project root containing alloy.toml + .alloy/toolchain.lock.
+
 ## `alloy export`
 
 Emit auxiliary configuration files.

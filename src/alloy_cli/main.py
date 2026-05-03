@@ -30,6 +30,7 @@ from alloy_cli.commands.chat import chat_command
 from alloy_cli.commands.debug import debug_command
 from alloy_cli.commands.devices import devices_command
 from alloy_cli.commands.doctor import doctor_command
+from alloy_cli.commands.erase import erase_command
 from alloy_cli.commands.export import export_command
 from alloy_cli.commands.flash import flash_command
 from alloy_cli.commands.mcp import mcp_command
@@ -87,6 +88,7 @@ cli.add_command(update_command)
 cli.add_command(export_command)
 cli.add_command(setup_command)
 cli.add_command(reset_command)
+cli.add_command(erase_command)
 
 
 def main(argv: list[str] | None = None) -> NoReturn:

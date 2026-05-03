@@ -18,12 +18,12 @@
 
 ## 3. `alloy erase` Click command
 
-- [ ] 3.1 Create `src/alloy_cli/commands/erase.py` with the Click command + flags (`--region` repeatable, `--auto`, `--yes`, `--probe`, `--project-dir`).
-- [ ] 3.2 Implement `_should_prompt(auto, yes, tty)` + the confirmation prompt in the command.  Mirror Wave-3's `commands/new.py::_is_stdin_tty()` helper so tests can monkeypatch the TTY check without replacing `sys.stdin`.
-- [ ] 3.3 Render the plan (Rich table: regions + total bytes + chip id) BEFORE the prompt fires.  Map `--region` arguments to the orchestrator's `regions` list (alias names + raw ranges).
-- [ ] 3.4 Dispatch through `probe_orchestrator.{plan_erase, execute_erase}`.  Surface the typed errors (`family-toolchain-erase-{aborted, unsupported-region, probe-failed}`) as `click.ClickException`.
-- [ ] 3.5 Register `erase_command` in `src/alloy_cli/main.py` (alongside `flash_command`).
-- [ ] 3.6 Add `tests/test_command_erase.py`: `--help` advertises every flag; TTY + `y` answer executes the erase; TTY + `n` answer aborts with typed surface; `--auto` in non-TTY skips the prompt + executes; non-TTY without `--auto`/`--yes` aborts with a clear message; `--region bootloader` resolves IR alias; `--region 0x08000000-0x08010000` accepts the literal range; `--region not-a-region` raises typed surface.
+- [x] 3.1 Create `src/alloy_cli/commands/erase.py` with the Click command + flags (`--region` repeatable, `--auto`, `--yes`, `--probe`, `--project-dir`).
+- [x] 3.2 Implement `_should_prompt(auto, yes, tty)` + the confirmation prompt in the command.  Mirror Wave-3's `commands/new.py::_is_stdin_tty()` helper so tests can monkeypatch the TTY check without replacing `sys.stdin`.
+- [x] 3.3 Render the plan (Rich table: regions + total bytes + chip id) BEFORE the prompt fires.  Map `--region` arguments to the orchestrator's `regions` list (alias names + raw ranges).
+- [x] 3.4 Dispatch through `probe_orchestrator.{plan_erase, execute_erase}`.  Surface the typed errors (`family-toolchain-erase-{aborted, unsupported-region, probe-failed}`) as `click.ClickException`.
+- [x] 3.5 Register `erase_command` in `src/alloy_cli/main.py` (alongside `flash_command`).
+- [x] 3.6 Add `tests/test_command_erase.py`: `--help` advertises every flag; TTY + `y` answer executes the erase; TTY + `n` answer aborts with typed surface; `--auto` in non-TTY skips the prompt + executes; non-TTY without `--auto`/`--yes` aborts with a clear message; `--region bootloader` resolves IR alias; `--region 0x08000000-0x08010000` accepts the literal range; `--region not-a-region` raises typed surface.
 
 ## 4. `alloy monitor` Click command
 
