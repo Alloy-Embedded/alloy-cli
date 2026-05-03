@@ -10,6 +10,7 @@ the registry directly.
 from __future__ import annotations
 
 import json
+import platform
 import time
 import uuid
 from collections.abc import Callable, Mapping
@@ -23,14 +24,19 @@ from alloy_cli.core import ir as _ir
 from alloy_cli.core import peripherals as _peripherals
 from alloy_cli.core import process as _process
 from alloy_cli.core import search as _search
+from alloy_cli.core import tool_sources as _ts
+from alloy_cli.core import toolchain_manager as _tm
 from alloy_cli.core import toolchain_registry as _registry
 from alloy_cli.core.diagnostics import UnifiedDiff
 from alloy_cli.core.errors import (
     AlloyCliError,
     BoardNotFoundError,
     DeviceNotFoundError,
+    FamilyToolchainInstallerError,
+    FamilyToolchainInstallerUnsupportedHostError,
     FamilyToolchainNotFoundError,
     PinInvalidError,
+    ProjectConfigError,
     StaleDiffError,
 )
 from alloy_cli.core.peripherals import AddArgs, AddResult
@@ -445,6 +451,270 @@ def _tool_list_family_toolchain(
         "required": [_tool_requirement_to_dict(t) for t in manifest.required],
         "recommended": [_tool_requirement_to_dict(t) for t in manifest.recommended],
         "optional": [_tool_requirement_to_dict(t) for t in manifest.optional],
+    }
+
+
+# ----- Wave 2: toolchain installer read-only tools -------------------------
+
+
+_OS_DOC_KEYS: dict[str, str] = {
+    "Darwin": "macos",
+    "Linux": "linux",
+    "Windows": "windows",
+}
+
+
+def _per_os_install_doc(install_docs: dict[str, str]) -> str | None:
+    """Pick the OS-appropriate install doc URL for the active host."""
+    if not install_docs:
+        return None
+    os_key = _OS_DOC_KEYS.get(platform.system())
+    if os_key and os_key in install_docs:
+        return install_docs[os_key]
+    return next(iter(install_docs.values()), None)
+
+
+def _resolve_family_for_mcp(
+    registry: ToolRegistry, family_id: str | None
+) -> Any:
+    """Family resolution shared by toolchain_status / install_plan.
+
+    With ``family_id``, loads the manifest directly.  Without, falls
+    back to the project's ``alloy.toml``; raises ``missing-target``
+    when neither resolves.
+    """
+    if family_id is not None:
+        try:
+            return _registry.load_family(family_id)
+        except FamilyToolchainNotFoundError as exc:
+            raise ToolError(
+                error_type="family-toolchain-not-found",
+                message=str(exc),
+                detail={"known_families": list(_registry.known_families())},
+            ) from exc
+
+    # Project resolution
+    toml_path = registry.project_dir / PROJECT_FILE
+    if not toml_path.exists():
+        raise ToolError(
+            error_type="missing-target",
+            message=(
+                "No family_id supplied and no alloy.toml in the project "
+                "directory.  Pass family_id explicitly."
+            ),
+        )
+    try:
+        config = read(toml_path)
+    except (ProjectConfigError, OSError) as exc:
+        raise ToolError(
+            error_type="project-config-error",
+            message=str(exc),
+        ) from exc
+    manifest = _registry.resolve_for_project(config)
+    if manifest is None:
+        raise ToolError(
+            error_type="missing-target",
+            message=(
+                "Could not resolve a family from alloy.toml.  Pass "
+                "family_id explicitly."
+            ),
+            detail={"known_families": list(_registry.known_families())},
+        )
+    return manifest
+
+
+def _supported_hosts_for_family(manifest: Any) -> list[str]:
+    """Return the union of host triples declared across every pin file
+    entry the family's tools reference.
+
+    Used in the unsupported-host envelope so the LLM can suggest a
+    different machine to retry from.
+    """
+    seen: set[str] = set()
+    for tier in (manifest.required, manifest.recommended, manifest.optional):
+        for tool_req in tier:
+            if tool_req.is_vendor:
+                continue
+            try:
+                adapter = _ts.adapter_for(tool_req.source)
+            except FamilyToolchainInstallerError:
+                continue
+            try:
+                payload = _ts._load_pins(adapter.kind)
+            except FamilyToolchainInstallerError:
+                continue
+            for entry in payload.get("tools") or ():
+                if not isinstance(entry, dict):
+                    continue
+                if entry.get("tool") != tool_req.tool:
+                    continue
+                hosts = entry.get("hosts") or {}
+                seen.update(hosts.keys())
+    return sorted(seen)
+
+
+def _tool_toolchain_status(
+    registry: ToolRegistry,
+    *,
+    family_id: str | None = None,
+) -> dict[str, Any]:
+    """Return Wave 1's family manifest enriched with per-tool installed
+    state from the local content-addressed store.
+
+    Mirrors the data ``alloy toolchain list --for <family>`` shows the
+    user.  Each tool row carries ``state`` ∈ {``ok``, ``missing``,
+    ``vendor``} so an LLM agent can branch on a single field instead
+    of inferring from ``installed`` + ``source``.
+
+    Preconditions: when ``family_id`` is omitted, the project's
+    ``alloy.toml`` must resolve a known family.  Side effects: none —
+    no network, no subprocess, only reads from the manifest.json under
+    ``platformdirs.user_data_dir("alloy")/tools/``.
+    """
+    manifest = _resolve_family_for_mcp(registry, family_id)
+
+    try:
+        host = _ts.host_triple()
+        host_str = str(host)
+    except FamilyToolchainInstallerUnsupportedHostError:
+        host_str = "(unsupported host)"
+
+    tools_out: list[dict[str, Any]] = []
+    for tier_name, tier in (
+        ("required", manifest.required),
+        ("recommended", manifest.recommended),
+        ("optional", manifest.optional),
+    ):
+        for tool_req in tier:
+            row = _tool_requirement_to_dict(tool_req)
+            row["tier"] = tier_name
+            if tool_req.is_vendor:
+                row["state"] = "vendor"
+                row["installed"] = False
+                row["installed_version"] = None
+                row["installed_path"] = None
+            else:
+                installed = _tm.find_installed(tool_req.tool)
+                if installed is not None:
+                    row["state"] = "ok"
+                    row["installed"] = True
+                    row["installed_version"] = installed.version
+                    row["installed_path"] = str(installed.absolute_primary())
+                else:
+                    row["state"] = "missing"
+                    row["installed"] = False
+                    row["installed_version"] = None
+                    row["installed_path"] = None
+            tools_out.append(row)
+
+    return {
+        "family_id": manifest.family_id,
+        "core": manifest.core,
+        "arch": manifest.arch,
+        "schema_version": manifest.schema_version,
+        "host": host_str,
+        "tools": tools_out,
+    }
+
+
+def _tool_toolchain_install_plan(
+    registry: ToolRegistry, *, family_id: str
+) -> dict[str, Any]:
+    """Return the planned download set for a family WITHOUT performing
+    any I/O.
+
+    Walks ``family.required + recommended``, dispatches every non-
+    vendor tool to its source adapter, and returns the resolved
+    artefact metadata (URL, sha256, size).  Vendor tools land in
+    ``skipped_vendor`` with their per-OS install doc URL.
+
+    Preconditions: a manifest exists for ``family_id`` and the active
+    host triple is supported.  Side effects: none — no download, no
+    file write, no subprocess.
+
+    Errors:
+      ``family-toolchain-not-found`` (Wave-1 envelope) when no
+        manifest ships for ``family_id``.
+      ``family-toolchain-installer-unsupported-host`` when the active
+        host has no pin in any of the family's tools; the envelope
+        carries ``host`` and ``supported_hosts``.
+    """
+    del registry  # tool is project-independent
+    try:
+        manifest = _registry.load_family(family_id)
+    except FamilyToolchainNotFoundError as exc:
+        raise ToolError(
+            error_type="family-toolchain-not-found",
+            message=str(exc),
+            detail={"known_families": list(_registry.known_families())},
+        ) from exc
+
+    try:
+        host = _ts.host_triple()
+    except FamilyToolchainInstallerUnsupportedHostError as exc:
+        raise ToolError(
+            error_type="family-toolchain-installer-unsupported-host",
+            message=str(exc),
+            detail={
+                "host": "(unsupported)",
+                "supported_hosts": _supported_hosts_for_family(manifest),
+            },
+        ) from exc
+
+    plan: list[dict[str, Any]] = []
+    skipped_vendor: list[dict[str, Any]] = []
+    total_size = 0
+
+    for tier in (manifest.required, manifest.recommended):
+        for tool_req in tier:
+            if tool_req.is_vendor:
+                skipped_vendor.append(
+                    {
+                        "tool": tool_req.tool,
+                        "version": tool_req.version,
+                        "install_doc_url": _per_os_install_doc(
+                            dict(tool_req.install_docs)
+                        ),
+                    }
+                )
+                continue
+            try:
+                adapter = _ts.adapter_for(tool_req.source)
+                artifact = adapter.resolve(tool_req, host)
+            except FamilyToolchainInstallerUnsupportedHostError as exc:
+                supported = _supported_hosts_for_family(manifest)
+                raise ToolError(
+                    error_type="family-toolchain-installer-unsupported-host",
+                    message=str(exc),
+                    detail={
+                        "host": str(host),
+                        "supported_hosts": supported,
+                    },
+                ) from exc
+            except FamilyToolchainInstallerError as exc:
+                raise ToolError(
+                    error_type=getattr(exc, "error_type", "family-toolchain-installer-error"),
+                    message=str(exc),
+                ) from exc
+            size = artifact.size_bytes or 0
+            plan.append(
+                {
+                    "tool": artifact.tool,
+                    "version": artifact.version,
+                    "source": artifact.source,
+                    "url": artifact.url,
+                    "sha256": artifact.sha256,
+                    "size_bytes": size if size else None,
+                }
+            )
+            total_size += size
+
+    return {
+        "family_id": manifest.family_id,
+        "host": {"os": host.os, "arch": host.arch},
+        "plan": plan,
+        "skipped_vendor": skipped_vendor,
+        "total_size_bytes": total_size,
     }
 
 
@@ -989,6 +1259,8 @@ _PARAM_SCHEMA: dict[str, dict[str, Any]] = {
     "read_alloy_toml": {},
     "list_recent_events": {"limit": "int"},
     "list_family_toolchain": {"family_id": "string"},
+    "toolchain_status": {"family_id": "string?"},
+    "toolchain_install_plan": {"family_id": "string"},
     "preview_diff": {"kind": "string", "name": "string", "payload": "object?"},
     "apply_diff": {"diff_id": "string"},
     "add_uart": {
@@ -1096,6 +1368,8 @@ def build_default_registry(
         "read_alloy_toml": _tool_read_alloy_toml,
         "list_recent_events": _tool_list_recent_events,
         "list_family_toolchain": _tool_list_family_toolchain,
+        "toolchain_status": _tool_toolchain_status,
+        "toolchain_install_plan": _tool_toolchain_install_plan,
         "preview_diff": _tool_preview_diff,
         "apply_diff": _tool_apply_diff,
         "add_uart": _tool_add_uart,
