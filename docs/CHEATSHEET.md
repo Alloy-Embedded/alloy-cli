@@ -294,6 +294,17 @@ Options:
   - `--install-toolchain, --no-install-toolchain` — Install the family's toolchain after scaffolding.  Default in a TTY: Y (prompts unless --auto).  Default elsewhere: N.
   - `--auto` — Skip every interactive confirmation.  Combine with --install-toolchain to perform the install non-interactively.
 
+## `alloy setup`
+
+Guided onboarding for a fresh machine: detect or scaffold a project, then install its toolchain through the shared orchestrator (the same path `alloy new` and `alloy doctor --fix` use).
+
+Options:
+  - `--board` — Pre-pick a board (skips the picker step).
+  - `--family` — Pre-pick a family; mutually exclusive with --board.
+  - `--auto` — Suppress every interactive prompt with the default answer (Y on each install confirmation).
+  - `--no-tui` — Force the line-based wizard even when STDIN is a TTY.  (Wave 3: line-based is the only path; this flag is a forward-compatible no-op.)
+  - `--project-dir` — Project root.  Defaults to the current directory.
+
 ## `alloy toolchain install`
 
 Download + verify + extract every non-vendor tool the family declares.

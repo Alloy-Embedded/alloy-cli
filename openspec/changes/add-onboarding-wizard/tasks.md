@@ -26,15 +26,15 @@
 
 ## 4. `alloy setup` standalone command
 
-- [ ] 4.1 Create `src/alloy_cli/commands/setup.py` with the Click command + flags (`--board`, `--family`, `--auto`, `--no-tui`, `--project-dir`).
-- [ ] 4.2 Implement the project-state detection: present project + resolved family → install path; missing project → embed the `alloy new` flow first; half-installed (lockfile pins something missing from the store) → run install to repair.
-- [ ] 4.3 Implement the family picker: outside a project, render a curated list from `boards.load_catalog()` sorted by tier; user selects one.  When `--no-tui` is set OR STDIN is non-TTY, fall back to a numbered line-based prompt.
-- [ ] 4.4 When STDIN is a TTY and `--no-tui` is NOT set, hand off to the TUI `OnboardingScreen` (block 5) instead of the line-based wizard.
-- [ ] 4.5 Wire SIGINT to raise `OnboardingCancelledError` cleanly; CLI exits 130 with a partial-progress summary.
-- [ ] 4.6 Print the canonical "next steps" panel after every successful run (`alloy build`, `alloy flash`, `alloy ui`).
-- [ ] 4.7 Register `setup_command` in `src/alloy_cli/main.py`.
-- [ ] 4.8 Run `python scripts/generate_cheatsheet.py` so the new verb lands in `docs/CHEATSHEET.md`.
-- [ ] 4.9 Add `tests/test_command_setup.py`: setup outside a project + `--auto` + `--board nucleo_g071rb` scaffolds and installs; setup inside a project + `--auto` skips scaffolding; `--no-tui` forces line prompts; `--auto` never blocks on STDIN; SIGINT exits 130 with partial progress.
+- [x] 4.1 Create `src/alloy_cli/commands/setup.py` with the Click command + flags (`--board`, `--family`, `--auto`, `--no-tui`, `--project-dir`).
+- [x] 4.2 Implement the project-state detection: present project + resolved family → install path; missing project → embed the `alloy new` flow first; half-installed (lockfile pins something missing from the store) → run install to repair.
+- [x] 4.3 Implement the family picker: outside a project, render a curated list from `boards.load_catalog()` sorted by tier; user selects one.  When `--no-tui` is set OR STDIN is non-TTY, fall back to a numbered line-based prompt.
+- [ ] 4.4 When STDIN is a TTY and `--no-tui` is NOT set, hand off to the TUI `OnboardingScreen` (block 5) instead of the line-based wizard.   *(deferred to Wave 3 group 5; see TODO in setup.py)*
+- [x] 4.5 Wire SIGINT to raise `OnboardingCancelledError` cleanly; CLI exits 130 with a partial-progress summary.
+- [x] 4.6 Print the canonical "next steps" panel after every successful run (`alloy build`, `alloy flash`, `alloy ui`).
+- [x] 4.7 Register `setup_command` in `src/alloy_cli/main.py`.
+- [x] 4.8 Run `python scripts/generate_cheatsheet.py` so the new verb lands in `docs/CHEATSHEET.md`.
+- [x] 4.9 Add `tests/test_command_setup.py`: setup outside a project + `--auto` + `--board nucleo_g071rb` scaffolds and installs; setup inside a project + `--auto` skips scaffolding; `--no-tui` forces line prompts; `--auto` never blocks on STDIN; SIGINT exits 130 with partial progress.
 
 ## 5. TUI `OnboardingScreen` real wizard
 
