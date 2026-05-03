@@ -9,6 +9,83 @@ Unreleased work lives at the top of the file; releases are tagged
 
 ## [Unreleased]
 
+### Added — Wave-4 of toolchain-management
+
+- **`add-recovery-tools`** — Wave 4 closes the user-facing arc by
+  giving the firmware developer the three primitives every embedded
+  engineer reaches for during normal hardware bring-up: `alloy
+  reset`, `alloy erase`, `alloy monitor`.  All three dispatch
+  through one shared orchestrator (`core.probe_orchestrator`) that
+  owns probe selection, binary resolution from `.alloy/toolchain.
+  lock`, and the typed-error vocabulary.  The CLI, the TUI
+  `MonitorScreen`, and six MCP tools all route through that one
+  seam.
+- **`alloy reset`** — non-destructive CPU / nRST reset.  `--soft`
+  (default) issues a CPU reset via probe-rs's `reset` verb; `--hard`
+  pulses nRST via `--connect-under-reset`; `--halt-after-reset`
+  leaves the core halted post-reset for debugger attach;
+  `--probe vid:pid:serial` matches `alloy flash`'s selector
+  semantics.
+- **`alloy erase`** — flash erase with two safety gates.  TTY prompt
+  (default N) renders the plan + chip id + total bytes before
+  asking `Continue?`; `--auto` / `--yes` bypasses in non-TTY
+  contexts.  `--region NAME|0xBASE-0xEND` (repeatable) for partial
+  erase; literal ranges pass through, named aliases resolve via
+  the device IR (Wave-5 will wire the bridge — current behaviour:
+  raises `family-toolchain-erase-unsupported-region`).
+- **`alloy monitor`** — live UART / RTT log viewer.  Replaces the
+  `screen /dev/cu.usbmodem*` workflow.  `--port` always required
+  (USB enumeration is host-specific); `--baud` autodetected from
+  `alloy.toml`'s console UART or falls back to 115200; `--mode raw`
+  / `rtt`; `--ansi/--no-ansi` toggles escape-sequence pass-through.
+  Press `Ctrl+]` to disconnect — exit 0 + one-line summary
+  (`<bytes> bytes captured over <secs>s`).
+- **New `core.probe_orchestrator` module** (UI-free) — frozen+slots
+  dataclasses (`ProbeIdentity`, `ResetReport`, `EraseRegion`,
+  `ErasePlan`, `EraseReport`), sealed `MonitorEvent` union
+  (`MonitorOpened` / `MonitorBytes` / `MonitorClosed`), `Probe`
+  Protocol, `FakeProbe` test seam, `_RealProbeRsProbe` subprocess
+  backend, `MonitorSessionTable` for the MCP session-style monitor.
+  Public functions: `select_probe`, `reset_target`, `plan_erase`,
+  `execute_erase`, `open_monitor`, `real_probe_for`.  AST-based
+  contract test enforces UI-free invariant.
+- **TUI `MonitorScreen`** — Textual `RichLog` viewer registered via
+  `register_screen("monitor", …)`.  Worker thread runs the
+  orchestrator; events stream back via `app.call_from_thread`
+  mirroring the Wave-3 OnboardingScreen pattern.  Dismisses with a
+  typed `MonitorSummary` on Ctrl+] / Esc.
+- **Six new MCP tools**: `probe_reset` (idempotent + safe);
+  `probe_erase_plan` (read-only preview); `probe_erase` (mutating;
+  refuses without `confirm=true`, mirroring Wave-3's two-phase
+  pattern); `probe_monitor_open` / `probe_monitor_poll` /
+  `probe_monitor_close` (session-style; UUIDs auto-close after 5
+  minutes idle so crashed agents never leak threads).
+- **Nine new typed `error_type` strings** registered in the
+  uniqueness guard:
+  `family-toolchain-probe-{not-found,not-attached,
+  multiple-attached,unauthorised}`,
+  `family-toolchain-erase-{aborted,unsupported-region,
+  confirmation-required,probe-failed}`, and
+  `probe-operation-cancelled`.  Cookbook anchors for every entry.
+- **Vendor-probe contract**: vendor-only probes (proprietary
+  J-Link, locked ST-Link) raise
+  `family-toolchain-probe-unauthorised` with `vendor_tool` +
+  `install_doc_url` populated.  The orchestrator NEVER auto-invokes
+  vendor utilities.  Conservative default heuristic
+  (`ALLOY_PROBE_VENDOR_ONLY=<vid:pid>` opts a specific probe in).
+- **New `docs/RECOVERY.md`** (the contributor reference): three
+  commands + decision matrix + orchestrator API + `Probe` Protocol
+  contract + two-phase MCP pattern + vendor-probe contract +
+  cancellation contract + cross-links to Waves 1-3 docs.
+  `docs/QUICKSTART.md` addendum points at it.  System prompt
+  documents the canonical workflow + the `confirm=true` safety
+  gate.
+- **112 new tests** cover the orchestrator (27), the entry-point
+  contract (4), `alloy reset` (9), `alloy erase` (10),
+  `alloy monitor` (10), TUI `MonitorScreen` (7), MCP probe tools
+  (18), doc regression guards (14), error-type uniqueness guards
+  (13).  Total suite: 1042 passing.
+
 ### Added — Wave-3 of toolchain-management
 
 - **`add-onboarding-wizard`** — Wave 2's installer is now welded

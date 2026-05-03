@@ -63,9 +63,9 @@
 
 ## 8. Validation + ship
 
-- [ ] 8.1 Run `openspec validate add-recovery-tools --strict` and resolve every reported issue.
-- [ ] 8.2 Run targeted test files locally and confirm green: `pytest tests/test_probe_orchestrator.py tests/test_probe_orchestrator_contract.py tests/test_command_reset.py tests/test_command_erase.py tests/test_command_monitor.py tests/test_tui_recovery_screens.py tests/test_mcp_recovery.py tests/test_recovery_doc.py tests/test_errors_uniqueness.py`.
-- [ ] 8.3 Run `pytest -q --deselect tests/test_mcp_server.py::test_alloy_mcp_serve_stdio_round_trips_via_subprocess` (and the four pre-Wave-3 environmental deselects) and confirm green.
-- [ ] 8.4 Run `ruff check src tests scripts` and `pyright src/alloy_cli` — fix any new findings introduced by this change.
-- [ ] 8.5 Update `CHANGELOG.md` under `[Unreleased]` with a Wave-4 entry naming the new capability, the three new verbs (`alloy reset` / `alloy erase` / `alloy monitor`), the four new MCP probe tools, the TUI `MonitorScreen`, and the typed error vocabulary.
-- [ ] 8.6 Open the PR titled `Implement add-recovery-tools (Wave 4 of toolchain-management)` referencing this OpenSpec change in the description.
+- [x] 8.1 Run `openspec validate add-recovery-tools --strict` and resolve every reported issue.   *Green.*
+- [x] 8.2 Run targeted test files locally and confirm green: `pytest tests/test_probe_orchestrator.py tests/test_probe_orchestrator_contract.py tests/test_command_reset.py tests/test_command_erase.py tests/test_command_monitor.py tests/test_tui_recovery_screens.py tests/test_mcp_recovery.py tests/test_recovery_doc.py tests/test_errors_uniqueness.py`.   *112 Wave-4 tests pass (the recovery-screens file landed as `tests/test_tui_monitor_screen.py`).*
+- [x] 8.3 Run `pytest -q --deselect tests/test_mcp_server.py::test_alloy_mcp_serve_stdio_round_trips_via_subprocess` (and the four pre-Wave-3 environmental deselects) and confirm green.   *1042 passed, 10 skipped, 5 deselected.*
+- [x] 8.4 Run `ruff check src tests scripts` and `pyright src/alloy_cli` — fix any new findings introduced by this change.   *Both clean: ruff "All checks passed!", pyright "0 errors, 0 warnings, 0 informations".*
+- [x] 8.5 Update `CHANGELOG.md` under `[Unreleased]` with a Wave-4 entry naming the new capability, the three new verbs (`alloy reset` / `alloy erase` / `alloy monitor`), the four new MCP probe tools, the TUI `MonitorScreen`, and the typed error vocabulary.
+- [ ] 8.6 Open the PR titled `Implement add-recovery-tools (Wave 4 of toolchain-management)` referencing this OpenSpec change in the description.   *(Deferred — local-only work; opening the PR is the user's call.)*

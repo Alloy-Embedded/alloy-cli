@@ -588,6 +588,10 @@ def select_probe(
             detected=tuple((p.vid, p.pid, p.serial, p.kind) for p in matches),
         )
 
+    # The two raises above guarantee ``matches`` has exactly one element
+    # by this point; pyright can't infer that.  ``assert`` narrows the
+    # type for the type checker without changing runtime behaviour.
+    assert len(matches) == 1, "select_probe invariant: matches has exactly one element here"
     chosen = matches[0]
     if chosen.vendor_only:
         raise FamilyToolchainProbeUnauthorisedError(
