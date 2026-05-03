@@ -9,6 +9,90 @@ Unreleased work lives at the top of the file; releases are tagged
 
 ## [Unreleased]
 
+### Added — Wave-2 of toolchain-management
+
+- **`add-toolchain-installer`** — alloy-cli now downloads, verifies-by-
+  SHA256, extracts, and self-hosts every non-vendor tool a project's
+  family declares.  No PATH munging: the content-addressed store at
+  ``platformdirs.user_data_dir("alloy")/tools/`` holds the bytes;
+  CMake / probe-rs / gdb invocations resolve absolute paths.
+- New `alloy toolchain` command group with five verbs:
+  ``install [--for <family>] [--shared] [--dry-run] [--include-optional]
+  [--force]``, ``list [--installed/--missing] [--for <family>] [--json]``,
+  ``use TOOL@VERSION``, ``prune [--dry-run] [--projects-root <dir>]``,
+  ``shell [--print-path]``.  Vendor tools render the explicit
+  "skipped (vendor — install manually: <URL>)" line; the installer
+  never touches them.
+- New JSON Schema ``schema/source_manifest_v1.json`` (Draft 2020-12)
+  validating per-source-kind pin files.  Initial pin tables ship for
+  xpack (arm-none-eabi-gcc 14.2.1, cmake 3.31.2, ninja 1.12.1),
+  github (picotool, esptool, dfu-util, tio), probe-rs 0.27.0 with
+  embedded udev rules, and Espressif (xtensa-esp-elf-gcc /
+  riscv32-esp-elf-gcc 14.2.0).  All across 5 host triples (linux/
+  macos/windows × x86_64/arm64) where upstream publishes them.
+- New core modules:
+    * ``core.tool_sources`` — ``XpackAdapter`` /
+      ``GithubAdapter`` / ``ProbeRsAdapter`` / ``EspressifAdapter``
+      behind a ``Source`` Protocol; ``Downloader`` Protocol with
+      stdlib-urllib production + ``FakeDownloader`` test seam,
+      streaming SHA256 verification on the wire.  ``host_triple()``
+      with alias map (AMD64/aarch64/arm64e → canonical x86_64/arm64).
+    * ``core.toolchain_manager`` — atomic install (download →
+      SHA verify → extract → ``os.rename`` → symlink/pointer →
+      manifest) under an advisory file lock (fcntl / msvcrt).
+      ``resolve(tool, version, sha256)``, ``resolve_for_lockfile
+      (project_root, tool)``, ``list_installed()``, ``verify()``,
+      ``prune(projects=…)``, ``installed_bin_dirs()``,
+      ``find_installed()``.  Honours ``ALLOY_TOOLS_ROOT`` env
+      override for tests/CI.
+    * ``core.lockfile_toolchain`` — read/write/dumps/parse/add/
+      remove/diff for ``.alloy/toolchain.lock``.  Deterministic
+      TOML, alphabetical key order, byte-stable across insert
+      orders.
+- ``core.build.run`` writes ``.alloy/cache/toolchain.cmake``
+  whenever ``.alloy/toolchain.lock`` exists, stamp-keyed on
+  ``sha256(lockfile) + alloy_cli_version``.  Compiler family map
+  covers arm-none-eabi-gcc / xtensa-esp-elf-gcc /
+  riscv32-esp-elf-gcc / riscv-none-elf-gcc.  Cmake configure now
+  carries ``-DCMAKE_TOOLCHAIN_FILE=`` only when the lockfile is
+  present — legacy projects keep building byte-identical to the
+  pre-Wave-2 baseline.
+- ``core.flash.run`` and ``core.debug.build_invocation`` resolve
+  ``probe-rs`` / ``arm-none-eabi-gdb`` / xtensa+riscv variants via
+  the lockfile + store before falling back to ``shutil.which``.
+  Spawned argv carries the absolute store path; PATH stays the
+  user's.
+- New MCP read-only tools:
+    * ``alloy.toolchain_status(family_id?)`` — Wave-1's
+      ``list_family_toolchain`` enriched with installed /
+      missing / vendor state from the local store.
+    * ``alloy.toolchain_install_plan(family_id)`` — returns
+      ``{plan, skipped_vendor, total_size_bytes}`` for the
+      planned download set without performing any I/O.
+- Linux udev handling: when a ``udev_required: true`` tool
+  installs, the manager writes
+  ``<base>/alloy/udev/<tool>.rules`` and emits the explicit
+  ``sudo cp ... && sudo udevadm control --reload-rules``
+  instruction.  alloy-cli never invokes ``sudo``.
+- New typed errors under ``FamilyToolchainInstallerError``:
+  ``checksum``, ``download``, ``extract``, ``store-corrupt``,
+  ``version-mismatch``, ``unsupported-host``, ``locked``.  Each
+  has a stable ``error_type`` string + a matching anchor in
+  ``docs/ERROR_COOKBOOK.md``.
+- New documentation: ``docs/TOOLCHAIN_INSTALLER.md`` covers the
+  source adapter contract, the pin file format, the store layout,
+  the lockfile workflow, the CMake toolchain file generation, the
+  Linux udev story, and the trust model.
+- New script ``scripts/refresh_source_pins.py`` walks every shipped
+  pin file, recomputes SHAs from upstream, and updates the JSON in
+  place.  Default is ``--dry-run`` (prints diff); ``--apply``
+  writes.  Never opens a PR.
+- 173 new tests across schema validation, tool_sources adapters,
+  manager pipeline (atomic install + flock + prune + udev),
+  lockfile read/write, CLI verbs, build CMake toolchain file
+  integration, flash/debug lockfile resolution, MCP tools, and
+  doc coverage.
+
 ### Added — Wave-1 of toolchain-management
 
 - **`add-toolchain-registry`** — per-MCU-family declarative toolchain
