@@ -22,6 +22,7 @@ from alloy_cli.core import boards as _boards
 from alloy_cli.core import flash as _flash
 from alloy_cli.core import ir as _ir
 from alloy_cli.core import peripherals as _peripherals
+from alloy_cli.core import probe_orchestrator as _po
 from alloy_cli.core import process as _process
 from alloy_cli.core import search as _search
 from alloy_cli.core import tool_sources as _ts
@@ -413,9 +414,7 @@ def _tool_requirement_to_dict(tool_req: _registry.ToolRequirement) -> dict[str, 
     }
 
 
-def _tool_list_family_toolchain(
-    registry: ToolRegistry, *, family_id: str
-) -> dict[str, Any]:
+def _tool_list_family_toolchain(registry: ToolRegistry, *, family_id: str) -> dict[str, Any]:
     """Return the resolved per-MCU-family toolchain manifest as JSON.
 
     Wave-1 surface for LLM agents.  Mirrors the data
@@ -475,9 +474,7 @@ def _per_os_install_doc(install_docs: dict[str, str]) -> str | None:
     return next(iter(install_docs.values()), None)
 
 
-def _resolve_family_for_mcp(
-    registry: ToolRegistry, family_id: str | None
-) -> Any:
+def _resolve_family_for_mcp(registry: ToolRegistry, family_id: str | None) -> Any:
     """Family resolution shared by toolchain_status / install_plan.
 
     With ``family_id``, loads the manifest directly.  Without, falls
@@ -515,10 +512,7 @@ def _resolve_family_for_mcp(
     if manifest is None:
         raise ToolError(
             error_type="missing-target",
-            message=(
-                "Could not resolve a family from alloy.toml.  Pass "
-                "family_id explicitly."
-            ),
+            message=("Could not resolve a family from alloy.toml.  Pass family_id explicitly."),
             detail={"known_families": list(_registry.known_families())},
         )
     return manifest
@@ -618,9 +612,7 @@ def _tool_toolchain_status(
     }
 
 
-def _tool_toolchain_install_plan(
-    registry: ToolRegistry, *, family_id: str
-) -> dict[str, Any]:
+def _tool_toolchain_install_plan(registry: ToolRegistry, *, family_id: str) -> dict[str, Any]:
     """Return the planned download set for a family WITHOUT performing
     any I/O.
 
@@ -673,9 +665,7 @@ def _tool_toolchain_install_plan(
                     {
                         "tool": tool_req.tool,
                         "version": tool_req.version,
-                        "install_doc_url": _per_os_install_doc(
-                            dict(tool_req.install_docs)
-                        ),
+                        "install_doc_url": _per_os_install_doc(dict(tool_req.install_docs)),
                     }
                 )
                 continue
@@ -759,9 +749,7 @@ def _outcome_to_dict(outcome: _orch.InstallOutcome) -> dict[str, Any]:
     }
 
 
-def _tool_toolchain_apply_install_plan(
-    registry: ToolRegistry, *, family_id: str
-) -> dict[str, Any]:
+def _tool_toolchain_apply_install_plan(registry: ToolRegistry, *, family_id: str) -> dict[str, Any]:
     """Execute the install plan for ``family_id`` (Wave-3 mutating tool).
 
     The write-side complement to ``toolchain_install_plan``: walks the
@@ -824,10 +812,282 @@ def _tool_toolchain_apply_install_plan(
         "failed_count": report.failed_count,
         "total_bytes_downloaded": report.total_bytes_downloaded,
         "lockfile_updated": report.lockfile_updated,
-        "lockfile_path": (
-            str(report.lockfile_path) if report.lockfile_path else None
-        ),
+        "lockfile_path": (str(report.lockfile_path) if report.lockfile_path else None),
     }
+
+
+# ---------------------------------------------------------------------------
+# Wave-4 probe tools — alloy.probe_{reset, erase_plan, erase, monitor_*}
+# ---------------------------------------------------------------------------
+
+
+# Process-global session table the monitor triplet shares.  Sessions
+# auto-close after 5 minutes of poll inactivity so a crashed agent
+# never leaks threads.  See Wave-4 design D7.
+_MONITOR_SESSIONS = _po.MonitorSessionTable(idle_timeout_seconds=300.0)
+
+
+def _probe_identity_to_dict(probe: _po.ProbeIdentity) -> dict[str, Any]:
+    return {
+        "vid": probe.vid,
+        "pid": probe.pid,
+        "serial": probe.serial,
+        "kind": probe.kind,
+        "vendor_only": probe.vendor_only,
+    }
+
+
+def _select_probe_or_raise(*, probe_hint: str | None, project_root: Path) -> _po.ProbeIdentity:
+    """Drive the orchestrator's selector and project errors to typed
+    MCP envelopes."""
+    from alloy_cli.core.errors import (
+        FamilyToolchainProbeMultipleAttachedError,
+        FamilyToolchainProbeNotAttachedError,
+        FamilyToolchainProbeUnauthorisedError,
+    )
+
+    try:
+        return _po.select_probe(hint=probe_hint, project_root=project_root)
+    except FamilyToolchainProbeNotAttachedError as exc:
+        raise ToolError(
+            error_type="family-toolchain-probe-not-attached",
+            message=str(exc),
+            detail={"detected_probes": []},
+        ) from exc
+    except FamilyToolchainProbeMultipleAttachedError as exc:
+        raise ToolError(
+            error_type="family-toolchain-probe-multiple-attached",
+            message=str(exc),
+            detail={
+                "detected_probes": [
+                    {"vid": v, "pid": p, "serial": s, "kind": k} for v, p, s, k in exc.detected
+                ],
+            },
+        ) from exc
+    except FamilyToolchainProbeUnauthorisedError as exc:
+        raise ToolError(
+            error_type="family-toolchain-probe-unauthorised",
+            message=str(exc),
+            detail={
+                "vendor_tool": exc.vendor_tool,
+                "install_doc_url": exc.install_doc_url,
+            },
+        ) from exc
+
+
+def _tool_probe_reset(
+    registry: ToolRegistry,
+    *,
+    probe: str | None = None,
+    method: str = "soft",
+    halt_after: bool = False,
+) -> dict[str, Any]:
+    """Issue a non-destructive reset of the connected probe target.
+
+    Idempotent + safe — no preview tool required (reset does not
+    modify flash).  The MCP write-side analogue of the CLI
+    ``alloy reset`` command.
+
+    Errors:
+      ``family-toolchain-probe-not-attached`` — no probe enumerated.
+      ``family-toolchain-probe-multiple-attached`` — pass ``probe``.
+      ``family-toolchain-probe-unauthorised`` — vendor-only probe.
+    """
+    if method not in {"soft", "hard"}:
+        raise ToolError(
+            error_type="family-toolchain-probe-error",
+            message=f"reset method must be 'soft' or 'hard'; got {method!r}",
+        )
+    identity = _select_probe_or_raise(probe_hint=probe, project_root=registry.project_dir)
+    backend = _po.real_probe_for(identity, project_root=registry.project_dir)
+    report = _po.reset_target(backend, method=method, halt_after=halt_after)
+    return {
+        "probe": _probe_identity_to_dict(report.probe),
+        "method": report.method,
+        "halt_after": report.halt_after,
+        "duration_ms": report.duration_ms,
+    }
+
+
+def _tool_probe_erase_plan(
+    registry: ToolRegistry,
+    *,
+    probe: str | None = None,
+    regions: list[str] | None = None,
+) -> dict[str, Any]:
+    """Return the planned erase regions WITHOUT executing.
+
+    Read-only preview the agent surfaces to the user before
+    calling ``probe_erase`` with ``confirm=true``.
+
+    Errors:
+      ``family-toolchain-erase-unsupported-region`` when an alias
+      doesn't resolve via the device IR (Wave-4 group 6 ships
+      literal-range support; alias resolution lands once the IR
+      bridge is in place).
+    """
+    from alloy_cli.core.errors import FamilyToolchainEraseUnsupportedRegionError
+
+    identity = _select_probe_or_raise(probe_hint=probe, project_root=registry.project_dir)
+    backend = _po.real_probe_for(identity, project_root=registry.project_dir)
+    try:
+        plan = _po.plan_erase(
+            backend,
+            regions=regions,
+            project_root=registry.project_dir,
+            all_size_bytes=0,
+        )
+    except FamilyToolchainEraseUnsupportedRegionError as exc:
+        raise ToolError(
+            error_type="family-toolchain-erase-unsupported-region",
+            message=str(exc),
+            detail={"known_regions": list(exc.known_regions)},
+        ) from exc
+
+    return {
+        "probe": _probe_identity_to_dict(plan.probe),
+        "regions": [{"name": r.name, "base": r.base, "size": r.size} for r in plan.regions],
+        "total_bytes": plan.total_bytes,
+    }
+
+
+def _tool_probe_erase(
+    registry: ToolRegistry,
+    *,
+    probe: str | None = None,
+    regions: list[str] | None = None,
+    confirm: bool = False,
+) -> dict[str, Any]:
+    """Execute the erase plan (mutating, two-phase).
+
+    Mirrors the Wave-3 ``toolchain_apply_install_plan`` shape.
+    Refuses to run without ``confirm=true`` so the agent must call
+    ``probe_erase_plan`` first, surface the plan to the user, get
+    explicit confirmation, then call this tool.
+
+    Errors:
+      ``family-toolchain-erase-confirmation-required`` — caller
+        forgot ``confirm=true``.
+      ``family-toolchain-erase-unsupported-region`` — alias not in IR.
+      ``family-toolchain-erase-probe-failed`` — backend non-zero.
+    """
+    from alloy_cli.core.errors import (
+        FamilyToolchainEraseConfirmationRequiredError,
+        FamilyToolchainEraseError,
+        FamilyToolchainEraseProbeFailedError,
+        FamilyToolchainEraseUnsupportedRegionError,
+    )
+
+    if not confirm:
+        err = FamilyToolchainEraseConfirmationRequiredError(
+            "probe_erase requires confirm=true; call probe_erase_plan first."
+        )
+        raise ToolError(
+            error_type=err.error_type,
+            message=str(err),
+        )
+
+    identity = _select_probe_or_raise(probe_hint=probe, project_root=registry.project_dir)
+    backend = _po.real_probe_for(identity, project_root=registry.project_dir)
+
+    try:
+        plan = _po.plan_erase(
+            backend,
+            regions=regions,
+            project_root=registry.project_dir,
+            all_size_bytes=0,
+        )
+    except FamilyToolchainEraseUnsupportedRegionError as exc:
+        raise ToolError(
+            error_type="family-toolchain-erase-unsupported-region",
+            message=str(exc),
+            detail={"known_regions": list(exc.known_regions)},
+        ) from exc
+
+    try:
+        report = _po.execute_erase(backend, plan)
+    except FamilyToolchainEraseProbeFailedError as exc:
+        raise ToolError(
+            error_type="family-toolchain-erase-probe-failed",
+            message=str(exc),
+            detail={"stderr": exc.stderr, "returncode": exc.returncode},
+        ) from exc
+    except FamilyToolchainEraseError as exc:
+        raise ToolError(
+            error_type=getattr(exc, "error_type", "family-toolchain-erase-error"),
+            message=str(exc),
+        ) from exc
+
+    return {
+        "probe": _probe_identity_to_dict(report.probe),
+        "regions": [{"name": r.name, "base": r.base, "size": r.size} for r in report.regions],
+        "total_bytes_erased": report.total_bytes_erased,
+        "duration_ms": report.duration_ms,
+    }
+
+
+def _tool_probe_monitor_open(
+    registry: ToolRegistry,
+    *,
+    probe: str | None = None,
+    port: str | None = None,
+    baud: int = 115200,
+    mode: str = "raw",
+) -> dict[str, Any]:
+    """Open a streaming monitor session.
+
+    Returns a ``session_id`` the agent polls via
+    ``probe_monitor_poll(session_id)`` for new bytes and closes
+    via ``probe_monitor_close(session_id)``.  Sessions auto-close
+    after 5 minutes of poll inactivity.
+    """
+    if mode not in {"raw", "rtt"}:
+        raise ToolError(
+            error_type="family-toolchain-probe-error",
+            message=f"monitor mode must be 'raw' or 'rtt'; got {mode!r}",
+        )
+    if mode == "raw" and not port:
+        raise ToolError(
+            error_type="family-toolchain-probe-error",
+            message="monitor 'raw' mode requires a `port` argument.",
+        )
+    identity = _select_probe_or_raise(probe_hint=probe, project_root=registry.project_dir)
+    sid = _MONITOR_SESSIONS.open(identity)
+    session = _MONITOR_SESSIONS.session(sid)
+    return {
+        "session_id": sid,
+        "started_at_ms": session.started_at_ms,
+        "probe": _probe_identity_to_dict(identity),
+        "port": port,
+        "baud": baud,
+        "mode": mode,
+    }
+
+
+def _tool_probe_monitor_poll(
+    registry: ToolRegistry,
+    *,
+    session_id: str,
+) -> dict[str, Any]:
+    """Return new bytes captured since the previous poll.
+
+    The bytes are decoded UTF-8 with ``errors="replace"``;
+    ``new_bytes`` is the empty string when the session has nothing
+    new to report.  ``closed=true`` once the session ends; subsequent
+    polls raise ``probe-operation-cancelled``.
+    """
+    del registry  # session is process-global
+    return _MONITOR_SESSIONS.poll(session_id)
+
+
+def _tool_probe_monitor_close(
+    registry: ToolRegistry,
+    *,
+    session_id: str,
+) -> dict[str, Any]:
+    """Close a monitor session and return the final summary."""
+    del registry
+    return _MONITOR_SESSIONS.close(session_id)
 
 
 # ----- mutating: preview / apply ------------------------------------------
@@ -910,9 +1170,7 @@ def _tool_apply_diff(registry: ToolRegistry, *, diff_id: str) -> dict[str, Any]:
     layout = AlloyDir(root=registry.project_dir)
     proposed = summary.get("proposed") if isinstance(summary, dict) else None
     if isinstance(proposed, dict) and "kind" in proposed and "name" in proposed:
-        record_event(
-            layout, "peripheral_added", kind=proposed["kind"], name=proposed["name"]
-        )
+        record_event(layout, "peripheral_added", kind=proposed["kind"], name=proposed["name"])
     elif "clocks.profiles" in summary:
         record_event(layout, "clock_profile_saved", name=summary["clocks.profiles"])
     elif "clocks.profile" in summary:
@@ -1374,6 +1632,28 @@ _PARAM_SCHEMA: dict[str, dict[str, Any]] = {
     "toolchain_status": {"family_id": "string?"},
     "toolchain_install_plan": {"family_id": "string"},
     "toolchain_apply_install_plan": {"family_id": "string"},
+    "probe_reset": {
+        "probe": "string?",
+        "method": "string?",
+        "halt_after": "bool?",
+    },
+    "probe_erase_plan": {
+        "probe": "string?",
+        "regions": "array<string>?",
+    },
+    "probe_erase": {
+        "probe": "string?",
+        "regions": "array<string>?",
+        "confirm": "bool",
+    },
+    "probe_monitor_open": {
+        "probe": "string?",
+        "port": "string?",
+        "baud": "int?",
+        "mode": "string?",
+    },
+    "probe_monitor_poll": {"session_id": "string"},
+    "probe_monitor_close": {"session_id": "string"},
     "preview_diff": {"kind": "string", "name": "string", "payload": "object?"},
     "apply_diff": {"diff_id": "string"},
     "add_uart": {
@@ -1484,6 +1764,12 @@ def build_default_registry(
         "toolchain_status": _tool_toolchain_status,
         "toolchain_install_plan": _tool_toolchain_install_plan,
         "toolchain_apply_install_plan": _tool_toolchain_apply_install_plan,
+        "probe_reset": _tool_probe_reset,
+        "probe_erase_plan": _tool_probe_erase_plan,
+        "probe_erase": _tool_probe_erase,
+        "probe_monitor_open": _tool_probe_monitor_open,
+        "probe_monitor_poll": _tool_probe_monitor_poll,
+        "probe_monitor_close": _tool_probe_monitor_close,
         "preview_diff": _tool_preview_diff,
         "apply_diff": _tool_apply_diff,
         "add_uart": _tool_add_uart,

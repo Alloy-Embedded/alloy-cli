@@ -92,6 +92,43 @@ row carries a typed `error_type`
 store-corrupt,version-mismatch,unsupported-host}`) the user can
 search the cookbook for.
 
+## Canonical workflow for "reset / erase / monitor"
+
+After the firmware lands on the chip, the user often pivots to
+hardware bring-up.  Three Wave-4 tools cover the daily verbs:
+
+```
+1. probe_reset(method="soft")                  — non-destructive reset
+2. probe_monitor_open(port="...", baud=115200) — start UART/RTT viewer
+3. probe_monitor_poll(session_id=...)          — read incremental bytes
+4. probe_monitor_close(session_id=...)         — clean disconnect
+```
+
+`probe_reset` is **idempotent + safe** (no preview required).
+The response carries `probe`, `method`, `halt_after`, `duration_ms`.
+
+`probe_erase` is **destructive** and follows the same two-phase
+pattern as `toolchain_apply_install_plan`:
+
+```
+1. probe_erase_plan(regions=["bootloader"])  — preview regions + bytes
+   → render the plan to the user; ask for explicit confirmation
+2. probe_erase(regions=["bootloader"], confirm=true)
+```
+
+Calling `probe_erase` without `confirm=true` **always** raises
+`family-toolchain-erase-confirmation-required` — the agent MUST
+preview first.  Wave-4 `probe-rs` backend currently ships
+chip-wide erase only; per-region erase falls through to a typed
+`family-toolchain-erase-probe-failed` until the IR alias bridge
+lands.
+
+Monitor sessions are **session-style** — open → poll → close.
+Sessions auto-close after 5 minutes of poll inactivity so a
+crashed agent doesn't leak threads.  `new_bytes` is the empty
+string when the session has nothing new; do NOT busy-poll —
+sleep at least 100ms between polls.
+
 ## Things you SHOULD NOT do
 
 * Do not propose code edits outside the alloy tool surface.  Do

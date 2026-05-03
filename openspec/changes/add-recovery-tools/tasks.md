@@ -46,13 +46,13 @@
 
 ## 6. MCP integration (six new tools)
 
-- [ ] 6.1 Add `_tool_probe_reset(registry, *, probe=None, method="soft", halt_after=False)` in `src/alloy_cli/mcp/tools.py`; project the `ResetReport` to JSON.
-- [ ] 6.2 Add `_tool_probe_erase_plan(registry, *, probe=None, regions=None)`; project the `ErasePlan` to JSON.
-- [ ] 6.3 Add `_tool_probe_erase(registry, *, probe=None, regions=None, confirm=False)`; refuse without `confirm=True` (raises `family-toolchain-erase-confirmation-required`); on accept dispatches `plan_erase` + `execute_erase`.
-- [ ] 6.4 Add the session table + `_tool_probe_monitor_open` / `_probe_monitor_poll` / `_probe_monitor_close` handlers.  Sessions live in a process-global UUID-keyed dict; each session owns a background thread + a thread-safe byte buffer.  Idle sessions auto-close after 5 minutes (configurable for tests).
-- [ ] 6.5 Register the six new tools in `_PARAM_SCHEMA` and `build_default_registry`'s handler dict.
-- [ ] 6.6 Update `src/alloy_cli/integrations/opencode/system_prompt.md` with a "Canonical workflow for hardware bring-up" section: `probe_reset` is safe; `probe_erase` requires `probe_erase_plan` + `confirm=True`; `probe_monitor_open` returns a session id that must be polled + closed.
-- [ ] 6.7 Add `tests/test_mcp_recovery.py`: every tool registered + JSON-serialisable; `probe_reset` happy path + typed error paths; `probe_erase_plan` returns the plan JSON; `probe_erase` without `confirm=True` raises typed; `probe_erase` with `confirm=True` dispatches; `probe_monitor_open` returns a session id; `probe_monitor_poll` returns incremental bytes; idle session times out.
+- [x] 6.1 Add `_tool_probe_reset(registry, *, probe=None, method="soft", halt_after=False)` in `src/alloy_cli/mcp/tools.py`; project the `ResetReport` to JSON.
+- [x] 6.2 Add `_tool_probe_erase_plan(registry, *, probe=None, regions=None)`; project the `ErasePlan` to JSON.
+- [x] 6.3 Add `_tool_probe_erase(registry, *, probe=None, regions=None, confirm=False)`; refuse without `confirm=True` (raises `family-toolchain-erase-confirmation-required`); on accept dispatches `plan_erase` + `execute_erase`.
+- [x] 6.4 Add the session table + `_tool_probe_monitor_open` / `_probe_monitor_poll` / `_probe_monitor_close` handlers.  Sessions live in a process-global UUID-keyed dict; each session owns a background thread + a thread-safe byte buffer.  Idle sessions auto-close after 5 minutes (configurable for tests).   *Process-global `_MONITOR_SESSIONS = MonitorSessionTable(idle_timeout_seconds=300.0)`.  Wave-4 ships the session plumbing; the streaming-backend bridge to PySerial / probe-rs RTT lands in Wave 5 alongside the bidirectional channel.*
+- [x] 6.5 Register the six new tools in `_PARAM_SCHEMA` and `build_default_registry`'s handler dict.
+- [x] 6.6 Update `src/alloy_cli/integrations/opencode/system_prompt.md` with a "Canonical workflow for hardware bring-up" section: `probe_reset` is safe; `probe_erase` requires `probe_erase_plan` + `confirm=True`; `probe_monitor_open` returns a session id that must be polled + closed.
+- [x] 6.7 Add `tests/test_mcp_recovery.py`: every tool registered + JSON-serialisable; `probe_reset` happy path + typed error paths; `probe_erase_plan` returns the plan JSON; `probe_erase` without `confirm=True` raises typed; `probe_erase` with `confirm=True` dispatches; `probe_monitor_open` returns a session id; `probe_monitor_poll` returns incremental bytes; idle session times out.   *18 tests landed.*
 
 ## 7. Documentation
 
