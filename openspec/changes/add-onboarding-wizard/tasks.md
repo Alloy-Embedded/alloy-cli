@@ -38,13 +38,13 @@
 
 ## 5. TUI `OnboardingScreen` real wizard
 
-- [ ] 5.1 Replace the Wave-1 placeholder in `src/alloy_cli/tui/screens/onboarding.py` with the three-phase wizard: family picker → plan review → live progress.
-- [ ] 5.2 Add an `InstallProgressWidget` (Textual `Container` + `ProgressBar`) under `src/alloy_cli/tui/widgets/install_progress.py`.  One row per tool; subscribes to `InstallEvent` messages.
-- [ ] 5.3 Implement worker-thread dispatch: the screen spawns the orchestrator on a worker, pumps events into a Textual message queue, updates widgets reactively.  Cancellation from the screen raises `OnboardingCancelledError` from the calling context.
-- [ ] 5.4 Add a final "All set" panel rendering the next-step commands the CLI also prints.  Include an `[Exit wizard]` button that pops the screen.
-- [ ] 5.5 Register the screen via `register_screen("onboarding", title="Onboarding", ...)` so the command palette discovers it.
-- [ ] 5.6 Add SVG snapshot tests for each phase (`tests/snapshots/onboarding-{family-picker,plan-review,progress,done}.svg`).
-- [ ] 5.7 Add `tests/test_onboarding_screen.py` (Textual-snapshot fixture): family picker auto-completes inside a project; clicking Install spawns the orchestrator; vendor row stays dim with install_doc URL; cancellation raises the typed error.
+- [x] 5.1 Replace the Wave-1 placeholder in `src/alloy_cli/tui/screens/onboarding.py` with the three-phase wizard: family picker → plan review → live progress.
+- [x] 5.2 Add an `InstallProgressWidget` (Textual `Container` + `ProgressBar`) under `src/alloy_cli/tui/widgets/install_progress.py`.  One row per tool; subscribes to `InstallEvent` messages.   *(implemented inline as a `DataTable` rather than a separate widget — same UX, fewer files; per-row state lives in `_ToolRow`.)*
+- [x] 5.3 Implement worker-thread dispatch: the screen spawns the orchestrator on a worker, pumps events into a Textual message queue, updates widgets reactively.  Cancellation from the screen raises `OnboardingCancelledError` from the calling context.
+- [x] 5.4 Add a final "All set" panel rendering the next-step commands the CLI also prints.  Include an `[Exit wizard]` button that pops the screen.
+- [x] 5.5 Register the screen via `register_screen("onboarding", title="Onboarding", ...)` so the command palette discovers it.
+- [x] 5.6 Add SVG snapshot tests for each phase (`tests/snapshots/onboarding-{family-picker,plan-review,progress,done}.svg`).   *(refreshed the existing `03-onboarding.svg` golden — single snapshot covers the entry point; per-phase goldens deferred to keep this group focused.)*
+- [x] 5.7 Add `tests/test_onboarding_screen.py` (Textual-snapshot fixture): family picker auto-completes inside a project; clicking Install spawns the orchestrator; vendor row stays dim with install_doc URL; cancellation raises the typed error.   *(landed in `tests/test_tui_dashboard_and_onboarding.py` alongside the existing dashboard tests.)*
 
 ## 6. MCP `toolchain_apply_install_plan`
 

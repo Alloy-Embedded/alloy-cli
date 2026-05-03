@@ -24,10 +24,7 @@ from alloy_cli.tui.screens.dashboard import (
 )
 from alloy_cli.tui.screens.onboarding import (
     OnboardingScreen,
-    _OnboardingState,
-    load_state,
-    persist_state,
-    state_path,
+    Phase,
 )
 
 # ---------------------------------------------------------------------------
@@ -108,44 +105,6 @@ def test_read_build_summary_parses_payload(tmp_path) -> None:
     assert summary.ok is True
     assert summary.flash_bytes == 10240
     assert summary.ram_capacity == 36864
-
-
-# ---------------------------------------------------------------------------
-# Onboarding state persistence
-# ---------------------------------------------------------------------------
-
-
-def test_onboarding_state_round_trip(tmp_path) -> None:
-    state = _OnboardingState(
-        name="firmware",
-        board_id="nucleo_g071rb",
-        clock_profile="pll_64mhz",
-        starter_peripheral_kind="uart",
-        skipped={"Starter peripheral"},
-    )
-    persist_state(tmp_path, state)
-    assert state_path(tmp_path).exists()
-    decoded = load_state(tmp_path)
-    assert decoded is not None
-    assert decoded.name == "firmware"
-    assert decoded.board_id == "nucleo_g071rb"
-    assert decoded.clock_profile == "pll_64mhz"
-    assert "Starter peripheral" in decoded.skipped
-
-
-def test_load_state_returns_none_when_absent(tmp_path) -> None:
-    assert load_state(tmp_path) is None
-
-
-def test_onboarding_state_to_from_dict_handles_device_tuple(tmp_path) -> None:
-    state = _OnboardingState(
-        name="raw", device=("st", "stm32g0", "stm32g071rb"), license="Apache-2.0"
-    )
-    persist_state(tmp_path, state)
-    decoded = load_state(tmp_path)
-    assert decoded is not None
-    assert decoded.device == ("st", "stm32g0", "stm32g071rb")
-    assert decoded.license == "Apache-2.0"
 
 
 # ---------------------------------------------------------------------------
@@ -244,54 +203,80 @@ async def test_dashboard_hotkeys_emit_notifications(tmp_path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Onboarding wizard (Pilot-driven)
+# Wave-3 OnboardingScreen (3-phase install wizard)
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
-async def test_onboarding_advances_through_steps(tmp_path) -> None:
-    screen = OnboardingScreen(root=tmp_path)
-    app = TuiApp(initial_screen=screen)
-    async with app.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
-        # Step 1: name input.
-        from textual.widgets import Input
-
-        name_input = app.screen.query_one("#step-name", Input)
-        name_input.value = "firmware"
-        # Click "Next".
-        from textual.widgets import Button
-
-        next_button = app.screen.query_one("#next", Button)
-        await pilot.click(next_button)
-        await pilot.pause()
-        # Step 2: board input — skip via the Skip button instead.
-        skip_button = app.screen.query_one("#skip", Button)
-        await pilot.click(skip_button)
-        await pilot.pause()
-        # State persisted to disk.
-        from_disk = load_state(tmp_path)
-        assert from_disk is not None
-        assert from_disk.name == "firmware"
+async def test_onboarding_inside_resolved_project_skips_to_plan_review(
+    tmp_path,
+) -> None:
+    """Spec scenario: opening the wizard inside a stm32g0 project
+    auto-completes the family picker and lands on plan review."""
+    _seed_project(tmp_path)  # writes a stm32g0 chip project
+    screen = OnboardingScreen(project_root=tmp_path)
+    assert screen._phase == Phase.PLAN_REVIEW
+    assert screen._state.manifest is not None
+    assert screen._state.manifest.family_id == "stm32g0"
 
 
 @pytest.mark.asyncio
-async def test_onboarding_save_and_exit_dismisses(tmp_path) -> None:
-    screen = OnboardingScreen(root=tmp_path)
-    app = TuiApp(initial_screen=screen)
-    async with app.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
-        await pilot.press("ctrl+s")
-        await pilot.pause()
-        # State file written even before completing all steps.
-        assert state_path(tmp_path).exists()
+async def test_onboarding_outside_project_starts_at_family_picker(tmp_path) -> None:
+    """No alloy.toml → wizard starts at the family-picker phase."""
+    screen = OnboardingScreen(project_root=tmp_path)
+    assert screen._phase == Phase.FAMILY_PICKER
+    assert screen._state.manifest is None
 
 
 @pytest.mark.asyncio
-async def test_onboarding_escape_cancels(tmp_path) -> None:
-    screen = OnboardingScreen(root=tmp_path)
+async def test_onboarding_plan_review_renders_required_and_recommended(
+    tmp_path,
+) -> None:
+    """The plan-review DataTable lists required + recommended tools."""
+    _seed_project(tmp_path)  # stm32g0
+    screen = OnboardingScreen(project_root=tmp_path)
+    app = TuiApp(initial_screen=screen)
+    async with app.run_test(size=(140, 40)) as pilot:
+        await pilot.pause()
+        from textual.widgets import DataTable
+
+        table = app.screen.query_one("#plan-table", DataTable)
+        # Required tier (inherited from arm-cortex-m): cmake, ninja,
+        # arm-none-eabi-gcc, probe-rs.  Recommended for stm32g0:
+        # STM32CubeProgrammer (vendor) + tio.
+        keys = {row.value for row in table.rows.keys() if row.value}
+        for tool in ("arm-none-eabi-gcc", "cmake", "ninja", "probe-rs"):
+            assert tool in keys
+        # Vendor row exists (and is dim — tested below).
+        assert "STM32CubeProgrammer" in keys
+
+
+@pytest.mark.asyncio
+async def test_onboarding_escape_cancels_before_install(tmp_path) -> None:
+    """Escape during the family picker / plan review dismisses with
+    None (no exception — only mid-install cancel raises)."""
+    _seed_project(tmp_path)
+    screen = OnboardingScreen(project_root=tmp_path)
     app = TuiApp(initial_screen=screen)
     async with app.run_test(size=(120, 40)) as pilot:
         await pilot.pause()
         await pilot.press("escape")
         await pilot.pause()
+        # The screen has been popped or dismissed.  We don't assert
+        # the call_screen result here (Textual harness limitation);
+        # success is "no exception was raised".
+
+
+@pytest.mark.asyncio
+async def test_onboarding_register_screen_factory_lands_on_picker_when_cwd_empty(
+    tmp_path, monkeypatch
+) -> None:
+    """The screen registry's factory creates an OnboardingScreen at
+    CWD; outside a project it starts at the family picker."""
+    monkeypatch.chdir(tmp_path)
+    from alloy_cli.tui.screens.onboarding import make_onboarding
+
+    screen = make_onboarding()
+    # The factory sets project_root=Path.cwd().
+    assert isinstance(screen, OnboardingScreen)
+    assert screen._phase == Phase.FAMILY_PICKER

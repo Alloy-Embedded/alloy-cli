@@ -425,7 +425,7 @@ def build_app_for(name: str, *, project_root: Path) -> TuiApp:
     if name == "02-dashboard":
         return TuiApp(initial_screen=DashboardScreen(project_dir=project_root))
     if name == "03-onboarding":
-        return TuiApp(initial_screen=OnboardingScreen(root=project_root))
+        return TuiApp(initial_screen=OnboardingScreen(project_root=project_root))
     if name == "04-board-picker":
         return TuiApp(initial_screen=BoardPickerScreen())
     if name == "05-peripheral-add":
