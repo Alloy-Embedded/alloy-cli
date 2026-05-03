@@ -57,10 +57,10 @@
 
 ## 7. Documentation
 
-- [ ] 7.1 Author `docs/TOOLCHAIN_ONBOARDING.md` covering the four entry points + decision matrix + orchestrator API + InstallEvent contract + two-phase MCP pattern + cancellation contract + cross-links to Waves 1-2 docs.
-- [ ] 7.2 Rewrite `docs/QUICKSTART.md` to use the post-scaffold install prompt as the canonical "five minutes to first ELF" path; reference `--no-install-toolchain` as the escape hatch and `alloy doctor --fix` as the "existing project" command.
-- [ ] 7.3 Add `tests/test_toolchain_onboarding_doc.py` mirroring Wave 1 + Wave 2 doc tests: every `InstallEvent` class is namedropped, every entry point has a subsection, every cookbook anchor for relevant errors is linked, the cancellation contract is documented.
-- [ ] 7.4 Run `python scripts/generate_cheatsheet.py` and verify the new `alloy setup` + the modified `alloy new` flags land.
+- [x] 7.1 Author `docs/TOOLCHAIN_ONBOARDING.md` covering the four entry points + decision matrix + orchestrator API + InstallEvent contract + two-phase MCP pattern + cancellation contract + cross-links to Waves 1-2 docs.
+- [x] 7.2 Rewrite `docs/QUICKSTART.md` to use the post-scaffold install prompt as the canonical "five minutes to first ELF" path; reference `--no-install-toolchain` as the escape hatch and `alloy doctor --fix` as the "existing project" command.
+- [x] 7.3 Add `tests/test_toolchain_onboarding_doc.py` mirroring Wave 1 + Wave 2 doc tests: every `InstallEvent` class is namedropped, every entry point has a subsection, every cookbook anchor for relevant errors is linked, the cancellation contract is documented.
+- [x] 7.4 Run `python scripts/generate_cheatsheet.py` and verify the new `alloy setup` + the modified `alloy new` flags land.   *(landed in groups 2 and 4; the cheatsheet check stays green.)*
 
 ## 8. Validation + ship-readiness
 
