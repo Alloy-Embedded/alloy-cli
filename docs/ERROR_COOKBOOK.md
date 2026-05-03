@@ -577,3 +577,30 @@ running), delete it manually: `rm
 ~/.local/share/alloy/tools/.lock`.
 
 **MCP tool:** none — the lock is process-level coordination.
+
+## onboarding-cancelled
+
+**Trigger:** the user cancelled the onboarding wizard mid-
+flight — Ctrl-C from a line prompt, the `Cancel` button in
+the TUI Onboarding screen, or SIGINT during `alloy setup` /
+`alloy new --install-toolchain`.  Distinct from the
+`family-toolchain-*` namespace because it is a user-flow event
+rather than a toolchain content failure.
+
+**Example message:** `Onboarding cancelled by user.`  The
+exception carries `.partial_outcomes` listing the tools that
+DID complete before the cancel — Wave-2's per-tool atomicity
+ensures those installs are consistent.
+
+**Fix:**
+- Re-run the wizard (`alloy setup`, `alloy new
+  --install-toolchain`, or `alloy ui` → Onboarding screen) —
+  the manager is idempotent so already-installed tools are
+  recognised as no-ops.
+- Or run `alloy toolchain install` directly, which finishes
+  the install without the wizard prompts.
+
+**MCP tool:** not applicable — MCP callers cannot mid-cancel
+`alloy.toolchain_apply_install_plan`; that tool runs to
+completion or fails with a typed
+`family-toolchain-installer-*` envelope.

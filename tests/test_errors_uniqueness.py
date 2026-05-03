@@ -38,9 +38,7 @@ def test_every_alloycli_error_type_string_is_unique() -> None:
             f"{cls.__name__} has no usable `error_type` class attribute"
         )
         if et in seen and seen[et] is not cls:
-            duplicates.append(
-                f"  • {et!r} on both {seen[et].__name__} and {cls.__name__}"
-            )
+            duplicates.append(f"  • {et!r} on both {seen[et].__name__} and {cls.__name__}")
         else:
             seen[et] = cls
 
@@ -67,6 +65,33 @@ def test_family_toolchain_error_subclasses_use_kebab_case() -> None:
         )
 
 
+def test_onboarding_cancelled_error_carries_stable_type() -> None:
+    """Wave-3's wizard cancellation surfaces as ``onboarding-cancelled``.
+
+    Distinct from the ``family-toolchain-*`` namespace because it's a
+    user-flow event, not a toolchain content failure.
+    """
+    err = _errors.OnboardingCancelledError()
+    assert err.error_type == "onboarding-cancelled"
+    assert issubclass(_errors.OnboardingCancelledError, _errors.AlloyCliError)
+    # NOT a FamilyToolchain* descendant — separate concept
+    assert not issubclass(_errors.OnboardingCancelledError, _errors.FamilyToolchainError)
+    assert not issubclass(
+        _errors.OnboardingCancelledError,
+        _errors.FamilyToolchainInstallerError,
+    )
+
+
+def test_onboarding_cancelled_error_attaches_partial_outcomes() -> None:
+    """The exception carries what was installed before the cancel."""
+    err = _errors.OnboardingCancelledError(
+        "user cancelled",
+        partial_outcomes=("outcome-a", "outcome-b"),
+    )
+    assert err.partial_outcomes == ("outcome-a", "outcome-b")
+    assert "user cancelled" in str(err)
+
+
 def test_family_toolchain_installer_error_subclasses_use_kebab_case() -> None:
     """The seven ``family-toolchain-installer-*`` sub-types follow the
     naming convention from Wave-2's proposal.
@@ -83,8 +108,7 @@ def test_family_toolchain_installer_error_subclasses_use_kebab_case() -> None:
     }
     for cls, expected_type in expected.items():
         assert cls.error_type == expected_type, (
-            f"{cls.__name__}.error_type expected {expected_type!r}, "
-            f"got {cls.error_type!r}"
+            f"{cls.__name__}.error_type expected {expected_type!r}, got {cls.error_type!r}"
         )
         assert issubclass(cls, _errors.FamilyToolchainInstallerError), (
             f"{cls.__name__} should be a FamilyToolchainInstallerError subclass"

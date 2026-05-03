@@ -163,6 +163,35 @@ class FamilyToolchainInstallerLockedError(FamilyToolchainInstallerError):
     error_type = "family-toolchain-installer-locked"
 
 
+class OnboardingCancelledError(AlloyCliError):
+    """User cancelled the onboarding wizard mid-flight.
+
+    Raised by Wave-3 entry points (``alloy new`` interactive
+    prompt, ``alloy setup``, the TUI ``OnboardingScreen``) when
+    the user sends SIGINT or clicks Cancel.  The CLI maps this to
+    exit code 130 (SIGINT convention).
+
+    The exception carries the partial install outcomes via
+    ``.partial_outcomes`` so callers can summarise "X of Y tools
+    installed before you cancelled" without losing context.
+    """
+
+    error_type = "onboarding-cancelled"
+
+    def __init__(
+        self,
+        message: str = "Onboarding cancelled by user.",
+        *,
+        partial_outcomes: tuple[object, ...] = (),
+    ) -> None:
+        super().__init__(message)
+        # ``partial_outcomes`` is intentionally typed as ``object`` here
+        # to avoid a circular import with
+        # ``core.toolchain_orchestrator``.  Callers should treat it as
+        # ``tuple[InstallOutcome, ...]``.
+        self.partial_outcomes = partial_outcomes
+
+
 __all__ = [
     "AlloyCliError",
     "BoardNotFoundError",
@@ -182,6 +211,7 @@ __all__ = [
     "FamilyToolchainNotFoundError",
     "FamilyToolchainSchemaError",
     "FamilyToolchainUnknownParentError",
+    "OnboardingCancelledError",
     "PinInvalidError",
     "ProjectConfigError",
     "ProjectConfigVersionError",
