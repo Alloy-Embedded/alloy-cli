@@ -20,13 +20,19 @@ import importlib.util
 import platform
 import shutil
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Literal, cast
 
 from alloy_cli.core import toolchain as _toolchain
+from alloy_cli.core import toolchain_orchestrator as _orch
 from alloy_cli.core import toolchain_registry as _registry
-from alloy_cli.core.errors import BoardNotFoundError, FamilyToolchainError, ProjectConfigError
+from alloy_cli.core.errors import (
+    AlloyCliError,
+    BoardNotFoundError,
+    FamilyToolchainError,
+    ProjectConfigError,
+)
 from alloy_cli.core.process import CommandRunner
 from alloy_cli.core.process import runner as _default_runner
 from alloy_cli.core.project import PROJECT_FILE, ProjectConfig, read
@@ -145,9 +151,24 @@ def _per_os_install_doc(tool_req: _registry.ToolRequirement) -> str | None:
     return next(iter(tool_req.install_docs.values()), None)
 
 
+def _missing_non_vendor_install_hint(
+    tool_req: _registry.ToolRequirement, family_id: str
+) -> str:
+    """The fix-this-now hint we show on missing non-vendor toolchain rows.
+
+    Wave 3 rewires the auto-fix path to dispatch through the shared
+    install orchestrator, so the hint is now a concrete CLI command
+    (``alloy toolchain install --for <family> <tool>``) the user can
+    paste — and the same string is reused as the ``auto_fix`` field
+    so :func:`get_auto_fix` can route the row.
+    """
+    return f"alloy toolchain install --for {family_id} {tool_req.tool}"
+
+
 def _from_dedicated_detector(
     tool_req: _registry.ToolRequirement,
     status: _toolchain.ToolchainStatus,
+    family_id: str,
 ) -> CheckResult:
     """Project a typed :class:`ToolchainStatus` to a :class:`CheckResult`."""
     if status.present:
@@ -159,17 +180,21 @@ def _from_dedicated_detector(
             message=f"{tool_req.tool}{version} at {status.path}",
             source="system",
         )
+    hint = _missing_non_vendor_install_hint(tool_req, family_id)
     return CheckResult(
         name=tool_req.tool,
         ok=False,
         severity="error",
         message=f"{tool_req.tool} is not on PATH.",
-        install_hint=status.install_hint,
+        install_hint=hint,
+        auto_fix=hint,
         source=tool_req.source,
     )
 
 
-def _check_generic_tool(tool_req: _registry.ToolRequirement) -> CheckResult:
+def _check_generic_tool(
+    tool_req: _registry.ToolRequirement, family_id: str
+) -> CheckResult:
     """Detect a tool that has no dedicated ``core.toolchain`` helper.
 
     Vendor-source missing tools surface as ``severity="info"`` with the
@@ -195,22 +220,29 @@ def _check_generic_tool(tool_req: _registry.ToolRequirement) -> CheckResult:
             install_hint=doc_url,
             source=_VENDOR_SOURCE_LABEL,
         )
-    # Non-vendor missing tool: red row, but Wave-1 has no installer.
+    # Non-vendor missing tool: Wave 3 ships an auto-installer via the
+    # shared orchestrator.  The `auto_fix` string doubles as the user-
+    # facing CLI hint; `get_auto_fix` routes it through the toolchain
+    # auto-fixer keyed on `_TOOLCHAIN_AUTO_FIX_KEY`.
+    hint = _missing_non_vendor_install_hint(tool_req, family_id)
     return CheckResult(
         name=tool_req.tool,
         ok=False,
         severity="error",
         message=f"{tool_req.tool} not on PATH.",
-        install_hint=f"Wave-2 will install via {tool_req.source}.",
+        install_hint=hint,
+        auto_fix=hint,
         source=tool_req.source,
     )
 
 
-def _check_for_tool(tool_req: _registry.ToolRequirement) -> CheckResult:
+def _check_for_tool(
+    tool_req: _registry.ToolRequirement, family_id: str
+) -> CheckResult:
     detector = _resolve_dedicated_detector(tool_req.tool)
     if detector is not None:
-        return _from_dedicated_detector(tool_req, detector())
-    return _check_generic_tool(tool_req)
+        return _from_dedicated_detector(tool_req, detector(), family_id)
+    return _check_generic_tool(tool_req, family_id)
 
 
 def _checks_from_manifest(manifest: _registry.FamilyManifest) -> list[CheckResult]:
@@ -222,7 +254,7 @@ def _checks_from_manifest(manifest: _registry.FamilyManifest) -> list[CheckResul
     out: list[CheckResult] = []
     for tier in (manifest.required, manifest.recommended, manifest.optional):
         for tool_req in tier:
-            out.append(_check_for_tool(tool_req))
+            out.append(_check_for_tool(tool_req, manifest.family_id))
     return out
 
 
@@ -531,13 +563,155 @@ def _auto_fix_pip_install_mcp(
     return AutoFixOutcome(ok=result.ok, log=log)
 
 
+# Sentinel key in :data:`AUTO_FIXERS` for the Wave-3 toolchain
+# auto-installer.  The spec writes the fix surface as
+# ``toolchain:<tool-name>`` (one synthetic fixer per missing required
+# tool), but the implementation uses one physical entry that reads
+# the failing :class:`CheckResult` to figure out which tool to install
+# — keyed on this sentinel so :func:`get_auto_fix` can route it.
+_TOOLCHAIN_AUTO_FIX_KEY = "__toolchain_install__"
+
+
+def _is_toolchain_install_row(check: CheckResult) -> bool:
+    """A check is eligible for the toolchain auto-installer iff it
+    represents a missing **non-vendor** tool resolved through a family
+    manifest.
+
+    Vendor rows carry ``source=_VENDOR_SOURCE_LABEL`` (so they're
+    excluded — Wave-3 never auto-installs EULA-gated tools).  System-
+    detected ``ok=True`` rows have ``source="system"`` (so they're
+    excluded).  Other failures (project-level, submodule-init,
+    accessibility) leave ``source=None`` (so they're excluded).
+    Anything else with a non-system, non-vendor source is a toolchain
+    row resolved from a family manifest.
+    """
+    if check.ok:
+        return False
+    if check.source is None:
+        return False
+    if check.source == "system":
+        return False
+    if check.source.startswith("vendor"):
+        return False
+    return True
+
+
+def _auto_fix_install_toolchain_tool(
+    check: CheckResult, runner: CommandRunner, project_root: Path
+) -> AutoFixOutcome:
+    """Install one missing non-vendor toolchain tool via the shared orchestrator.
+
+    Wave-3 entry point: dispatches a single-tool slice of the family
+    manifest through :func:`toolchain_orchestrator.install_family`.
+    The lockfile gets the new pin atomically; failure of THIS tool
+    does not affect the rest of ``alloy doctor --fix``'s queue.
+
+    The ``runner`` parameter is unused — the orchestrator owns its
+    own download / extract pipeline (which has been tested separately
+    via the :class:`Downloader` Protocol).  Kept for signature parity
+    with the other AutoFix callables.
+    """
+    del runner
+
+    toml = project_root / PROJECT_FILE
+    if not toml.exists():
+        return AutoFixOutcome(
+            ok=False,
+            log=(
+                f"No alloy.toml at {project_root}; cannot resolve a family. "
+                "Run inside a project or scaffold one with `alloy new`."
+            ),
+        )
+    try:
+        config = read(toml)
+    except (ProjectConfigError, OSError) as exc:
+        return AutoFixOutcome(ok=False, log=f"alloy.toml unreadable: {exc}")
+
+    try:
+        manifest = _registry.resolve_for_project(config)
+    except FamilyToolchainError as exc:
+        return AutoFixOutcome(ok=False, log=f"family resolution failed: {exc}")
+    if manifest is None:
+        return AutoFixOutcome(
+            ok=False,
+            log=(
+                "Project does not resolve to a family with a shipped "
+                "toolchain manifest; cannot auto-install."
+            ),
+        )
+
+    target = manifest.find_tool(check.name)
+    if target is None:
+        return AutoFixOutcome(
+            ok=False,
+            log=(
+                f"Tool {check.name!r} is not declared in family "
+                f"{manifest.family_id!r}; cannot auto-install."
+            ),
+        )
+    if target.is_vendor:
+        # Belt-and-braces — `_is_toolchain_install_row` already filters
+        # vendor rows out, but a future caller might reach here directly.
+        return AutoFixOutcome(
+            ok=False,
+            log=f"{check.name} is a vendor (EULA-gated) tool; never auto-installed.",
+        )
+
+    # Slice the manifest down to one required tool so the orchestrator
+    # walks exactly that.  The optional/recommended tiers are emptied
+    # — `--fix` only auto-installs the rows the user can see failing.
+    sliced = replace(manifest, required=(target,), recommended=(), optional=())
+
+    log_lines: list[str] = []
+
+    def _on(event: _orch.InstallEvent) -> None:
+        log_lines.append(_format_event(event))
+
+    try:
+        report = _orch.install_family(
+            sliced,
+            project_root=project_root,
+            on_event=_on,
+        )
+    except AlloyCliError as exc:
+        log_lines.append(f"error: {exc}")
+        return AutoFixOutcome(ok=False, log="\n".join(log_lines))
+
+    failed = report.failed_count > 0
+    return AutoFixOutcome(ok=not failed, log="\n".join(log_lines))
+
+
+def _format_event(event: _orch.InstallEvent) -> str:
+    """One-line summary of an install event for the auto-fix log."""
+    if isinstance(event, _orch.ToolStarted):
+        size = f" ({event.size_bytes} B)" if event.size_bytes else ""
+        return f"→ {event.tool}@{event.version} from {event.source}{size}"
+    if isinstance(event, _orch.ToolDownloaded):
+        return f"  downloaded {event.bytes_downloaded} B"
+    if isinstance(event, _orch.ToolInstalled):
+        verb = "skipped (already installed)" if event.skipped else "installed"
+        return f"✓ {event.tool}@{event.version} {verb}"
+    if isinstance(event, _orch.ToolSkippedVendor):
+        url = f" — see {event.install_doc_url}" if event.install_doc_url else ""
+        return f"· {event.tool}@{event.version} skipped (vendor){url}"
+    if isinstance(event, _orch.ToolSkippedHostUnsupported):
+        return (
+            f"· {event.tool}@{event.version} skipped — no pin for host {event.host}"
+        )
+    if isinstance(event, _orch.ToolFailed):
+        return f"✗ {event.tool}@{event.version} failed: {event.message} ({event.error_type})"
+    return repr(event)
+
+
 # Mapping CheckResult.name → AutoFix.  Adding a check with an
 # ``auto_fix`` string is necessary but not sufficient — the entry
-# must also appear here.  Tests pin the contents of this dict so
-# regressions surface immediately.
+# must also appear here OR the row must be a toolchain-install row
+# routed via :data:`_TOOLCHAIN_AUTO_FIX_KEY`.  Tests pin the contents
+# of this dict so regressions surface immediately.
 AUTO_FIXERS: dict[str, AutoFix] = {
     "alloy-devices-yml": _auto_fix_init_devices_submodule,
     "mcp": _auto_fix_pip_install_mcp,
+    _TOOLCHAIN_AUTO_FIX_KEY: _auto_fix_install_toolchain_tool,
 }
 
 
@@ -545,13 +719,17 @@ def get_auto_fix(check: CheckResult) -> AutoFix | None:
     """Return the registered fixer for ``check`` or ``None``.
 
     A fixer is available iff the check carries a non-None
-    ``auto_fix`` AND the registry has an entry under
-    :attr:`CheckResult.name`.  Both conditions matter so checks
-    that *describe* a manual fix (with ``auto_fix=None``) keep
-    ``f`` disabled in the TUI.
+    ``auto_fix`` AND either:
+
+    1. the row is a toolchain-install row (Wave 3 — routed via the
+       shared sentinel in :data:`AUTO_FIXERS`), OR
+    2. the registry has an entry under :attr:`CheckResult.name` (the
+       legacy lookup for fixers like ``alloy-devices-yml`` / ``mcp``).
     """
     if check.auto_fix is None:
         return None
+    if _is_toolchain_install_row(check):
+        return AUTO_FIXERS.get(_TOOLCHAIN_AUTO_FIX_KEY)
     return AUTO_FIXERS.get(check.name)
 
 

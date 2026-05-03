@@ -388,7 +388,9 @@ def test_non_vendor_missing_carries_manifest_source(
     assert tio.ok is False
     assert tio.severity == "error"
     assert tio.source == "github:tio/tio"
-    assert tio.install_hint and "Wave-2" in tio.install_hint
+    # Wave 3: the install_hint is now the concrete CLI command.
+    assert tio.install_hint == "alloy toolchain install --for stm32g0 tio"
+    assert tio.auto_fix == tio.install_hint
 
 
 # ---------------------------------------------------------------------------

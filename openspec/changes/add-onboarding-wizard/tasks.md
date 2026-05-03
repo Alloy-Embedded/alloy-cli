@@ -18,11 +18,11 @@
 
 ## 3. `alloy doctor --fix` toolchain extension
 
-- [ ] 3.1 Extend `core/diagnose.py` to register synthetic check names (`toolchain:<tool-name>`) for every missing non-vendor tool the resolved family declares.  Each check carries an `auto_fix` string + appears under a new `_print_table` row.
-- [ ] 3.2 Register a new `AUTO_FIXERS` entry that dispatches a single tool through `toolchain_orchestrator.install_family` (`include_optional=False`, `force=False`).  The entry maps the synthetic check name to a fixer callable that resolves the family from `project_dir`, builds a single-tool slice of the manifest, and runs the orchestrator.
-- [ ] 3.3 Add a `--with-recommended` flag to `commands/doctor.py` so `--fix` extends to the recommended tier when set.  Default is required-only.
-- [ ] 3.4 Update `_run_fixes` (existing) so per-fixer failures are captured and surfaced in `_print_fix_summary` without aborting the rest of the queue.  Existing tests already assert this for the legacy fixers; Wave 3 just preserves the contract.
-- [ ] 3.5 Update `tests/test_doctor_for_flag.py` (existing) + `tests/test_doctor_update_export.py` (existing) with new tests: `--fix` in stm32g0 with empty store installs all four required tools in sequence; vendor tools render as info, never attempted; per-tool failure surfaces typed in the summary; `--with-recommended` extends the queue to the recommended tier.
+- [x] 3.1 Extend `core/diagnose.py` to register synthetic check names (`toolchain:<tool-name>`) for every missing non-vendor tool the resolved family declares.  Each check carries an `auto_fix` string + appears under a new `_print_table` row.
+- [x] 3.2 Register a new `AUTO_FIXERS` entry that dispatches a single tool through `toolchain_orchestrator.install_family` (`include_optional=False`, `force=False`).  The entry maps the synthetic check name to a fixer callable that resolves the family from `project_dir`, builds a single-tool slice of the manifest, and runs the orchestrator.
+- [x] 3.3 Add a `--with-recommended` flag to `commands/doctor.py` so `--fix` extends to the recommended tier when set.  Default is required-only.
+- [x] 3.4 Update `_run_fixes` (existing) so per-fixer failures are captured and surfaced in `_print_fix_summary` without aborting the rest of the queue.  Existing tests already assert this for the legacy fixers; Wave 3 just preserves the contract.
+- [x] 3.5 Update `tests/test_doctor_for_flag.py` (existing) + `tests/test_doctor_update_export.py` (existing) with new tests: `--fix` in stm32g0 with empty store installs all four required tools in sequence; vendor tools render as info, never attempted; per-tool failure surfaces typed in the summary; `--with-recommended` extends the queue to the recommended tier.
 
 ## 4. `alloy setup` standalone command
 

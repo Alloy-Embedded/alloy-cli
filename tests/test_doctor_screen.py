@@ -37,8 +37,14 @@ from alloy_cli.tui.screens.doctor import DoctorScreen
 
 def test_auto_fixers_registry_pins_known_keys() -> None:
     # The registry is the public contract every façade reads.
-    # Pinning the keys makes regressions surface immediately.
-    assert set(AUTO_FIXERS.keys()) == {"alloy-devices-yml", "mcp"}
+    # Pinning the keys makes regressions surface immediately.  Wave 3
+    # adds `__toolchain_install__` — a sentinel routed via
+    # :func:`get_auto_fix` for missing non-vendor toolchain rows.
+    assert set(AUTO_FIXERS.keys()) == {
+        "alloy-devices-yml",
+        "mcp",
+        "__toolchain_install__",
+    }
 
 
 def test_get_auto_fix_returns_none_when_check_has_no_marker() -> None:

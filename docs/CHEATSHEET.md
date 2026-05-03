@@ -247,6 +247,7 @@ Diagnose the host environment for alloy-cli.
 Options:
   - `--json` — Emit JSON.
   - `--fix` — Run every available auto-fix; exits 0 only when no error rows remain.
+  - `--with-recommended` — Extend the toolchain auto-installer to the family's recommended tier (default: required tier only).
   - `--for` — Inspect the toolchain for a specific MCU family (e.g. stm32g0, rp2040, esp32) instead of inferring it from the project's alloy.toml.  Useful before scaffolding.
   - `--project-dir` — Project root containing alloy.toml.
 

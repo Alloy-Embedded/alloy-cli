@@ -188,18 +188,38 @@ def test_grandfathered_list_is_accurate() -> None:
     assert not stale, "Stale grandfathered entries:\n" + "\n".join(stale)
 
 
+# ``core/`` modules allowed to call ``install_family`` directly.  These
+# are dispatchers (they delegate to the orchestrator on behalf of an
+# entry point), not re-implementations of the walk.  Adding a new
+# entry here is OK as long as the file truly delegates (one call into
+# ``install_family``, no duplication of tier walk / vendor
+# short-circuit / lockfile logic).
+_CORE_INSTALL_FAMILY_DELEGATORS: set[Path] = {
+    SRC / "core" / "diagnose.py",  # `alloy doctor --fix` auto-installer
+}
+
+
 def test_orchestrator_is_the_only_install_family_caller_in_core() -> None:
-    """``install_family`` is the orchestrator's own public entry point
-    — no other ``core/`` module should call it back into itself
-    (would imply a circular walk).  Catch the regression early."""
+    """``install_family`` is the orchestrator's own public entry point.
+
+    The only other ``core/`` callers permitted are explicit *dispatchers*
+    listed in :data:`_CORE_INSTALL_FAMILY_DELEGATORS` — modules whose
+    job is to call the orchestrator on behalf of an entry point (e.g.
+    ``diagnose.py`` for ``alloy doctor --fix``).  Any other ``core/``
+    module that calls ``install_family`` is almost certainly
+    re-implementing the walk and should be rejected.
+    """
     core_dir = SRC / "core"
     offenders: list[str] = []
     for path in core_dir.glob("*.py"):
         if path.name == "toolchain_orchestrator.py":
             continue
+        if path in _CORE_INSTALL_FAMILY_DELEGATORS:
+            continue
         text = path.read_text(encoding="utf-8")
         if "install_family(" in text:
             offenders.append(f"  • {path.relative_to(REPO_ROOT)}")
-    assert not offenders, "Only the orchestrator may call `install_family`:\n" + "\n".join(
-        offenders
+    assert not offenders, (
+        "Only the orchestrator + listed delegators may call "
+        "`install_family`:\n" + "\n".join(offenders)
     )

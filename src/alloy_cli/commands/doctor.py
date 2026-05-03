@@ -20,6 +20,9 @@ from alloy_cli.core.diagnose import (
     apply_auto_fix,
     get_auto_fix,
 )
+from alloy_cli.core.errors import AlloyCliError, FamilyToolchainError
+from alloy_cli.core.project import PROJECT_FILE
+from alloy_cli.core.project import read as _read_project
 
 
 def _print_table(console: Console, checks: tuple[CheckResult, ...]) -> None:
@@ -75,8 +78,55 @@ def _print_fix_summary(
     console.print(table)
 
 
+def _resolve_manifest_for_fix(
+    project_dir: Path, family: str | None
+) -> _registry.FamilyManifest | None:
+    """Resolve the family manifest the auto-fixer should consult.
+
+    Returns ``None`` when no family resolves — in that case the
+    ``--with-recommended`` flag has nothing to gate, and the legacy
+    fixers (submodule init, MCP install) still run as before.
+    """
+    if family is not None:
+        try:
+            return _registry.load_family(family)
+        except FamilyToolchainError:
+            return None
+    toml = project_dir / PROJECT_FILE
+    if not toml.exists():
+        return None
+    try:
+        config = _read_project(toml)
+    except AlloyCliError:
+        return None
+    try:
+        return _registry.resolve_for_project(config)
+    except FamilyToolchainError:
+        return None
+
+
+def _is_recommended_or_optional_toolchain_row(
+    check: CheckResult, manifest: _registry.FamilyManifest
+) -> bool:
+    """Return True iff ``check`` represents a tool in the manifest's
+    recommended or optional tier (i.e., NOT in the required tier).
+    Toolchain rows for required tools always run; recommended /
+    optional rows only run when ``--with-recommended`` is passed.
+    """
+    if not _diagnose._is_toolchain_install_row(check):
+        return False
+    target = manifest.find_tool(check.name)
+    if target is None:
+        return False
+    return target not in manifest.required
+
+
 def _run_fixes(
-    report: DiagnosticReport, project_dir: Path
+    report: DiagnosticReport,
+    project_dir: Path,
+    *,
+    family: str | None = None,
+    with_recommended: bool = False,
 ) -> list[tuple[CheckResult, AutoFixOutcome]]:
     """Iterate over every fixable check and apply the registered auto-fix.
 
@@ -85,11 +135,22 @@ def _run_fixes(
     auto-fixer, so they fall through here without an attempt.
     The regression test ``test_doctor_skips_vendor_rows_in_auto_fix``
     pins that contract.
+
+    Wave 3 adds tier-aware filtering for toolchain rows: by default,
+    only the family's required tier auto-installs.  Pass
+    ``with_recommended=True`` to also queue the recommended tier.
     """
     runner = _process.runner
+    manifest = _resolve_manifest_for_fix(project_dir, family)
     outcomes: list[tuple[CheckResult, AutoFixOutcome]] = []
     for check in report.checks:
         if get_auto_fix(check) is None:
+            continue
+        if (
+            not with_recommended
+            and manifest is not None
+            and _is_recommended_or_optional_toolchain_row(check, manifest)
+        ):
             continue
         outcome = apply_auto_fix(check, project_root=project_dir, runner=runner)
         outcomes.append((check, outcome))
@@ -129,6 +190,16 @@ def _validate_family(
     help="Run every available auto-fix; exits 0 only when no error rows remain.",
 )
 @click.option(
+    "--with-recommended",
+    "with_recommended",
+    is_flag=True,
+    default=False,
+    help=(
+        "Extend the toolchain auto-installer to the family's "
+        "recommended tier (default: required tier only)."
+    ),
+)
+@click.option(
     "--for",
     "family",
     metavar="FAMILY",
@@ -150,12 +221,18 @@ def _validate_family(
 def doctor_command(
     as_json: bool,
     auto_fix: bool,
+    with_recommended: bool,
     family: str | None,
     project_dir: Path,
 ) -> None:
     report = _diagnose.run(project_dir=project_dir, family=family)
     if auto_fix:
-        outcomes = _run_fixes(report, project_dir=project_dir)
+        outcomes = _run_fixes(
+            report,
+            project_dir=project_dir,
+            family=family,
+            with_recommended=with_recommended,
+        )
         # Re-run after fixers so the final report reflects post-fix
         # state (e.g. submodule init now exposes vendors).
         report = _diagnose.run(project_dir=project_dir, family=family)
