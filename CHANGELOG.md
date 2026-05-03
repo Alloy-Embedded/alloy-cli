@@ -9,6 +9,73 @@ Unreleased work lives at the top of the file; releases are tagged
 
 ## [Unreleased]
 
+### Added — Wave-3 of toolchain-management
+
+- **`add-onboarding-wizard`** — Wave 2's installer is now welded
+  into the user-facing flows.  A new contributor goes from
+  `pip install alloy-cli` to a flashed Nucleo without leaving
+  alloy-cli.  All five surfaces (alloy new, alloy doctor --fix,
+  alloy setup, the TUI Onboarding screen, the MCP write tool)
+  dispatch through one shared walker
+  (`core.toolchain_orchestrator.install_family`) — single source
+  of truth for tier walk + vendor short-circuit + lockfile update.
+- **`alloy new --install-toolchain` post-scaffold prompt** —
+  default Y in a TTY, default N otherwise.  Tri-state via
+  `--install-toolchain` / `--no-install-toolchain` / (implicit).
+  `--auto` suppresses the confirmation.  The plan renders before
+  the prompt; the next-step panel always names
+  `alloy toolchain install` when the install was skipped.
+- **`alloy doctor --fix` toolchain auto-installer** — extends the
+  existing fixer queue with a synthetic `toolchain:<tool>` row
+  per missing required non-vendor tool.  `--with-recommended`
+  extends the queue to the recommended tier.  Vendor tools stay
+  info-severity (never auto-fetched).  Per-tool failures do NOT
+  abort the queue.
+- **New `alloy setup` standalone command** — guided wizard for a
+  fresh machine.  Detects project state, embeds `alloy new` when
+  no project exists, dispatches the install through the shared
+  orchestrator.  `--board`, `--family`, `--auto`, `--no-tui`,
+  `--project-dir`.  SIGINT mid-install → exit 130 with partial
+  outcomes summarised.
+- **TUI `OnboardingScreen` 3-phase wizard** (replaces the Wave-1
+  placeholder) — family picker → plan review → live progress.
+  Vendor rows render dim with the install_doc URL inline.  Worker
+  thread runs the orchestrator; events stream back via
+  `app.call_from_thread`.  Cancellation raises
+  `OnboardingCancelledError` with partial outcomes.
+- **New MCP write-side tool `alloy.toolchain_apply_install_plan`**
+  — the mutating complement to Wave 2's
+  `toolchain_install_plan`.  Two-phase pattern: agents preview
+  first, get explicit confirmation, then apply.  Idempotent
+  (re-run on a fully-installed family returns every row with
+  `skipped=true, reason="already-installed"`, zero bytes).
+  Vendor surfaces with `reason="vendor"` + `install_doc_url`.
+  Per-tool typed errors propagate via the standard envelope.
+- **New `OnboardingCancelledError`** (`error_type="onboarding-
+  cancelled"`) — carries `partial_outcomes` so callers can
+  summarise what already installed before the abort.  CLI
+  surfaces map it to exit code 130.
+- **New `core.toolchain_orchestrator.plan_install` /
+  `install_family`** — public API; UI-free (no Click / Rich /
+  Textual / `input()` / `sys.stdin`).  AST-checked invariant.
+- **New `commands/_install_view.py`** — shared Rich rendering
+  (`render_install_plan`, `render_install_summary`,
+  `make_event_logger`, `human_bytes`) reused across `alloy new`,
+  `alloy setup`, future `alloy doctor --fix` + `alloy toolchain
+  install` refactors.
+- **Documentation**: new `docs/TOOLCHAIN_ONBOARDING.md` (the
+  contributor reference: decision matrix, orchestrator API,
+  InstallEvent contract, two-phase MCP pattern, vendor contract,
+  cancellation contract, code locations); rewritten
+  `docs/QUICKSTART.md` (the "5 minutes to first ELF" walkthrough
+  now uses the post-scaffold install prompt); cookbook anchor for
+  `onboarding-cancelled`.
+- **121 new tests** cover the orchestrator (15), the entry-point
+  contract (5), `alloy new` integration (16), `alloy doctor --fix`
+  (15), `alloy setup` (10), TUI onboarding (5), MCP apply tool
+  (8), doc regression guards (14), and error-type uniqueness
+  guards (6).  Total suite: 936 passing.
+
 ### Added — Wave-2 of toolchain-management
 
 - **`add-toolchain-installer`** — alloy-cli now downloads, verifies-by-

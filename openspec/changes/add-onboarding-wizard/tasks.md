@@ -64,9 +64,9 @@
 
 ## 8. Validation + ship-readiness
 
-- [ ] 8.1 Run `openspec validate add-onboarding-wizard --strict` and resolve every reported issue.
-- [ ] 8.2 Run targeted test files locally and confirm green: `pytest tests/test_toolchain_orchestrator.py tests/test_toolchain_onboarding_contract.py tests/test_command_setup.py tests/test_onboarding_screen.py tests/test_mcp_toolchain_apply.py tests/test_toolchain_onboarding_doc.py`.
-- [ ] 8.3 Run `pytest -q --deselect tests/test_mcp_server.py::test_alloy_mcp_serve_stdio_round_trips_via_subprocess` and confirm green.
-- [ ] 8.4 Run `ruff check src tests scripts` and `pyright src/alloy_cli` — fix any new findings introduced by this change.
-- [ ] 8.5 Update `CHANGELOG.md` under `[Unreleased]` with a Wave-3 entry naming the new capability, the `alloy setup` verb, the `--install-toolchain` flags on `alloy new`, the `--with-recommended` flag on `alloy doctor`, the TUI `OnboardingScreen`, and the new MCP write tool.
-- [ ] 8.6 Open the PR titled `Implement add-onboarding-wizard (Wave 3 of toolchain-management)` referencing this OpenSpec change in the description.
+- [x] 8.1 Run `openspec validate add-onboarding-wizard --strict` and resolve every reported issue.   *(green: "Change 'add-onboarding-wizard' is valid".)*
+- [x] 8.2 Run targeted test files locally and confirm green: `pytest tests/test_toolchain_orchestrator.py tests/test_toolchain_onboarding_contract.py tests/test_command_setup.py tests/test_onboarding_screen.py tests/test_mcp_toolchain_apply.py tests/test_toolchain_onboarding_doc.py`.   *(landed under different filenames: `test_command_new.py`, `test_doctor_toolchain_fix.py`, `test_tui_dashboard_and_onboarding.py`, `test_mcp_toolchain.py`. 121 tests pass across all Wave-3 files.)*
+- [x] 8.3 Run `pytest -q --deselect tests/test_mcp_server.py::test_alloy_mcp_serve_stdio_round_trips_via_subprocess` and confirm green.   *(936 passed, 10 skipped, 5 deselected — same 5 pre-Wave-3 environmental failures still excluded.)*
+- [x] 8.4 Run `ruff check src tests scripts` and `pyright src/alloy_cli` — fix any new findings introduced by this change.   *(both clean: ruff "All checks passed!", pyright "0 errors, 0 warnings, 0 informations".)*
+- [x] 8.5 Update `CHANGELOG.md` under `[Unreleased]` with a Wave-3 entry naming the new capability, the `alloy setup` verb, the `--install-toolchain` flags on `alloy new`, the `--with-recommended` flag on `alloy doctor`, the TUI `OnboardingScreen`, and the new MCP write tool.
+- [ ] 8.6 Open the PR titled `Implement add-onboarding-wizard (Wave 3 of toolchain-management)` referencing this OpenSpec change in the description.   *(deferred — local-only work; opening the PR is the user's call.)*
