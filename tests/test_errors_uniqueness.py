@@ -130,3 +130,125 @@ def test_every_exported_error_is_an_alloy_error() -> None:
         assert issubclass(obj, _errors.AlloyCliError), (
             f"{name} listed in __all__ but is not an AlloyCliError subclass"
         )
+
+
+def test_family_toolchain_probe_error_subclasses_use_kebab_case() -> None:
+    """The five ``family-toolchain-probe-*`` sub-types follow the
+    naming convention spec'd in Wave 4's proposal.
+    """
+    expected = {
+        _errors.FamilyToolchainProbeError: "family-toolchain-probe-error",
+        _errors.FamilyToolchainProbeNotFoundError: "family-toolchain-probe-not-found",
+        _errors.FamilyToolchainProbeNotAttachedError: "family-toolchain-probe-not-attached",
+        _errors.FamilyToolchainProbeMultipleAttachedError: (
+            "family-toolchain-probe-multiple-attached"
+        ),
+        _errors.FamilyToolchainProbeUnauthorisedError: "family-toolchain-probe-unauthorised",
+    }
+    for cls, expected_type in expected.items():
+        assert cls.error_type == expected_type, (
+            f"{cls.__name__}.error_type expected {expected_type!r}, got {cls.error_type!r}"
+        )
+        assert issubclass(cls, _errors.FamilyToolchainProbeError), (
+            f"{cls.__name__} should be a FamilyToolchainProbeError subclass"
+        )
+
+
+def test_family_toolchain_erase_error_subclasses_use_kebab_case() -> None:
+    """The five ``family-toolchain-erase-*`` sub-types follow the
+    naming convention spec'd in Wave 4's proposal.
+    """
+    expected = {
+        _errors.FamilyToolchainEraseError: "family-toolchain-erase-error",
+        _errors.FamilyToolchainEraseAbortedError: "family-toolchain-erase-aborted",
+        _errors.FamilyToolchainEraseUnsupportedRegionError: (
+            "family-toolchain-erase-unsupported-region"
+        ),
+        _errors.FamilyToolchainEraseConfirmationRequiredError: (
+            "family-toolchain-erase-confirmation-required"
+        ),
+        _errors.FamilyToolchainEraseProbeFailedError: "family-toolchain-erase-probe-failed",
+    }
+    for cls, expected_type in expected.items():
+        assert cls.error_type == expected_type, (
+            f"{cls.__name__}.error_type expected {expected_type!r}, got {cls.error_type!r}"
+        )
+        assert issubclass(cls, _errors.FamilyToolchainEraseError), (
+            f"{cls.__name__} should be a FamilyToolchainEraseError subclass"
+        )
+        # Erase errors live in their own family — not under
+        # FamilyToolchainProbeError (they describe destination, not source).
+        assert not issubclass(cls, _errors.FamilyToolchainProbeError), (
+            f"{cls.__name__} should NOT extend FamilyToolchainProbeError"
+        )
+
+
+def test_probe_operation_cancelled_error_carries_session_summary() -> None:
+    """The Wave-4 graceful-disconnect event carries duration + byte
+    count + last-line so the CLI can summarise.  Distinct from
+    ``OnboardingCancelledError`` because it's a different user-flow
+    event — viewer disconnect vs. wizard abort."""
+    err = _errors.ProbeOperationCancelledError(
+        "user pressed ctrl+]",
+        duration_ms=4720,
+        bytes_captured=124,
+        last_line="boot complete\n",
+    )
+    assert err.error_type == "probe-operation-cancelled"
+    assert err.duration_ms == 4720
+    assert err.bytes_captured == 124
+    assert err.last_line == "boot complete\n"
+    assert "user pressed ctrl+]" in str(err)
+    # Distinct from OnboardingCancelledError — different user-flow events.
+    assert not issubclass(_errors.ProbeOperationCancelledError, _errors.OnboardingCancelledError)
+    assert not issubclass(_errors.OnboardingCancelledError, _errors.ProbeOperationCancelledError)
+
+
+def test_probe_multiple_attached_error_carries_detected_tuple() -> None:
+    """The error carries the (vid, pid, serial, kind) tuple per probe
+    so the CLI / MCP envelope can render the list."""
+    err = _errors.FamilyToolchainProbeMultipleAttachedError(
+        detected=(
+            ("0483", "374b", "0671FF1234567890", "stlink"),
+            ("1366", "0101", "000123456789", "jlink"),
+        ),
+    )
+    assert err.error_type == "family-toolchain-probe-multiple-attached"
+    assert len(err.detected) == 2
+    assert err.detected[0][0] == "0483"
+    assert err.detected[1][3] == "jlink"
+
+
+def test_probe_unauthorised_error_carries_vendor_tool_name() -> None:
+    """Vendor-only probe surfaces the vendor tool name + install_doc URL
+    so the user knows where to go."""
+    err = _errors.FamilyToolchainProbeUnauthorisedError(
+        vendor_tool="J-Link Commander",
+        install_doc_url="https://www.segger.com/downloads/jlink/",
+    )
+    assert err.error_type == "family-toolchain-probe-unauthorised"
+    assert err.vendor_tool == "J-Link Commander"
+    assert err.install_doc_url is not None
+    assert "segger" in err.install_doc_url
+
+
+def test_erase_unsupported_region_error_carries_known_regions() -> None:
+    """``--region not-a-region`` surfaces the regions the IR DOES
+    declare so the user can pick a valid one."""
+    err = _errors.FamilyToolchainEraseUnsupportedRegionError(
+        known_regions=("bootloader", "appslot-a", "appslot-b"),
+    )
+    assert err.error_type == "family-toolchain-erase-unsupported-region"
+    assert err.known_regions == ("bootloader", "appslot-a", "appslot-b")
+
+
+def test_erase_probe_failed_error_carries_stderr_and_returncode() -> None:
+    """A backend (probe-rs / openocd) failure during erase surfaces
+    the raw stderr + non-zero returncode for debugging."""
+    err = _errors.FamilyToolchainEraseProbeFailedError(
+        stderr="error: probe-rs: Could not connect to target",
+        returncode=2,
+    )
+    assert err.error_type == "family-toolchain-erase-probe-failed"
+    assert "probe-rs" in err.stderr
+    assert err.returncode == 2

@@ -192,6 +192,184 @@ class OnboardingCancelledError(AlloyCliError):
         self.partial_outcomes = partial_outcomes
 
 
+# ---------------------------------------------------------------------------
+# Wave 4 (recovery-tools): probe + erase error families
+# ---------------------------------------------------------------------------
+
+
+class FamilyToolchainProbeError(AlloyCliError):
+    """Probe-side failure surfaced by ``core.probe_orchestrator``.
+
+    Sub-classes carry stable ``family-toolchain-probe-*`` strings the
+    CLI surfaces (`alloy reset`, `alloy erase`, `alloy monitor`) and
+    the MCP probe tools branch on.  Keeping them under a shared base
+    means consumers can ``except FamilyToolchainProbeError`` to catch
+    the whole family without enumerating subclasses.
+    """
+
+    error_type = "family-toolchain-probe-error"
+
+
+class FamilyToolchainProbeNotFoundError(FamilyToolchainProbeError):
+    """The lockfile pins probe-rs / openocd but the binary is missing
+    from the local store (e.g. after ``alloy toolchain prune``).
+
+    Recovery: re-run ``alloy toolchain install`` to repopulate the
+    store.
+    """
+
+    error_type = "family-toolchain-probe-not-found"
+
+
+class FamilyToolchainProbeNotAttachedError(FamilyToolchainProbeError):
+    """No probe is USB-attached.
+
+    The orchestrator scanned the host with the lockfile-pinned
+    probe-rs and got an empty list.  The CLI surfaces this as a clear
+    "plug in your probe" message; the MCP tool returns it as a typed
+    envelope with an empty ``detected_probes`` array.
+    """
+
+    error_type = "family-toolchain-probe-not-attached"
+
+
+class FamilyToolchainProbeMultipleAttachedError(FamilyToolchainProbeError):
+    """More than one probe is attached and ``--probe`` was not given.
+
+    Carries ``.detected`` — a tuple of (vid, pid, serial, kind) tuples
+    the CLI / MCP envelope renders so the user can pick one.
+    """
+
+    error_type = "family-toolchain-probe-multiple-attached"
+
+    def __init__(
+        self,
+        message: str = "Multiple probes attached; pass --probe to disambiguate.",
+        *,
+        detected: tuple[tuple[str, str, str, str], ...] = (),
+    ) -> None:
+        super().__init__(message)
+        self.detected = detected
+
+
+class FamilyToolchainProbeUnauthorisedError(FamilyToolchainProbeError):
+    """The detected probe is vendor-only (proprietary J-Link / locked
+    ST-Link with vendor firmware) and cannot be auto-driven.
+
+    Wave 4's contract: the orchestrator NEVER auto-invokes vendor
+    tools.  The error message names the vendor utility the user must
+    install.  ``.vendor_tool`` carries the human-readable name.
+    """
+
+    error_type = "family-toolchain-probe-unauthorised"
+
+    def __init__(
+        self,
+        message: str = "Vendor-only probe detected; use the vendor tool manually.",
+        *,
+        vendor_tool: str = "",
+        install_doc_url: str | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.vendor_tool = vendor_tool
+        self.install_doc_url = install_doc_url
+
+
+class FamilyToolchainEraseError(AlloyCliError):
+    """Erase-side failure surfaced by ``core.probe_orchestrator``."""
+
+    error_type = "family-toolchain-erase-error"
+
+
+class FamilyToolchainEraseAbortedError(FamilyToolchainEraseError):
+    """The user answered N at the confirmation prompt — or the CLI
+    refused to proceed in a non-TTY without ``--auto`` / ``--yes``.
+    """
+
+    error_type = "family-toolchain-erase-aborted"
+
+
+class FamilyToolchainEraseUnsupportedRegionError(FamilyToolchainEraseError):
+    """``--region <name>`` does not resolve via the device IR's
+    flash bank descriptors.
+
+    ``.known_regions`` carries the regions the IR DOES expose so the
+    error message can list them.
+    """
+
+    error_type = "family-toolchain-erase-unsupported-region"
+
+    def __init__(
+        self,
+        message: str = "Unsupported erase region.",
+        *,
+        known_regions: tuple[str, ...] = (),
+    ) -> None:
+        super().__init__(message)
+        self.known_regions = known_regions
+
+
+class FamilyToolchainEraseConfirmationRequiredError(FamilyToolchainEraseError):
+    """An MCP agent called ``probe_erase`` without ``confirm=true``.
+
+    Mirrors Wave-3's two-phase pattern: the agent must call
+    ``probe_erase_plan`` first, surface the plan to the user, get
+    explicit confirmation, then call ``probe_erase`` with
+    ``confirm=true``.
+    """
+
+    error_type = "family-toolchain-erase-confirmation-required"
+
+
+class FamilyToolchainEraseProbeFailedError(FamilyToolchainEraseError):
+    """The backend (probe-rs / openocd) returned non-zero during the
+    erase.  ``.stderr`` carries the raw output for debugging.
+    """
+
+    error_type = "family-toolchain-erase-probe-failed"
+
+    def __init__(
+        self,
+        message: str = "Probe-side erase failed.",
+        *,
+        stderr: str = "",
+        returncode: int = -1,
+    ) -> None:
+        super().__init__(message)
+        self.stderr = stderr
+        self.returncode = returncode
+
+
+class ProbeOperationCancelledError(AlloyCliError):
+    """User pressed Ctrl+] in ``alloy monitor`` (graceful disconnect).
+
+    Distinct from ``OnboardingCancelledError`` because it's a
+    different user-flow event: not a wizard abort, just "I'm done
+    looking at the log."  Carries the session summary
+    (``duration_ms``, ``bytes_captured``, ``last_line``) so the CLI
+    can render a one-line "Closed monitor session" summary.
+
+    The CLI exits 0 on this error (graceful disconnect is not a
+    failure).  Distinct exit code from ``OnboardingCancelledError``
+    (130) — pinned in tests.
+    """
+
+    error_type = "probe-operation-cancelled"
+
+    def __init__(
+        self,
+        message: str = "Probe operation cancelled by user.",
+        *,
+        duration_ms: int = 0,
+        bytes_captured: int = 0,
+        last_line: str | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.duration_ms = duration_ms
+        self.bytes_captured = bytes_captured
+        self.last_line = last_line
+
+
 __all__ = [
     "AlloyCliError",
     "BoardNotFoundError",
@@ -199,6 +377,11 @@ __all__ = [
     "DeviceNotFoundError",
     "DmaConflictError",
     "FamilyToolchainCycleError",
+    "FamilyToolchainEraseAbortedError",
+    "FamilyToolchainEraseConfirmationRequiredError",
+    "FamilyToolchainEraseError",
+    "FamilyToolchainEraseProbeFailedError",
+    "FamilyToolchainEraseUnsupportedRegionError",
     "FamilyToolchainError",
     "FamilyToolchainInstallerChecksumError",
     "FamilyToolchainInstallerDownloadError",
@@ -209,10 +392,16 @@ __all__ = [
     "FamilyToolchainInstallerUnsupportedHostError",
     "FamilyToolchainInstallerVersionMismatchError",
     "FamilyToolchainNotFoundError",
+    "FamilyToolchainProbeError",
+    "FamilyToolchainProbeMultipleAttachedError",
+    "FamilyToolchainProbeNotAttachedError",
+    "FamilyToolchainProbeNotFoundError",
+    "FamilyToolchainProbeUnauthorisedError",
     "FamilyToolchainSchemaError",
     "FamilyToolchainUnknownParentError",
     "OnboardingCancelledError",
     "PinInvalidError",
+    "ProbeOperationCancelledError",
     "ProjectConfigError",
     "ProjectConfigVersionError",
     "StaleDiffError",

@@ -604,3 +604,213 @@ ensures those installs are consistent.
 `alloy.toolchain_apply_install_plan`; that tool runs to
 completion or fails with a typed
 `family-toolchain-installer-*` envelope.
+
+## family-toolchain-probe-error
+
+**Trigger:** umbrella class for every Wave-4 probe failure.
+Sub-classes (`family-toolchain-probe-not-found`,
+`family-toolchain-probe-not-attached`,
+`family-toolchain-probe-multiple-attached`,
+`family-toolchain-probe-unauthorised`) carry the specific
+context.  Catch this base when you want to handle "anything
+went wrong with the probe-side."
+
+**Fix:** dispatch on the specific sub-type — see the dedicated
+sections below.
+
+**MCP tool:** raised by `probe_reset`, `probe_erase`,
+`probe_erase_plan`, `probe_monitor_open`.
+
+## family-toolchain-probe-not-found
+
+**Trigger:** the project's `.alloy/toolchain.lock` pins
+`probe-rs` (or `openocd`) but the binary is missing from the
+local store — typically after `alloy toolchain prune` removed
+it, or after a manual edit to the store.
+
+**Example message:** `probe-rs binary missing from store; run
+\`alloy toolchain install\` to repopulate.`
+
+**Fix:**
+- Re-run `alloy toolchain install` (the lockfile pins are
+  honoured; the manager re-fetches the missing binaries).
+- If the lockfile itself is corrupt, delete
+  `.alloy/toolchain.lock` and run `alloy toolchain install`
+  to regenerate it.
+
+**MCP tool:** raises the same envelope from `probe_reset`,
+`probe_erase`, `probe_monitor_open`.
+
+## family-toolchain-probe-not-attached
+
+**Trigger:** `alloy reset` / `alloy erase` / `alloy monitor`
+ran but no probe is USB-attached (or the kernel hasn't enumerated
+it yet).
+
+**Example message:** `No probe attached; plug in your debugger
+and try again.`
+
+**Fix:**
+- Plug the probe in, wait a second, retry.
+- On Linux, verify udev rules are installed (`alloy doctor`
+  surfaces the rules path Wave-2 generated).
+- On macOS, check that the OS sees the probe via `system_profiler
+  SPUSBDataType | grep -i jlink` (or similar).
+
+**MCP tool:** `probe_reset`, `probe_erase`, `probe_monitor_open`
+all surface this envelope when no probe is attached.
+
+## family-toolchain-probe-multiple-attached
+
+**Trigger:** more than one probe is USB-attached and the user
+did not pass `--probe`.  The orchestrator refuses to guess.
+
+**Example message:** `Multiple probes attached; pass
+--probe vid:pid:serial to disambiguate.`  The error carries
+`.detected` listing every probe (vid, pid, serial, kind).
+
+**Fix:**
+- Pass the `--probe` selector with the desired probe's
+  `vid:pid:serial` triple (the message lists every detected
+  probe).
+- Or unplug the probes you don't need.
+
+**MCP tool:** the envelope carries `detected_probes` so the
+agent can surface the list to the user and re-call the tool
+with the chosen `probe`.
+
+## family-toolchain-probe-unauthorised
+
+**Trigger:** the detected probe is vendor-only — proprietary
+J-Link firmware, ST-Link with locked firmware, or another probe
+whose driver alloy-cli cannot legally redistribute.  The
+orchestrator NEVER auto-invokes vendor tools.
+
+**Example message:** `Vendor-only probe detected; install
+J-Link Commander to reset / erase the target.`  The error
+carries `.vendor_tool` (human-readable name) and
+`.install_doc_url`.
+
+**Fix:**
+- Install the vendor utility named in the message; invoke it
+  manually for reset / erase / monitor.
+- Or use a non-vendor-locked probe (CMSIS-DAP, generic
+  ST-Link with open firmware) so probe-rs can drive it.
+
+**MCP tool:** the envelope carries `vendor_tool` +
+`install_doc_url` so the agent can surface the install link
+to the user.
+
+## family-toolchain-erase-error
+
+**Trigger:** umbrella class for every Wave-4 erase failure.
+Sub-classes (`family-toolchain-erase-aborted`,
+`family-toolchain-erase-unsupported-region`,
+`family-toolchain-erase-confirmation-required`,
+`family-toolchain-erase-probe-failed`) carry the specific
+context.  Catch this base when you want to handle "anything
+went wrong with the erase."
+
+**Fix:** dispatch on the specific sub-type — see the dedicated
+sections below.
+
+**MCP tool:** raised by `probe_erase_plan` (for region
+validation) and `probe_erase` (for execution failures).
+
+## family-toolchain-erase-aborted
+
+**Trigger:** the user answered N (or anything that wasn't `y`)
+at the `alloy erase` confirmation prompt — or the CLI refused
+to proceed in a non-TTY without `--auto` / `--yes`.
+
+**Example message:** `Erase aborted by user.`
+
+**Fix:**
+- If you really meant to erase, re-run with `--auto` (or `--yes`)
+  in non-TTY contexts; in a TTY, answer `y` at the prompt.
+- If you didn't mean to erase, you're done — the chip is
+  untouched.
+
+**MCP tool:** never surfaces this envelope from `probe_erase`
+because MCP agents have no prompt path.  The MCP equivalent
+is `family-toolchain-erase-confirmation-required`.
+
+## family-toolchain-erase-unsupported-region
+
+**Trigger:** `alloy erase --region <name>` where `<name>` is not
+a flash region the device IR declares.  The orchestrator carries
+`.known_regions` listing the regions the IR DOES expose.
+
+**Example message:** `Unknown region 'boot-rom'; known regions:
+bootloader, appslot-a, appslot-b.`
+
+**Fix:**
+- Use one of the names listed in the error message.
+- Or pass a literal `0xBASE-0xEND` range when the IR has no
+  named regions for your device.
+- If your device's IR is missing region aliases that should
+  exist, file an upstream IR fix in `alloy-devices-yml`.
+
+**MCP tool:** `probe_erase_plan` and `probe_erase` both surface
+the envelope with `known_regions` populated.
+
+## family-toolchain-erase-confirmation-required
+
+**Trigger:** an MCP agent called `alloy.probe_erase` without
+passing `confirm=true`.  The two-phase pattern requires the
+agent to call `probe_erase_plan` first, surface the plan to the
+user, get explicit confirmation, then call `probe_erase` with
+`confirm=true`.
+
+**Example message:** `probe_erase requires confirm=true; call
+probe_erase_plan first to preview.`
+
+**Fix:**
+- Update the agent's tool-call sequence to follow the two-phase
+  pattern: preview → confirm → apply.
+- The agent SHOULD render the plan to the user verbatim before
+  calling `probe_erase` with `confirm=true`.
+
+**MCP tool:** raised by `probe_erase` itself.  Never raised by
+the CLI (which uses an interactive prompt instead).
+
+## family-toolchain-erase-probe-failed
+
+**Trigger:** the backend (probe-rs / openocd) returned non-zero
+during the erase.  Could indicate a hardware fault, a wrong
+target chip in the lockfile, or a probe that lost USB power.
+
+**Example message:** `Probe-side erase failed (returncode=2):
+probe-rs: Could not connect to target.`  The error carries
+`.stderr` + `.returncode`.
+
+**Fix:**
+- Check the probe's USB cable + power.
+- Verify the chip in `alloy.toml`'s `[chip]` matches the
+  hardware (a stm32g0 lockfile won't erase a stm32f4 board).
+- Run `alloy doctor` to confirm the lockfile-pinned probe-rs
+  matches the host triple.
+
+**MCP tool:** the envelope carries `stderr` + `returncode` so
+the agent can surface backend output to the user.
+
+## probe-operation-cancelled
+
+**Trigger:** the user pressed Ctrl+] in `alloy monitor` (the
+graceful disconnect key, mirroring `screen` / telnet) — OR an
+MCP `probe_monitor_*` session timed out (5 minutes idle) — OR
+the agent called `probe_monitor_close` then tried to `poll` /
+`close` again.
+
+**Example message:** `Closed monitor session.  124 bytes
+captured over 47.2s.`  The exception carries
+`.duration_ms`, `.bytes_captured`, `.last_line` so the CLI can
+summarise.
+
+**Fix:**
+- This is NOT an error — it's a graceful disconnect.  The CLI
+  exits 0; the MCP tool returns a closed session envelope.
+- Open a new session if you need to keep watching the log.
+
+**MCP tool:** raised by `probe_monitor_poll` /
+`probe_monitor_close` after a session ended.
