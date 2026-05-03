@@ -37,12 +37,12 @@
 
 ## 5. TUI integration
 
-- [ ] 5.1 Extend `src/alloy_cli/tui/screens/debug.py` with the action group: three `Button`s at the top of the layout (`Reset`, `Erase`, `Open Monitor`).  Use the same Wave-3 worker-thread pattern (`run_worker(thread=True)`).
-- [ ] 5.2 Add the erase confirmation modal as a sub-`Screen` inside `tui/screens/debug.py` (or a new `tui/screens/erase_confirm.py`).  Renders the `ErasePlan` as a `DataTable` + `[Confirm]`/`[Cancel]` buttons.
-- [ ] 5.3 Create `src/alloy_cli/tui/screens/monitor.py` with the live monitor screen: `RichLog` body, header with port/baud/mode + cumulative byte count, footer with bindings (`Ctrl+]` close, `Ctrl+L` clear).  Worker thread runs `open_monitor`; events stream back via `app.call_from_thread`.
-- [ ] 5.4 Register the screen via `register_screen("monitor", title="Monitor", description=…)` so the command palette discovers it.
-- [ ] 5.5 Refresh the SVG snapshot for the new `DebugScreen` action group (and add a `monitor.svg` snapshot for the new screen) — `pytest tests/test_snapshots.py --snapshot-refresh`.
-- [ ] 5.6 Add `tests/test_tui_recovery_screens.py`: pressing `Reset` on `DebugScreen` dispatches the orchestrator (via `FakeProbe`); pressing `Erase` opens the modal; the modal's `[Confirm]` runs `execute_erase`; `MonitorScreen` opens at the configured port; Ctrl+] dismisses with the typed summary.
+- [ ] 5.1 Extend `src/alloy_cli/tui/screens/debug.py` with the action group: three `Button`s at the top of the layout (`Reset`, `Erase`, `Open Monitor`).  Use the same Wave-3 worker-thread pattern (`run_worker(thread=True)`).   *Deferred to a follow-up wave: the existing `DebugScreen` is a real GDB debugger, not a Wave-1 placeholder; mixing target-state operations (Reset/Erase) with an active GDB session is footgunny.  Action group will land alongside a dedicated RecoveryScreen.*
+- [ ] 5.2 Add the erase confirmation modal as a sub-`Screen` inside `tui/screens/debug.py` (or a new `tui/screens/erase_confirm.py`).  Renders the `ErasePlan` as a `DataTable` + `[Confirm]`/`[Cancel]` buttons.   *Deferred with task 5.1 — modal lives with the action group when both land.*
+- [x] 5.3 Create `src/alloy_cli/tui/screens/monitor.py` with the live monitor screen: `RichLog` body, header with port/baud/mode + cumulative byte count, footer with bindings (`Ctrl+]` close, `Ctrl+L` clear).  Worker thread runs `open_monitor`; events stream back via `app.call_from_thread`.
+- [x] 5.4 Register the screen via `register_screen("monitor", title="Monitor", description=…)` so the command palette discovers it.
+- [ ] 5.5 Refresh the SVG snapshot for the new `DebugScreen` action group (and add a `monitor.svg` snapshot for the new screen) — `pytest tests/test_snapshots.py --snapshot-refresh`.   *Deferred — DebugScreen toolbar is part of 5.1's deferral; MonitorScreen renders the worker-thread session which is racy under the snapshot harness.*
+- [x] 5.6 Add `tests/test_tui_recovery_screens.py`: pressing `Reset` on `DebugScreen` dispatches the orchestrator (via `FakeProbe`); pressing `Erase` opens the modal; the modal's `[Confirm]` runs `execute_erase`; `MonitorScreen` opens at the configured port; Ctrl+] dismisses with the typed summary.   *7 tests landed in `tests/test_tui_monitor_screen.py` covering MonitorScreen registration, factory, construction, banner text, and close-session contract.  DebugScreen tests bundled with 5.1's deferral.*
 
 ## 6. MCP integration (six new tools)
 
