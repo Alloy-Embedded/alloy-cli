@@ -56,10 +56,10 @@
 
 ## 7. Documentation
 
-- [ ] 7.1 Author `docs/RECOVERY.md` covering the three commands + decision matrix + orchestrator API + Probe Protocol contract + two-phase MCP pattern + vendor-probe contract + cancellation contract + cross-links to Waves 1-3 docs.
-- [ ] 7.2 Append a "Reset / Monitor" addendum to `docs/QUICKSTART.md` after the build/flash steps.  Mention `alloy erase` as the recovery option behind the safety gate.
-- [ ] 7.3 Add `tests/test_recovery_doc.py` mirroring Wave 3's `test_toolchain_onboarding_doc.py`: every Wave-4 `error_type` is namedropped; every command has a subsection; every cookbook anchor is linked; QUICKSTART references `alloy reset` / `alloy monitor` / `alloy erase` and links to `RECOVERY.md`.
-- [ ] 7.4 Update the `tests/test_toolchain_onboarding_doc.py` cross-link expectations if needed (RECOVERY.md is a sibling doc, not a child).
+- [x] 7.1 Author `docs/RECOVERY.md` covering the three commands + decision matrix + orchestrator API + Probe Protocol contract + two-phase MCP pattern + vendor-probe contract + cancellation contract + cross-links to Waves 1-3 docs.
+- [x] 7.2 Append a "Reset / Monitor" addendum to `docs/QUICKSTART.md` after the build/flash steps.  Mention `alloy erase` as the recovery option behind the safety gate.
+- [x] 7.3 Add `tests/test_recovery_doc.py` mirroring Wave 3's `test_toolchain_onboarding_doc.py`: every Wave-4 `error_type` is namedropped; every command has a subsection; every cookbook anchor is linked; QUICKSTART references `alloy reset` / `alloy monitor` / `alloy erase` and links to `RECOVERY.md`.   *14 tests landed.*
+- [x] 7.4 Update the `tests/test_toolchain_onboarding_doc.py` cross-link expectations if needed (RECOVERY.md is a sibling doc, not a child).   *Wave-3 doc test makes no claim about RECOVERY.md being absent; cross-link is one-directional from RECOVERY.md → TOOLCHAIN_ONBOARDING.md.  No update needed.*
 
 ## 8. Validation + ship
 

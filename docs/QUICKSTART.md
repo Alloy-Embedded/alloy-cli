@@ -80,6 +80,24 @@ alloy flash
 probe-rs auto-discovers the ST-Link, programs the firmware, and
 resets the chip.  The on-board LED should now blink at ~1 Hz.
 
+## 6. Reset + monitor (optional)
+
+Once the firmware is on the chip, the recovery primitives let you
+poke at it without leaving alloy-cli:
+
+```bash
+alloy reset                                  # CPU reset
+alloy monitor --port /dev/cu.usbmodem1234    # press Ctrl+] to disconnect
+```
+
+`alloy reset` is non-destructive — the firmware on the chip stays
+put.  `alloy monitor` opens the explicit serial port at 115200
+baud (or whatever your project's `[uart].debug` declares).
+`alloy erase` exists for recovering from a brick but is gated
+behind a TTY confirmation prompt by default; pass `--auto` /
+`--yes` to bypass in CI.  See
+[RECOVERY.md](RECOVERY.md) for the full reference.
+
 ## I cloned an existing project — what now?
 
 ```bash
