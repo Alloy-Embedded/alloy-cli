@@ -294,6 +294,16 @@ Options:
   - `--install-toolchain, --no-install-toolchain` — Install the family's toolchain after scaffolding.  Default in a TTY: Y (prompts unless --auto).  Default elsewhere: N.
   - `--auto` — Skip every interactive confirmation.  Combine with --install-toolchain to perform the install non-interactively.
 
+## `alloy reset`
+
+Reset the connected probe target.  Default is a soft CPU reset; pass --hard to pulse nRST.  Lockfile-aware: the probe-rs binary comes from .alloy/toolchain.lock when present.
+
+Options:
+  - `--soft, --hard` — Reset method: --soft (CPU reset, default) or --hard (nRST line).
+  - `--halt-after-reset` — Leave the core halted after reset so a debugger can attach.
+  - `--probe` — Explicit probe selector (matches alloy flash --probe).  Each field is optional — '0483' matches every ST-Link, '0483:374b' matches every ST-Link/V2-1, the full triple pinpoints one probe.
+  - `--project-dir` — Project root containing .alloy/toolchain.lock.
+
 ## `alloy setup`
 
 Guided onboarding for a fresh machine: detect or scaffold a project, then install its toolchain through the shared orchestrator (the same path `alloy new` and `alloy doctor --fix` use).

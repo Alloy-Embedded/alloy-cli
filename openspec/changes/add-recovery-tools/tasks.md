@@ -4,17 +4,17 @@
 - [x] 1.2 Add cookbook anchors for every new `error_type` to `docs/ERROR_COOKBOOK.md` so `scripts/check_error_cookbook.py` stays green.
 - [x] 1.3 Create `src/alloy_cli/core/probe_orchestrator.py` with frozen+slots dataclasses: `ProbeIdentity` (vid/pid/serial/kind/vendor_only), `ResetReport`, `EraseRegion`, `ErasePlan`, `EraseReport`, and the sealed `MonitorEvent` union (`MonitorOpened`, `MonitorBytes`, `MonitorClosed`).  Plus `Probe` Protocol declaring `identity`, `reset`, `erase`, `monitor`.
 - [x] 1.4 Implement the public functions: `select_probe(*, hint, project_root)` (single-attached heuristic + `--probe` selector + multiple-attached error); `reset_target(probe, *, method, halt_after)`; `plan_erase(probe, *, regions, project_root)` (resolves IR aliases or `0xBASE-0xEND` ranges); `execute_erase(probe, plan)`; `open_monitor(probe, *, port, baud, mode, on_event)`.  Module is UI-free — no Click / Rich / Textual / `input()` / `sys.stdin`.
-- [ ] 1.5 Implement `_RealProbeRsProbe` (subprocess wrapper around the lockfile-pinned `probe-rs` binary) and a `FakeProbe` test seam recording every call + emitting scripted `MonitorEvent`s.   *(FakeProbe ✓; `_RealProbeRsProbe` deferred to Group 2 where the first CLI command needs it — keeps Group 1 focused on the orchestrator skeleton + tests.)*
+- [x] 1.5 Implement `_RealProbeRsProbe` (subprocess wrapper around the lockfile-pinned `probe-rs` binary) and a `FakeProbe` test seam recording every call + emitting scripted `MonitorEvent`s.   *FakeProbe shipped in Group 1; `_RealProbeRsProbe` + `real_probe_for(...)` factory shipped in Group 2 alongside `alloy reset`.*
 - [x] 1.6 Add `tests/test_probe_orchestrator.py` covering: `select_probe` matches `vid:pid:serial`; single-attached fast path; multiple-attached + no `--probe` raises `family-toolchain-probe-multiple-attached`; vendor-only probe raises `family-toolchain-probe-unauthorised`; `reset_target` returns a `ResetReport` with the right method; `plan_erase` resolves IR aliases + raw ranges; `plan_erase` with unknown alias raises `family-toolchain-erase-unsupported-region`; `execute_erase` reports `total_bytes_erased`; `open_monitor` pumps `MonitorEvent`s in order; `FakeProbe` records calls.   *27 tests + the AST-based UI-free guard.*
 - [x] 1.7 Add `tests/test_probe_orchestrator_contract.py` enforcing the entry-point dispatch invariant via AST scan: `commands/{reset,erase,monitor}.py`, `tui/screens/{debug,monitor}.py`, and the new MCP probe handlers MUST NOT spawn `probe-rs` / `openocd` directly nor import them — every dispatch goes through `probe_orchestrator`.
 
 ## 2. `alloy reset` Click command
 
-- [ ] 2.1 Create `src/alloy_cli/commands/reset.py` with the Click command + flags (`--soft`/`--hard` mutex group, `--halt-after-reset`, `--probe`, `--project-dir`).
-- [ ] 2.2 Dispatch through `probe_orchestrator.select_probe` + `reset_target`.  Output a Rich panel summarising probe id + method + duration on success.
-- [ ] 2.3 Map the typed errors (`probe-not-attached`, `probe-multiple-attached`, `probe-unauthorised`, `probe-not-found`) to clean `click.ClickException` messages with cookbook links.
-- [ ] 2.4 Register `reset_command` in `src/alloy_cli/main.py` (alongside `flash_command`).
-- [ ] 2.5 Add `tests/test_command_reset.py`: `--help` advertises every flag; happy path uses `FakeProbe`; no probe → exit non-zero with the typed surface; multiple probes → typed surface lists them; vendor-only probe → typed surface naming the vendor tool; `--probe vid:pid:serial` selector wins over autodetect.
+- [x] 2.1 Create `src/alloy_cli/commands/reset.py` with the Click command + flags (`--soft`/`--hard` mutex group, `--halt-after-reset`, `--probe`, `--project-dir`).
+- [x] 2.2 Dispatch through `probe_orchestrator.select_probe` + `reset_target`.  Output a Rich panel summarising probe id + method + duration on success.
+- [x] 2.3 Map the typed errors (`probe-not-attached`, `probe-multiple-attached`, `probe-unauthorised`, `probe-not-found`) to clean `click.ClickException` messages with cookbook links.
+- [x] 2.4 Register `reset_command` in `src/alloy_cli/main.py` (alongside `flash_command`).
+- [x] 2.5 Add `tests/test_command_reset.py`: `--help` advertises every flag; happy path uses `FakeProbe`; no probe → exit non-zero with the typed surface; multiple probes → typed surface lists them; vendor-only probe → typed surface naming the vendor tool; `--probe vid:pid:serial` selector wins over autodetect.
 
 ## 3. `alloy erase` Click command
 

@@ -295,6 +295,150 @@ class FakeProbe:
 
 
 # ---------------------------------------------------------------------------
+# Real probe-rs subprocess backend
+# ---------------------------------------------------------------------------
+
+
+class _RealProbeRsProbe:
+    """Subprocess-backed :class:`Probe` implementation.
+
+    Wraps the lockfile-pinned probe-rs binary.  Translates Wave-4's
+    typed contract into the subprocess argv probe-rs expects + maps
+    non-zero exit codes to typed errors.
+
+    Tests that need a real backend can pass a ``runner`` argument
+    (typically a :class:`FakeRunner`) so the subprocess seam is
+    fully overridable.  Production callers leave it ``None`` and
+    pick up :data:`alloy_cli.core.process.runner`.
+    """
+
+    def __init__(
+        self,
+        identity: ProbeIdentity,
+        *,
+        binary: str,
+        runner: Any | None = None,
+    ) -> None:
+        self._identity = identity
+        self._binary = binary
+        # Late-import the runner to keep the module importable when
+        # subprocess plumbing isn't ready (e.g. CI bootstrap).
+        from alloy_cli.core import process as _process
+
+        self._runner = runner if runner is not None else _process.runner
+
+    @property
+    def identity(self) -> ProbeIdentity:
+        return self._identity
+
+    def reset(self, *, method: str, halt_after: bool) -> ResetReport:
+        argv = [self._binary, "reset"]
+        if method == "hard":
+            # probe-rs uses --connect-under-reset to drive nRST when
+            # the probe + target support it.  Fall back to soft if
+            # the backend doesn't recognise the flag (probe-rs <0.24
+            # behaviour).
+            argv.append("--connect-under-reset")
+        if halt_after:
+            argv.append("--halt-after-reset")
+        argv.extend(self._probe_selector_argv())
+        started = _now_ms()
+        result = self._runner.run(argv)
+        duration = _now_ms() - started
+        if not result.ok:
+            raise FamilyToolchainEraseProbeFailedError(
+                f"probe-rs reset failed (returncode={result.returncode}): "
+                f"{result.stderr or result.stdout}".strip(),
+                stderr=result.stderr or result.stdout,
+                returncode=result.returncode,
+            )
+        return ResetReport(
+            probe=self._identity,
+            method=method,
+            halt_after=halt_after,
+            duration_ms=duration,
+        )
+
+    def erase(self, regions: Sequence[EraseRegion]) -> EraseReport:
+        # Wave-4: chip-wide erase only.  Per-region erase via
+        # probe-rs requires `--restore-unwritten-bytes` + manual
+        # offset/size flags; that lands in a follow-up.  For now,
+        # if any region is anything other than "all", refuse with
+        # a typed error so the CLI surfaces it cleanly.
+        regions_tuple = tuple(regions)
+        if not (len(regions_tuple) == 1 and regions_tuple[0].name == "all"):
+            raise FamilyToolchainEraseProbeFailedError(
+                "Per-region erase via probe-rs is not yet supported "
+                "(Wave-4 ships chip-wide erase only).  Pass a chip-wide "
+                "plan or use the vendor utility for partial erase.",
+            )
+        argv = [self._binary, "erase"]
+        argv.extend(self._probe_selector_argv())
+        started = _now_ms()
+        result = self._runner.run(argv)
+        duration = _now_ms() - started
+        if not result.ok:
+            raise FamilyToolchainEraseProbeFailedError(
+                f"probe-rs erase failed (returncode={result.returncode}): "
+                f"{result.stderr or result.stdout}".strip(),
+                stderr=result.stderr or result.stdout,
+                returncode=result.returncode,
+            )
+        return EraseReport(
+            probe=self._identity,
+            regions=regions_tuple,
+            total_bytes_erased=regions_tuple[0].size,
+            duration_ms=duration,
+        )
+
+    def monitor(
+        self,
+        *,
+        port: Path | None,
+        baud: int,
+        mode: str,
+        on_event: Callable[[MonitorEvent], None],
+    ) -> int:
+        # Wave-4 group 4 will wire this up to a real PySerial /
+        # probe-rs RTT subprocess.  Group 2 only needs reset, so we
+        # raise a typed error if a caller dispatches monitor through
+        # the real backend before group 4 lands.
+        raise NotImplementedError("Real-backend monitor is wired up in Wave-4 group 4.")
+
+    def _probe_selector_argv(self) -> list[str]:
+        """Build the ``--probe vid:pid:serial`` argv probe-rs expects."""
+        if not self._identity.serial:
+            return ["--probe", f"{self._identity.vid}:{self._identity.pid}"]
+        return [
+            "--probe",
+            f"{self._identity.vid}:{self._identity.pid}:{self._identity.serial}",
+        ]
+
+
+def real_probe_for(
+    identity: ProbeIdentity,
+    *,
+    project_root: Path | None = None,
+    runner: Any | None = None,
+) -> _RealProbeRsProbe:
+    """Build a real backend probe for ``identity``.
+
+    Resolves the probe-rs binary from the project lockfile (when set)
+    so the orchestrator inherits Wave-2's atomicity + sha-verification.
+    Tests pass an explicit ``runner`` to swap out the subprocess seam.
+    """
+    binary = _resolve_probe_rs_binary(project_root)
+    return _RealProbeRsProbe(identity, binary=binary, runner=runner)
+
+
+# Need to import the typed-failure error here so the real backend can
+# raise it without a circular import.  Place the import at module
+# bottom (post-class definition) once the file finishes loading.
+from alloy_cli.core.errors import (  # noqa: E402
+    FamilyToolchainEraseProbeFailedError,
+)
+
+# ---------------------------------------------------------------------------
 # Probe selection
 # ---------------------------------------------------------------------------
 
@@ -368,7 +512,7 @@ def _list_probes(*, project_root: Path | None) -> tuple[ProbeIdentity, ...]:
     binary = _resolve_probe_rs_binary(project_root)
     try:
         infos = _flash.detect_probes(probe_rs_binary=binary)
-    except Exception as exc:  # noqa: BLE001 -- subprocess runner can raise OSError, FileNotFoundError, ProcessLookupError, etc.; we project them all to a typed envelope so callers branch on the error_type rather than the lower-level exception class.
+    except Exception as exc:
         # Surface as not-found; the user probably doesn't have probe-rs
         # installed at all.
         raise FamilyToolchainProbeNotAttachedError(
@@ -744,6 +888,7 @@ __all__ = [
     "execute_erase",
     "open_monitor",
     "plan_erase",
+    "real_probe_for",
     "reset_target",
     "select_probe",
 ]
