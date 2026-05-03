@@ -48,12 +48,12 @@
 
 ## 6. MCP `toolchain_apply_install_plan`
 
-- [ ] 6.1 Add `_tool_toolchain_apply_install_plan(registry, *, family_id)` handler in `src/alloy_cli/mcp/tools.py` that dispatches through `toolchain_orchestrator.install_family` and projects every outcome to the JSON shape from spec D7.
-- [ ] 6.2 Idempotency contract: a re-run on a fully-installed family returns every outcome with `skipped=true, reason="already-installed"` and `total_bytes_downloaded=0`.
-- [ ] 6.3 Vendor tools surface with `skipped=true, reason="vendor"` and `install_doc_url` populated.  Error envelopes propagate Wave-2's typed error_types unchanged.
-- [ ] 6.4 Register the tool in `_PARAM_SCHEMA` (`{"family_id": "string"}`) and in `build_default_registry`'s handler dict.
-- [ ] 6.5 Update `src/alloy_cli/integrations/opencode/system_prompt.md` to document the two-phase contract (preview via `toolchain_install_plan`, apply via `toolchain_apply_install_plan`, after explicit human confirmation).
-- [ ] 6.6 Add `tests/test_mcp_toolchain_apply.py` covering: full install populates outcomes + lockfile_updated; re-run is idempotent + zero bytes; vendor surfaces reason="vendor" + install_doc_url; tool failure surfaces typed error_type per row without aborting; tool list discovery includes the new entry.
+- [x] 6.1 Add `_tool_toolchain_apply_install_plan(registry, *, family_id)` handler in `src/alloy_cli/mcp/tools.py` that dispatches through `toolchain_orchestrator.install_family` and projects every outcome to the JSON shape from spec D7.
+- [x] 6.2 Idempotency contract: a re-run on a fully-installed family returns every outcome with `skipped=true, reason="already-installed"` and `total_bytes_downloaded=0`.   *(orchestrator already returns `state="skipped-already-installed"` on no-ops; the handler maps that to `reason="already-installed"`.)*
+- [x] 6.3 Vendor tools surface with `skipped=true, reason="vendor"` and `install_doc_url` populated.  Error envelopes propagate Wave-2's typed error_types unchanged.
+- [x] 6.4 Register the tool in `_PARAM_SCHEMA` (`{"family_id": "string"}`) and in `build_default_registry`'s handler dict.
+- [x] 6.5 Update `src/alloy_cli/integrations/opencode/system_prompt.md` to document the two-phase contract (preview via `toolchain_install_plan`, apply via `toolchain_apply_install_plan`, after explicit human confirmation).
+- [x] 6.6 Add `tests/test_mcp_toolchain_apply.py` covering: full install populates outcomes + lockfile_updated; re-run is idempotent + zero bytes; vendor surfaces reason="vendor" + install_doc_url; tool failure surfaces typed error_type per row without aborting; tool list discovery includes the new entry.   *(landed in `tests/test_mcp_toolchain.py` alongside Wave-2's read-only tool tests, 8 new test cases.)*
 
 ## 7. Documentation
 

@@ -26,6 +26,7 @@ from alloy_cli.core import process as _process
 from alloy_cli.core import search as _search
 from alloy_cli.core import tool_sources as _ts
 from alloy_cli.core import toolchain_manager as _tm
+from alloy_cli.core import toolchain_orchestrator as _orch
 from alloy_cli.core import toolchain_registry as _registry
 from alloy_cli.core.diagnostics import UnifiedDiff
 from alloy_cli.core.errors import (
@@ -718,6 +719,117 @@ def _tool_toolchain_install_plan(
     }
 
 
+# ---------------------------------------------------------------------------
+# Wave-3 mutating tool: toolchain_apply_install_plan
+# ---------------------------------------------------------------------------
+
+
+_OUTCOME_REASONS = {
+    "installed": "installed",
+    "skipped-already-installed": "already-installed",
+    "skipped-vendor": "vendor",
+    "skipped-host-unsupported": "host-unsupported",
+    "failed": "failed",
+}
+
+
+def _outcome_to_dict(outcome: _orch.InstallOutcome) -> dict[str, Any]:
+    """Project an :class:`InstallOutcome` to a JSON-friendly row.
+
+    Wave-3's two-phase pattern: agents call
+    ``toolchain_install_plan`` first (read-only), surface the plan to
+    the user for confirmation, then call
+    ``toolchain_apply_install_plan`` and read back exactly these
+    rows.  Vendor tools always surface with ``skipped=True,
+    reason="vendor"`` so the agent can render the install_doc URL
+    without ever spawning a download.
+    """
+    return {
+        "tool": outcome.tool,
+        "version": outcome.version,
+        "state": outcome.state,
+        "skipped": outcome.skipped,
+        "reason": _OUTCOME_REASONS.get(outcome.state, outcome.state),
+        "bytes_downloaded": outcome.bytes_downloaded,
+        "sha256": outcome.sha256,
+        "store_path": str(outcome.store_path) if outcome.store_path else None,
+        "install_doc_url": outcome.install_doc_url,
+        "error_type": outcome.error_type,
+        "error_message": outcome.error_message,
+    }
+
+
+def _tool_toolchain_apply_install_plan(
+    registry: ToolRegistry, *, family_id: str
+) -> dict[str, Any]:
+    """Execute the install plan for ``family_id`` (Wave-3 mutating tool).
+
+    The write-side complement to ``toolchain_install_plan``: walks the
+    family's required + recommended tiers and dispatches every non-
+    vendor tool through ``toolchain_orchestrator.install_family``.
+    Vendor (EULA-gated) tools surface with ``skipped=True,
+    reason="vendor"`` and the per-OS ``install_doc_url`` — the agent
+    NEVER spawns a download for them.
+
+    Pattern: agents call ``toolchain_install_plan`` first to preview,
+    surface the plan to the user, get explicit confirmation, then
+    call this tool.  Idempotent: a re-run on a fully-installed family
+    returns every outcome with ``skipped=true,
+    reason="already-installed"`` and ``total_bytes_downloaded=0``.
+
+    Per-tool failures do NOT abort the rest of the walk; they surface
+    as a row with ``state="failed"`` and the typed ``error_type``
+    (one of ``family-toolchain-installer-{checksum,download,extract,
+    locked,store-corrupt,version-mismatch,unsupported-host}``).
+
+    The lockfile at ``<project_dir>/.alloy/toolchain.lock`` is
+    updated atomically once at the end; the response carries
+    ``lockfile_updated`` (bool) and ``lockfile_path`` (str | null).
+
+    Errors:
+      ``family-toolchain-not-found`` (Wave-1 envelope) when no
+        manifest ships for ``family_id``.
+      ``family-toolchain-installer-locked`` if another process holds
+        the per-tool flock — propagates because this is a global
+        installer-level error, not a per-tool one.
+    """
+    try:
+        manifest = _registry.load_family(family_id)
+    except FamilyToolchainNotFoundError as exc:
+        raise ToolError(
+            error_type="family-toolchain-not-found",
+            message=str(exc),
+            detail={"known_families": list(_registry.known_families())},
+        ) from exc
+
+    try:
+        report = _orch.install_family(
+            manifest,
+            project_root=registry.project_dir,
+        )
+    except FamilyToolchainInstallerError as exc:
+        # Lock-acquisition + other installer-level failures.  Per-tool
+        # errors are caught inside `install_family` and projected as
+        # outcomes — they NEVER reach here.
+        raise ToolError(
+            error_type=getattr(exc, "error_type", "family-toolchain-installer-error"),
+            message=str(exc),
+        ) from exc
+
+    return {
+        "family_id": report.family_id,
+        "host": {"os": report.host.os, "arch": report.host.arch},
+        "outcomes": [_outcome_to_dict(o) for o in report.outcomes],
+        "installed_count": report.installed_count,
+        "failed_count": report.failed_count,
+        "total_bytes_downloaded": report.total_bytes_downloaded,
+        "lockfile_updated": report.lockfile_updated,
+        "lockfile_path": (
+            str(report.lockfile_path) if report.lockfile_path else None
+        ),
+    }
+
+
 # ----- mutating: preview / apply ------------------------------------------
 
 
@@ -1261,6 +1373,7 @@ _PARAM_SCHEMA: dict[str, dict[str, Any]] = {
     "list_family_toolchain": {"family_id": "string"},
     "toolchain_status": {"family_id": "string?"},
     "toolchain_install_plan": {"family_id": "string"},
+    "toolchain_apply_install_plan": {"family_id": "string"},
     "preview_diff": {"kind": "string", "name": "string", "payload": "object?"},
     "apply_diff": {"diff_id": "string"},
     "add_uart": {
@@ -1370,6 +1483,7 @@ def build_default_registry(
         "list_family_toolchain": _tool_list_family_toolchain,
         "toolchain_status": _tool_toolchain_status,
         "toolchain_install_plan": _tool_toolchain_install_plan,
+        "toolchain_apply_install_plan": _tool_toolchain_apply_install_plan,
         "preview_diff": _tool_preview_diff,
         "apply_diff": _tool_apply_diff,
         "add_uart": _tool_add_uart,

@@ -58,6 +58,40 @@ that exposes typed tools backed by canonical device IR.
 6. build()
 ```
 
+## Canonical workflow for "install the family's toolchain"
+
+The toolchain install is a **two-phase** mutation, just like
+`preview_diff` → `apply_diff`.  Never call the apply tool without
+the preview first:
+
+```
+1. read_alloy_toml()                              — confirm the project's family
+2. toolchain_install_plan(family_id="stm32g0")    — preview download set + sizes
+   → render the plan (URLs, sha256, total size) and the vendor
+     skip-list to the user; ask for explicit confirmation
+3. toolchain_apply_install_plan(family_id="stm32g0")
+   → executes the install; returns one row per tool with
+     `state` ∈ {installed, skipped-already-installed,
+     skipped-vendor, skipped-host-unsupported, failed}
+```
+
+The apply tool is **idempotent**: a re-run on a fully-installed
+family returns every outcome with `skipped=true,
+reason="already-installed"` and `total_bytes_downloaded=0`.  It
+also updates the project's `.alloy/toolchain.lock` atomically (the
+response carries `lockfile_updated` and `lockfile_path`).
+
+Vendor (EULA-gated) tools — STM32CubeProgrammer, nrfjprog,
+J-Link — surface with `skipped=true, reason="vendor"` and the
+per-OS `install_doc_url`.  **Never spawn a download for them.**
+Surface the URL to the user and let them install manually.
+
+Per-tool failures do NOT abort the rest of the walk; each failed
+row carries a typed `error_type`
+(`family-toolchain-installer-{checksum,download,extract,locked,
+store-corrupt,version-mismatch,unsupported-host}`) the user can
+search the cookbook for.
+
 ## Things you SHOULD NOT do
 
 * Do not propose code edits outside the alloy tool surface.  Do

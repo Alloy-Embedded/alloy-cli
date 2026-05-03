@@ -346,3 +346,194 @@ def test_status_response_is_json_serialisable(
     payload = registry.call("toolchain_status", family_id="stm32g0")
     blob = _json.dumps(payload, sort_keys=True)
     assert _json.loads(blob) == payload
+
+
+# ---------------------------------------------------------------------------
+# Wave-3 mutating tool: toolchain_apply_install_plan
+# ---------------------------------------------------------------------------
+
+
+def _stub_install_family(monkeypatch: pytest.MonkeyPatch, *, failed_tools=()):
+    """Replace ``install_family`` in the MCP module with a recorder."""
+    from dataclasses import replace
+
+    from alloy_cli.core import tool_sources as _ts_inner
+    from alloy_cli.core import toolchain_orchestrator as _orch
+    from alloy_cli.core.toolchain_orchestrator import (
+        InstallOutcome,
+        InstallReport,
+    )
+    from alloy_cli.mcp import tools as _mcp_tools
+
+    captured: dict = {"calls": []}
+
+    def _fake(manifest, *, project_root=None, on_event=None, **kwargs):
+        captured["calls"].append(
+            {
+                "family_id": manifest.family_id,
+                "project_root": project_root,
+                "tool_count": (
+                    len(manifest.required) + len(manifest.recommended)
+                ),
+            }
+        )
+        outcomes = []
+        for tool in (*manifest.required, *manifest.recommended):
+            if tool.is_vendor:
+                outcomes.append(
+                    InstallOutcome(
+                        tool=tool.tool,
+                        version=tool.version,
+                        state="skipped-vendor",
+                        install_doc_url="https://example.com/vendor-doc",
+                    )
+                )
+                continue
+            failed = tool.tool in failed_tools
+            outcomes.append(
+                InstallOutcome(
+                    tool=tool.tool,
+                    version=tool.version,
+                    state="failed" if failed else "installed",
+                    sha256=None if failed else "deadbeef" * 8,
+                    bytes_downloaded=0 if failed else 1024,
+                    error_type=("family-toolchain-installer-checksum" if failed else None),
+                    error_message=("checksum mismatch" if failed else None),
+                )
+            )
+        return InstallReport(
+            family_id=manifest.family_id,
+            host=replace(_ts_inner.host_triple()),
+            outcomes=tuple(outcomes),
+            total_bytes_downloaded=sum(o.bytes_downloaded for o in outcomes),
+            lockfile_updated=any(o.installed for o in outcomes) and project_root is not None,
+            lockfile_path=(project_root / ".alloy" / "toolchain.lock") if project_root else None,
+        )
+
+    monkeypatch.setattr(_mcp_tools._orch, "install_family", _fake)
+    monkeypatch.setattr(_orch, "install_family", _fake)
+    return captured
+
+
+def test_apply_install_plan_appears_in_registry(registry: ToolRegistry) -> None:
+    assert "toolchain_apply_install_plan" in registry.names()
+
+
+def test_apply_install_plan_returns_outcomes_for_every_tier_entry(
+    registry: ToolRegistry, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """One row per tool the family declares — required + recommended."""
+    captured = _stub_install_family(monkeypatch)
+    payload = registry.call("toolchain_apply_install_plan", family_id="stm32g0")
+    assert payload["family_id"] == "stm32g0"
+    assert isinstance(payload["outcomes"], list)
+    tools_in_response = {row["tool"] for row in payload["outcomes"]}
+    # Required tier (inherited from arm-cortex-m): cmake, ninja,
+    # arm-none-eabi-gcc, probe-rs.  Recommended for stm32g0:
+    # tio + STM32CubeProgrammer (vendor).
+    for tool in ("arm-none-eabi-gcc", "cmake", "ninja", "probe-rs"):
+        assert tool in tools_in_response
+    assert "STM32CubeProgrammer" in tools_in_response
+    assert len(captured["calls"]) == 1
+    assert captured["calls"][0]["family_id"] == "stm32g0"
+
+
+def test_apply_install_plan_vendor_row_carries_skipped_and_install_doc(
+    registry: ToolRegistry, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Vendor tools NEVER spawn a download; the row carries
+    ``skipped=true, reason="vendor"`` and the install_doc_url."""
+    _stub_install_family(monkeypatch)
+    payload = registry.call("toolchain_apply_install_plan", family_id="stm32g0")
+    cube = next(
+        (r for r in payload["outcomes"] if r["tool"] == "STM32CubeProgrammer"),
+        None,
+    )
+    assert cube is not None
+    assert cube["skipped"] is True
+    assert cube["reason"] == "vendor"
+    assert cube["install_doc_url"] is not None
+    assert cube["bytes_downloaded"] == 0
+
+
+def test_apply_install_plan_failed_row_carries_typed_error_type(
+    registry: ToolRegistry, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A per-tool failure surfaces with state='failed' and the typed
+    error_type — the rest of the walk completes regardless."""
+    _stub_install_family(monkeypatch, failed_tools=("cmake",))
+    payload = registry.call("toolchain_apply_install_plan", family_id="stm32g0")
+    cmake = next(r for r in payload["outcomes"] if r["tool"] == "cmake")
+    assert cmake["state"] == "failed"
+    assert cmake["reason"] == "failed"
+    assert cmake["error_type"] == "family-toolchain-installer-checksum"
+    # Other tools still attempted.
+    other_states = {r["tool"]: r["state"] for r in payload["outcomes"] if r["tool"] != "cmake"}
+    assert "arm-none-eabi-gcc" in other_states
+    assert other_states["arm-none-eabi-gcc"] == "installed"
+
+
+def test_apply_install_plan_unknown_family_raises_typed_envelope(
+    registry: ToolRegistry,
+) -> None:
+    """Unknown family → Wave-1 envelope with ``known_families``."""
+    with pytest.raises(ToolError) as excinfo:
+        registry.call("toolchain_apply_install_plan", family_id="not-a-family")
+    err = excinfo.value
+    assert err.error_type == "family-toolchain-not-found"
+    assert "known_families" in (err.detail or {})
+
+
+def test_apply_install_plan_response_carries_aggregate_counts(
+    registry: ToolRegistry, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The response carries aggregated counters the agent uses for
+    summarising progress to the user."""
+    _stub_install_family(monkeypatch)
+    payload = registry.call("toolchain_apply_install_plan", family_id="stm32g0")
+    for key in (
+        "installed_count",
+        "failed_count",
+        "total_bytes_downloaded",
+        "lockfile_updated",
+        "lockfile_path",
+    ):
+        assert key in payload, f"response missing aggregate key {key!r}"
+    assert isinstance(payload["installed_count"], int)
+    assert isinstance(payload["failed_count"], int)
+
+
+def test_apply_install_plan_response_is_json_serialisable(
+    registry: ToolRegistry, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import json as _json
+
+    _stub_install_family(monkeypatch)
+    payload = registry.call("toolchain_apply_install_plan", family_id="stm32g0")
+    blob = _json.dumps(payload, sort_keys=True)
+    assert _json.loads(blob) == payload
+
+
+def test_apply_install_plan_lockfile_path_is_under_project_dir(
+    registry: ToolRegistry, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """When the orchestrator writes the lockfile, the response path
+    points inside the project_dir of the registry."""
+    _stub_install_family(monkeypatch)
+    payload = registry.call("toolchain_apply_install_plan", family_id="stm32g0")
+    if payload["lockfile_updated"]:
+        assert payload["lockfile_path"] is not None
+        assert ".alloy/toolchain.lock" in payload["lockfile_path"]
+
+
+def test_system_prompt_documents_two_phase_pattern() -> None:
+    """The opencode system prompt mentions both tools in the canonical
+    workflow — keeps LLM agents aware of the preview-then-apply
+    contract."""
+    prompt = (
+        Path(__file__).resolve().parents[1]
+        / "src/alloy_cli/integrations/opencode/system_prompt.md"
+    ).read_text(encoding="utf-8")
+    assert "toolchain_install_plan" in prompt
+    assert "toolchain_apply_install_plan" in prompt
+    assert "two-phase" in prompt.lower() or "two phase" in prompt.lower()
