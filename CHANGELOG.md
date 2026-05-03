@@ -9,6 +9,14 @@ Unreleased work lives at the top of the file; releases are tagged
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-05-03
+
+The toolchain-management track lands.  Two waves ship together:
+Wave 3 (`add-onboarding-wizard`) welds the Wave-2 installer into
+five user-facing entry points; Wave 4 (`add-recovery-tools`) adds
+the daily hardware-bring-up verbs (`alloy reset` / `erase` /
+`monitor`).
+
 ### Added — Wave-4 of toolchain-management
 
 - **`add-recovery-tools`** — Wave 4 closes the user-facing arc by
