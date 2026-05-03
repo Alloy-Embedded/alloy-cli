@@ -34,6 +34,7 @@ from alloy_cli.commands.erase import erase_command
 from alloy_cli.commands.export import export_command
 from alloy_cli.commands.flash import flash_command
 from alloy_cli.commands.mcp import mcp_command
+from alloy_cli.commands.monitor import monitor_command
 from alloy_cli.commands.new import new_command
 from alloy_cli.commands.reset import reset_command
 from alloy_cli.commands.setup import setup_command
@@ -89,6 +90,7 @@ cli.add_command(export_command)
 cli.add_command(setup_command)
 cli.add_command(reset_command)
 cli.add_command(erase_command)
+cli.add_command(monitor_command)
 
 
 def main(argv: list[str] | None = None) -> NoReturn:

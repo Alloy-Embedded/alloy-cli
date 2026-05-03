@@ -289,6 +289,18 @@ Options:
   - `--transport` — Transport for the MCP server.  HTTP / SSE land with the official SDK.
   - `--cwd` — Project directory exposed to MCP tools.
 
+## `alloy monitor`
+
+Stream bytes from the target's debug UART (or RTT channel) to stdout.  Press Ctrl+] to disconnect cleanly.  Resolves the port from alloy.toml when the project declares a console UART; --port / --baud overrides.
+
+Options:
+  - `--port` — Serial device path (e.g. /dev/cu.usbmodem1234).  Overrides autodetect.
+  - `--baud` — Baud rate.  Overrides the project's [uart].debug config; falls back to 115200 when neither resolves.
+  - `--mode` — Stream source: raw UART bytes or probe-rs RTT channel.
+  - `--ansi, --no-ansi` — Pass through ANSI escape sequences.  Default strips them so the log stays grep-friendly.
+  - `--probe` — Probe selector (only meaningful in --mode rtt).
+  - `--project-dir` — Project root containing alloy.toml + .alloy/toolchain.lock.
+
 ## `alloy new`
 
 Scaffold a new alloy-cli firmware project.

@@ -27,13 +27,13 @@
 
 ## 4. `alloy monitor` Click command
 
-- [ ] 4.1 Create `src/alloy_cli/commands/monitor.py` with the Click command + flags (`--port`, `--baud`, `--mode raw|rtt`, `--ansi/--no-ansi`, `--probe`, `--project-dir`).
-- [ ] 4.2 Auto-detect the debug UART from `alloy.toml [uart].debug` when `--port` is not given.  When neither resolves, exit clean with a typed message.
-- [ ] 4.3 Dispatch through `probe_orchestrator.open_monitor` with an `on_event` callback that streams `MonitorBytes` to stdout (with optional ANSI strip).
-- [ ] 4.4 Catch `ProbeOperationCancelledError` (Ctrl+]) and print the one-line summary (`bytes_captured`, `duration_ms`, `last_line`).  Exit 0.
-- [ ] 4.5 Register `monitor_command` in `src/alloy_cli/main.py`.
-- [ ] 4.6 Run `python scripts/generate_cheatsheet.py` so the new verb lands in `docs/CHEATSHEET.md`.
-- [ ] 4.7 Add `tests/test_command_monitor.py`: `--help` advertises every flag; explicit `--port` + `--baud` opens the right port; auto-detect via `alloy.toml [uart].debug` works; missing port + no project config exits with a clear error; Ctrl+] (simulated by `FakeProbe.close_session`) prints the summary line + exits 0; `--mode rtt` dispatches the RTT path.
+- [x] 4.1 Create `src/alloy_cli/commands/monitor.py` with the Click command + flags (`--port`, `--baud`, `--mode raw|rtt`, `--ansi/--no-ansi`, `--probe`, `--project-dir`).
+- [x] 4.2 Auto-detect the debug UART from `alloy.toml [uart].debug` when `--port` is not given.  When neither resolves, exit clean with a typed message.   *Wave 4 only autodetects the BAUD rate from `alloy.toml`'s console UART peripheral; the OS-level serial path always requires `--port` because USB enumeration is host-specific.  The clear-message path covers both cases.*
+- [x] 4.3 Dispatch through `probe_orchestrator.open_monitor` with an `on_event` callback that streams `MonitorBytes` to stdout (with optional ANSI strip).
+- [x] 4.4 Catch `ProbeOperationCancelledError` (Ctrl+]) and print the one-line summary (`bytes_captured`, `duration_ms`, `last_line`).  Exit 0.
+- [x] 4.5 Register `monitor_command` in `src/alloy_cli/main.py`.
+- [x] 4.6 Run `python scripts/generate_cheatsheet.py` so the new verb lands in `docs/CHEATSHEET.md`.
+- [x] 4.7 Add `tests/test_command_monitor.py`: `--help` advertises every flag; explicit `--port` + `--baud` opens the right port; auto-detect via `alloy.toml [uart].debug` works; missing port + no project config exits with a clear error; Ctrl+] (simulated by `FakeProbe.close_session`) prints the summary line + exits 0; `--mode rtt` dispatches the RTT path.
 
 ## 5. TUI integration
 
