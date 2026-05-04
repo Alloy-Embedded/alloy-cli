@@ -1,0 +1,216 @@
+# mkdocs.yml — alloy-cli documentation site (add-docs-site, Wave 5).
+#
+# Build:    pip install -e .[docs] && mkdocs build --strict
+# Preview:  mkdocs serve
+# Deploy:   .github/workflows/docs.yml (gh-deploy on main + v* tags)
+#
+# Spec:     openspec/specs/docs-site/spec.md
+# Design:   openspec/changes/archive/<DATE>-add-docs-site/design.md
+
+site_name: alloy-cli
+site_description: >-
+  Terminal-native developer surface for the Alloy embedded platform —
+  scaffold, configure, build, flash, and debug firmware projects from
+  one tool, with first-class AI-agent integration.
+site_url: https://alloy-embedded.github.io/alloy-cli/
+site_author: Alloy Embedded
+
+repo_url: https://github.com/Alloy-Embedded/alloy-cli
+repo_name: Alloy-Embedded/alloy-cli
+edit_uri: edit/main/docs/
+
+# Source files live under docs/ — DO NOT move existing files; the IA
+# tree below references them by path so external links continue to
+# work via the redirects plugin.
+docs_dir: docs
+
+# Strict mode in CI catches: unresolved nav entries, broken internal
+# links, malformed YAML, unknown plugins, broken mkdocstrings refs.
+strict: true
+
+# Several existing docs link out of the docs/ tree (e.g.
+# `../src/alloy_cli/core/...`, `../schema/family_toolchain_v1.json`,
+# `../data/families/`).  Those links resolve when viewed on
+# github.com (which is the canonical reading surface for those
+# files), but mkdocs can't follow them.  The existing
+# `test_*_doc.py` regression tests pin those exact strings as
+# proof the contributor docs reference the source modules — so we
+# do NOT rewrite them.  Downgrade the unrecognised-link warning
+# to info so the strict build stays green; keep `not_found` strict
+# so a real typo on a SITE-internal link still fails.
+validation:
+  # Group 1 ships a slim nav; Group 2 wires every file into the
+  # tree.  Until then, downgrade omitted_files to info.
+  omitted_files: info
+  links:
+    not_found: info           # `../src/...`, `../schema/...` (GH paths)
+    absolute_links: info      # `/foo` → external
+    unrecognized_links: info  # ambiguous external refs
+    anchors: warn             # in-page anchor typos still warn
+
+theme:
+  name: material
+  language: en
+  # Custom theming (D8): alloy-blue + amber accent matching the TUI
+  # snapshots' palette.  Light mode is default; dark mode persists in
+  # localStorage (default Material behaviour).
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: deep orange
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: deep orange
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    # Instant navigation (no full-page reloads when clicking nav links).
+    - navigation.instant
+    - navigation.instant.progress
+    # Track active section in the sidebar as the user scrolls.
+    - navigation.tracking
+    # Group sections into top-level tabs above the sidebar.
+    - navigation.tabs
+    - navigation.tabs.sticky
+    # Sticky section index pages so users always know where they are.
+    - navigation.sections
+    - navigation.expand
+    # Footer with prev/next navigation.
+    - navigation.footer
+    # Code-copy buttons + line annotations in code blocks.
+    - content.code.copy
+    - content.code.annotate
+    # In-page tabs for the OS-specific install instructions.
+    - content.tabs.link
+    # Search-as-you-type with highlighting.
+    - search.highlight
+    - search.share
+    - search.suggest
+    # Hint when the user uses Ctrl+K / Cmd+K.
+    - announce.dismiss
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil
+  # Logo + favicon land in Group 5 (theming + branding).  The
+  # placeholder paths are referenced ahead of time so the build is
+  # already structured when the assets ship.
+  # logo: assets/logo.png
+  # favicon: assets/favicon.ico
+
+# ----------------------------------------------------------------------
+# Plugins
+# ----------------------------------------------------------------------
+
+plugins:
+  - search
+  # Group 3 — auto-generated CLI + API references (see tasks 3.x).
+  # Configured here for the strict-mode invariant; the per-page
+  # directives land alongside the new pages under docs/reference/cli.md
+  # + docs/api/*.md.
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            show_source: true
+            show_root_heading: true
+            heading_level: 2
+            members_order: source
+            filters:
+              - "!^_"           # hide private symbols
+              - "!^__init__$"
+            merge_init_into_class: true
+  # Group 4 — URL stability for legacy docs/<X>.md paths.
+  - redirects:
+      redirect_maps: {}     # filled in Group 4
+  # Include CHANGELOG / VISION / etc. without duplicating content.
+  - include-markdown
+
+# ----------------------------------------------------------------------
+# Markdown extensions
+# ----------------------------------------------------------------------
+
+markdown_extensions:
+  # PyMdown — superfences (Mermaid + tabs + admonitions), task lists,
+  # tilde-strikethrough, caret-superscript, smart symbols.
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: "#"
+      permalink_title: Direct link to this heading
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.smartsymbols
+  - pymdownx.tilde
+  - pymdownx.caret
+  - pymdownx.keys
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+# ----------------------------------------------------------------------
+# Navigation tree (the IA — see proposal D7).
+#
+# Group 1 ships ONLY the Home + Getting Started branches so the
+# strict build is green from day one.  Groups 2–4 grow the tree.
+# ----------------------------------------------------------------------
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Quickstart: QUICKSTART.md
+  - User Guide:
+      - Toolchain management:
+          - Onboarding: TOOLCHAIN_ONBOARDING.md
+          - Installer: TOOLCHAIN_INSTALLER.md
+          - Registry: TOOLCHAIN_REGISTRY.md
+      - Recovery: RECOVERY.md
+      - AI integration: AI_INTEGRATION.md
+  - Reference:
+      - Error cookbook: ERROR_COOKBOOK.md
+      - Cheatsheet: CHEATSHEET.md
+  - Architecture & Design:
+      - Overview: ARCHITECTURE.md
+      - TUI design: TUI_DESIGN.md
+      - Data sources: DATA_SOURCES.md
+      - Project format: PROJECT_FORMAT.md
+      - Comparison: COMPARISON.md
+  - Contributing:
+      - Contributing: CONTRIBUTING.md
+      - Releasing: RELEASING.md
+      - Roadmap: ROADMAP.md
+      - Vision: VISION.md
+      - Review: REVIEW.md
+
+# Custom CSS overrides land in Group 5.
+extra_css:
+  - stylesheets/extra.css
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Alloy-Embedded/alloy-cli
+      name: alloy-cli on GitHub
+  # Generator banner — Material renders "Made with Material for MkDocs"
+  # in the footer; keep it ON to credit the theme.
+  generator: true

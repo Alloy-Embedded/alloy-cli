@@ -1,0 +1,65 @@
+/* extra.css — alloy-cli docs site overrides.
+ *
+ * Group 1 ships the minimum (hero card + footer note); Group 5
+ * extends with print-friendly + brand-colour tweaks.
+ *
+ * Spec: openspec/specs/docs-site/spec.md
+ */
+
+/* -----------------------------------------------------------------
+ * Hero card on the landing page (docs/index.md).
+ * -------------------------------------------------------------- */
+
+.hero {
+  text-align: center;
+  padding: 2rem 1rem 1rem 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.hero h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.hero blockquote {
+  border-left: none;
+  font-size: 1.15rem;
+  color: var(--md-default-fg-color--light);
+  margin: 0.75rem auto 1.5rem auto;
+  max-width: 42rem;
+  padding: 0;
+}
+
+.hero blockquote p {
+  margin: 0;
+}
+
+.hero pre {
+  display: inline-block;
+  margin: 0.5rem 0 1.25rem 0;
+  text-align: left;
+}
+
+.hero .md-button {
+  margin: 0.25rem 0.4rem;
+}
+
+/* -----------------------------------------------------------------
+ * Feature grid (the "What you get" + "Where to go next" sections).
+ * -------------------------------------------------------------- */
+
+.md-typeset .grid.cards > :is(ul, ol) {
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+}
+
+/* -----------------------------------------------------------------
+ * Footer note on the landing page.
+ * -------------------------------------------------------------- */
+
+.footer-note {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--md-default-fg-color--light);
+  margin-top: 2rem;
+}

@@ -56,6 +56,22 @@ dev = [
     "pyright>=1.1",
     "mypy>=1.10",
 ]
+docs = [
+    # Static-site generator + Material theme (see docs/CONTRIBUTING.md
+    # for the build flow; see openspec/specs/docs-site/spec.md for
+    # the full requirements set).
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.5",
+    # Auto-doc plugins: CLI from Click, API from docstrings.
+    "mkdocstrings[python]>=0.26",
+    "mkdocs-click>=0.8",
+    # Keep legacy `docs/<X>.md` URLs resolving after the IA reorg.
+    "mkdocs-redirects>=1.2",
+    # Render CHANGELOG / VISION / etc. without duplicating content.
+    "mkdocs-include-markdown-plugin>=6",
+    # Tabs / admonitions / Mermaid via SuperFences.
+    "pymdown-extensions>=10",
+]
 
 [project.scripts]
 alloy = "alloy_cli.main:main"
@@ -63,6 +79,7 @@ alloy = "alloy_cli.main:main"
 [project.urls]
 Homepage = "https://github.com/Alloy-Embedded/alloy-cli"
 Repository = "https://github.com/Alloy-Embedded/alloy-cli"
+Documentation = "https://alloy-embedded.github.io/alloy-cli/"
 Changelog = "https://github.com/Alloy-Embedded/alloy-cli/blob/main/CHANGELOG.md"
 Issues = "https://github.com/Alloy-Embedded/alloy-cli/issues"
 

@@ -55,3 +55,6 @@ src/alloy_cli/_version.py
 
 # ccd-session worktrees (Claude Code dev)
 .claude/worktrees/
+
+# MkDocs build output (shipped via the docs.yml workflow, never committed).
+site/
