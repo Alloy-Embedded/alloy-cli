@@ -273,15 +273,35 @@ def _run_entry(
         # ahead of time (vendor adapters raise vendor-specific
         # errors).  Log the suppressed exception so a maintainer
         # can grep the codegen log later.
-        logger.warning("alloy-codegen entry callable raised: %s", exc)
+        exc_str = str(exc)
+        logger.warning("alloy-codegen entry callable raised: %s", exc_str)
+
+        # Board-only configs (no chip vendor/family/device) cannot be resolved
+        # by alloy-codegen alone — device headers are pre-shipped by the alloy
+        # HAL for in-tree builds.  Treat this as a graceful skip so that
+        # `alloy build` keeps working for in-repo examples without an SDK.
+        if "board-only config" in exc_str or "resolve the board to a" in exc_str:
+            if on_line is not None:
+                on_line(
+                    "[codegen] board-only config — skipping codegen "
+                    "(device headers expected pre-shipped by the alloy HAL)."
+                )
+            return RegenResult(
+                returncode=None,
+                skipped=True,
+                out_dir=out_dir,
+                written=(),
+                reason="board-only-config-skip",
+            )
+
         if on_line is not None:
-            on_line(f"[codegen] failed: {exc}")
+            on_line(f"[codegen] failed: {exc_str}")
         return RegenResult(
             returncode=1,
             skipped=False,
             out_dir=out_dir,
             written=(),
-            reason=f"codegen-error: {exc}",
+            reason=f"codegen-error: {exc_str}",
         )
     written_after = _snapshot_files(out_dir)
     new_files = tuple(sorted(written_after - written_before))

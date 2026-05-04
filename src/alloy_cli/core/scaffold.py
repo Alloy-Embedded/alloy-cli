@@ -4,9 +4,11 @@ Pure function ``scaffold(...)`` writes a complete project tree from a
 ``ScaffoldRequest`` and returns a ``ScaffoldResult``.  Knows nothing
 about Click or terminal output — that lives in ``commands.new``.
 
-The scaffolder picks board-driven defaults when the user passes
-``--board`` (debug-UART peripheral, LED GPIO, clock profile) and
-falls back to a chip-only project when ``--device`` is used.
+board.json is the single source of truth for board-native hardware
+(LEDs, buttons, debug UART, clock profiles).  alloy-codegen generates
+board.hpp / board.cpp directly from board.json; the scaffolder no longer
+copies those fields into alloy.toml.  The generated alloy.toml contains
+only project identity and project-specific overrides.
 """
 
 from __future__ import annotations
@@ -29,7 +31,6 @@ from alloy_cli.core.project import (
     SCHEMA_VERSION,
     BoardRef,
     ChipRef,
-    PeripheralEntry,
     ProjectConfig,
     ProjectMeta,
     write,
@@ -130,14 +131,24 @@ def _validate_request(req: ScaffoldRequest) -> None:
 
 
 def _config_from_board(name: str, board_id: str) -> tuple[ProjectConfig, dict[str, Any]]:
-    """Build a ProjectConfig + a render context from a board.json."""
+    """Build a ProjectConfig + a render context from a board.json.
+
+    board.json is the single source of truth for all board-native hardware
+    (LEDs, buttons, debug UART, clock profiles).  alloy-codegen generates
+    board.hpp / board.cpp directly from board.json, so we do NOT mirror
+    those fields into alloy.toml.  The generated alloy.toml only carries
+    project-specific overrides and project identity.
+    """
     try:
         manifest = _boards.lookup(board_id)
     except BoardNotFoundError as exc:
         raise ScaffoldError(str(exc)) from exc
 
     payload = manifest.payload
-    peripherals: list[PeripheralEntry] = []
+
+    # Populate the template render context from board.json so project
+    # templates can branch on available hardware — without copying the
+    # data into alloy.toml.
     context: dict[str, Any] = {
         "target_label": (
             f"{manifest.summary.summary or manifest.board_id} "
@@ -149,59 +160,23 @@ def _config_from_board(name: str, board_id: str) -> tuple[ProjectConfig, dict[st
 
     debug_uart = payload.get("uart", {}).get("debug")
     if debug_uart and {"peripheral", "tx", "rx"} <= debug_uart.keys():
-        peripheral_payload = {
-            "kind": "uart",
-            "name": "console",
-            "peripheral": str(debug_uart["peripheral"]),
-            "tx": str(debug_uart["tx"]),
-            "rx": str(debug_uart["rx"]),
-            "baud": int(debug_uart.get("baud", 115200)),
-        }
-        peripherals.append(
-            PeripheralEntry(
-                kind="uart",
-                name="console",
-                payload=peripheral_payload,
-            )
-        )
         context["has_debug_uart"] = True
-        context["debug_uart_peripheral"] = peripheral_payload["peripheral"]
-        context["debug_uart_tx"] = peripheral_payload["tx"]
-        context["debug_uart_rx"] = peripheral_payload["rx"]
+        context["debug_uart_peripheral"] = str(debug_uart["peripheral"])
+        context["debug_uart_tx"] = str(debug_uart["tx"])
+        context["debug_uart_rx"] = str(debug_uart["rx"])
 
     leds = payload.get("leds") or []
     if leds and isinstance(leds[0], dict) and leds[0].get("pin"):
-        led = leds[0]
-        led_name = str(led.get("name") or "led")
-        led_pin = str(led["pin"])
-        peripherals.append(
-            PeripheralEntry(
-                kind="gpio",
-                name=led_name,
-                payload={
-                    "kind": "gpio",
-                    "name": led_name,
-                    "pin": led_pin,
-                    "mode": "output",
-                    "initial": 0,
-                },
-            )
-        )
         context["has_led"] = True
-        context["led_pin"] = led_pin
-
-    clocks: dict[str, Any] = {}
-    profiles = payload.get("clock_profiles") or ()
-    if profiles:
-        clocks["profile"] = str(profiles[0])
+        context["led_pin"] = str(leds[0]["pin"])
 
     config = ProjectConfig(
         schema_version=SCHEMA_VERSION,
         project=ProjectMeta(name=name, alloy_cli=_alloy_cli_version),
         board=BoardRef(id=manifest.board_id),
         chip=None,
-        clocks=clocks,
-        peripherals=tuple(peripherals),
+        clocks={},
+        peripherals=(),
         build={"profile": "debug"},
         flash={},
         raw={},

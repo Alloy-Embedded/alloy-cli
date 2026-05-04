@@ -78,9 +78,9 @@ def build_command(
             f"ninja rc={result.build_returncode}).  See the log above."
         )
 
-    if result.codegen_returncode is None:
+    if result.codegen_returncode is None and result.codegen_reason == "alloy-codegen-not-installed":
         codegen_label = "[yellow]codegen skipped[/yellow] (alloy-codegen not installed)"
-    elif result.codegen_skipped:
+    elif result.codegen_returncode is None or result.codegen_skipped:
         codegen_label = f"codegen [dim]skipped — {result.codegen_reason}[/dim]"
     else:
         codegen_label = "[green]codegen ran[/green]"

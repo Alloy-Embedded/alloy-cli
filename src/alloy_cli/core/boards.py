@@ -58,11 +58,31 @@ class BoardManifest:
 
 
 def _boards_root() -> Path | None:
+    # 1. Explicit override wins.
     raw = os.environ.get("ALLOY_BOARDS_ROOT")
     if raw:
         path = Path(raw)
         if path.exists():
             return path
+
+    # 2. SDK installation: ~/.alloy/sdk/<version>/boards/
+    sdk_base = Path.home() / ".alloy" / "sdk"
+    if sdk_base.is_dir():
+        versions = sorted(
+            (d for d in sdk_base.iterdir() if d.is_dir() and (d / "boards").is_dir()),
+            key=lambda p: p.name,
+        )
+        if versions:
+            return versions[-1] / "boards"
+
+    # 3. In-tree development: walk up from this file looking for alloy/boards/
+    #    (covers the case where alloy-cli lives next to the alloy repo).
+    here = Path(__file__).resolve()
+    for parent in here.parents:
+        candidate = parent / "boards"
+        if candidate.is_dir() and any(candidate.glob("*/board.json")):
+            return candidate
+
     return None
 
 

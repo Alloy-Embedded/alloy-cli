@@ -35,6 +35,8 @@ dependencies = [
     "pyyaml>=6.0",
     # Project format
     "tomli>=2.0; python_version < '3.11'",
+    # Serial port access (alloy monitor --mode raw)
+    "pyserial>=3.5",
     # Subprocess + plumbing
     "platformdirs>=4.2",
     # Project scaffolding (alloy new)

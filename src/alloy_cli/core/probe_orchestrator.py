@@ -399,11 +399,283 @@ class _RealProbeRsProbe:
         mode: str,
         on_event: Callable[[MonitorEvent], None],
     ) -> int:
-        # Wave-4 group 4 will wire this up to a real PySerial /
-        # probe-rs RTT subprocess.  Group 2 only needs reset, so we
-        # raise a typed error if a caller dispatches monitor through
-        # the real backend before group 4 lands.
-        raise NotImplementedError("Real-backend monitor is wired up in Wave-4 group 4.")
+        if mode == "raw":
+            return self._monitor_raw(port=port, baud=baud, on_event=on_event)
+        elif mode == "rtt":
+            return self._monitor_rtt(baud=baud, on_event=on_event)
+        else:
+            raise ValueError(f"monitor mode must be 'raw' or 'rtt'; got {mode!r}")
+
+    def _monitor_raw(
+        self,
+        *,
+        port: Path | None,
+        baud: int,
+        on_event: Callable[[MonitorEvent], None],
+    ) -> int:
+        """Stream raw UART bytes from ``port`` via PySerial.
+
+        Uses ``select`` + ``tty.setraw`` (Unix) so Ctrl+] (0x1d) closes
+        the session cleanly and Ctrl+C is also caught.  Falls back
+        gracefully when stdin is not a TTY (piped / test).
+        """
+        import os
+        import select as _select
+        import sys
+
+        from alloy_cli.core.errors import AlloyCliError, ProbeOperationCancelledError
+
+        if port is None:
+            raise AlloyCliError("--port is required for raw UART monitor (mode=raw)")
+
+        try:
+            import serial  # pyserial
+        except ImportError as exc:
+            raise AlloyCliError(
+                "pyserial is required for raw UART monitoring.\n"
+                "Install it:  pip install pyserial"
+            ) from exc
+
+        started_ms = _now_ms()
+        bytes_captured = 0
+        last_line_buf = bytearray()
+        last_line: str | None = None
+
+        try:
+            ser = serial.Serial(str(port), baud, timeout=0)
+        except serial.SerialException as exc:
+            raise AlloyCliError(f"Cannot open {port} at {baud} baud: {exc}") from exc
+
+        on_event(
+            MonitorOpened(
+                probe=self._identity,
+                port=str(port),
+                baud=baud,
+                mode="raw",
+                started_at_ms=started_ms,
+            )
+        )
+
+        # Put stdin in raw mode so we receive individual bytes (Ctrl+], Ctrl+C).
+        # Guard: only possible when stdin is a real TTY (not piped / test harness).
+        stdin_fd: int = -1
+        old_tty_settings: list | None = None
+        try:
+            if sys.stdin.isatty():
+                import termios
+                import tty as _tty
+
+                stdin_fd = sys.stdin.fileno()
+                old_tty_settings = termios.tcgetattr(stdin_fd)
+                _tty.setraw(stdin_fd, termios.TCSANOW)
+        except Exception:
+            stdin_fd = -1
+            old_tty_settings = None
+
+        def _restore_tty() -> None:
+            if old_tty_settings is not None and stdin_fd >= 0:
+                try:
+                    import termios
+
+                    termios.tcsetattr(stdin_fd, termios.TCSADRAIN, old_tty_settings)
+                except Exception:
+                    pass
+
+        try:
+            serial_fd = ser.fileno()
+            watch: list[int] = [serial_fd]
+            if stdin_fd >= 0:
+                watch.append(stdin_fd)
+
+            while True:
+                try:
+                    readable, _, _ = _select.select(watch, [], [], 0.1)
+                except (ValueError, OSError):
+                    break
+
+                # --- stdin: Ctrl+] (0x1d) or Ctrl+C (0x03) → clean close ---
+                if stdin_fd >= 0 and stdin_fd in readable:
+                    try:
+                        ch = os.read(stdin_fd, 1)
+                    except OSError:
+                        ch = b""
+                    if ch in (b"\x1d", b"\x03"):
+                        duration = _now_ms() - started_ms
+                        on_event(
+                            MonitorClosed(
+                                duration_ms=duration,
+                                bytes_captured=bytes_captured,
+                                last_line=last_line,
+                            )
+                        )
+                        raise ProbeOperationCancelledError(
+                            "Monitor closed by user.",
+                            duration_ms=duration,
+                            bytes_captured=bytes_captured,
+                            last_line=last_line,
+                        )
+
+                # --- serial port: read available bytes ---
+                if serial_fd in readable:
+                    try:
+                        waiting = ser.in_waiting
+                        chunk = ser.read(max(waiting, 1))
+                    except serial.SerialException as exc:
+                        raise AlloyCliError(f"Serial read error: {exc}") from exc
+                    if chunk:
+                        bytes_captured += len(chunk)
+                        on_event(MonitorBytes(chunk=chunk, timestamp_ms=_now_ms()))
+                        # Track the last complete line for the session summary.
+                        last_line_buf.extend(chunk)
+                        if b"\n" in last_line_buf:
+                            parts = last_line_buf.split(b"\n")
+                            last_line = (
+                                parts[-2].decode("utf-8", errors="replace").rstrip("\r")
+                            )
+                            last_line_buf = bytearray(parts[-1])
+
+        except KeyboardInterrupt:
+            duration = _now_ms() - started_ms
+            on_event(
+                MonitorClosed(
+                    duration_ms=duration,
+                    bytes_captured=bytes_captured,
+                    last_line=last_line,
+                )
+            )
+            raise ProbeOperationCancelledError(
+                "Monitor closed by user (Ctrl+C).",
+                duration_ms=duration,
+                bytes_captured=bytes_captured,
+                last_line=last_line,
+            )
+        finally:
+            _restore_tty()
+            try:
+                ser.close()
+            except Exception:
+                pass
+
+        # Normal exit — serial port closed by remote or select() error.
+        duration = _now_ms() - started_ms
+        on_event(
+            MonitorClosed(
+                duration_ms=duration,
+                bytes_captured=bytes_captured,
+                last_line=last_line,
+            )
+        )
+        return bytes_captured
+
+    def _monitor_rtt(
+        self,
+        *,
+        baud: int,  # protocol-uniform; unused for RTT
+        on_event: Callable[[MonitorEvent], None],
+    ) -> int:
+        """Stream RTT output from a running target via probe-rs attach.
+
+        Launches ``probe-rs attach --rtt-scan-memory`` as a subprocess and
+        pipes its stdout as :class:`MonitorBytes` events.  Ctrl+C or
+        Ctrl+] (SIGINT) closes the session.
+        """
+        import subprocess
+        import threading
+
+        from alloy_cli.core.errors import AlloyCliError, ProbeOperationCancelledError
+
+        del baud  # protocol-uniform parameter; RTT does not use a baud rate
+
+        argv = [self._binary, "attach", "--rtt-scan-memory"]
+        argv.extend(self._probe_selector_argv())
+
+        started_ms = _now_ms()
+        bytes_captured = 0
+        last_line_buf = bytearray()
+        last_line: str | None = None
+
+        try:
+            proc = subprocess.Popen(
+                argv,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                bufsize=0,
+            )
+        except FileNotFoundError as exc:
+            raise AlloyCliError(
+                f"probe-rs not found ({self._binary!r}).\n"
+                "Install: cargo install probe-rs-tools --features cli\n"
+                "  or use the curl installer at https://probe.rs"
+            ) from exc
+
+        on_event(
+            MonitorOpened(
+                probe=self._identity,
+                port="rtt://0",
+                baud=0,
+                mode="rtt",
+                started_at_ms=started_ms,
+            )
+        )
+
+        # Read probe-rs stdout in a background thread; emit events from it.
+        read_error: list[Exception] = []
+
+        def _reader() -> None:
+            stdout = proc.stdout
+            assert stdout is not None, "Popen stdout pipe unexpectedly None"
+            try:
+                for chunk in iter(lambda: stdout.read(4096), b""):
+                    nonlocal bytes_captured, last_line
+                    bytes_captured += len(chunk)
+                    on_event(MonitorBytes(chunk=chunk, timestamp_ms=_now_ms()))
+                    last_line_buf.extend(chunk)
+                    if b"\n" in last_line_buf:
+                        parts = last_line_buf.split(b"\n")
+                        last_line = (
+                            parts[-2].decode("utf-8", errors="replace").rstrip("\r")
+                        )
+                        last_line_buf[:] = parts[-1]
+            except Exception as exc:
+                read_error.append(exc)
+
+        reader_thread = threading.Thread(target=_reader, daemon=True)
+        reader_thread.start()
+
+        try:
+            proc.wait()
+        except KeyboardInterrupt:
+            proc.terminate()
+            reader_thread.join(timeout=2.0)
+            duration = _now_ms() - started_ms
+            on_event(
+                MonitorClosed(
+                    duration_ms=duration,
+                    bytes_captured=bytes_captured,
+                    last_line=last_line,
+                )
+            )
+            raise ProbeOperationCancelledError(
+                "RTT monitor closed by user.",
+                duration_ms=duration,
+                bytes_captured=bytes_captured,
+                last_line=last_line,
+            )
+        finally:
+            reader_thread.join(timeout=2.0)
+
+        if read_error:
+            raise AlloyCliError(f"RTT read error: {read_error[0]}") from read_error[0]
+
+        duration = _now_ms() - started_ms
+        on_event(
+            MonitorClosed(
+                duration_ms=duration,
+                bytes_captured=bytes_captured,
+                last_line=last_line,
+            )
+        )
+        return bytes_captured
 
     def _probe_selector_argv(self) -> list[str]:
         """Build the ``--probe vid:pid:serial`` argv probe-rs expects."""

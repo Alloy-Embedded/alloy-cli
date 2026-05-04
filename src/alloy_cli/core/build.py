@@ -7,6 +7,7 @@ business-logic layer; the Click wrapper is in
 
 from __future__ import annotations
 
+import dataclasses
 import hashlib
 import json
 import shutil
@@ -29,7 +30,8 @@ from alloy_cli.core.errors import (
 )
 from alloy_cli.core.events import record_event
 from alloy_cli.core.memory import MemoryReport, parse_elf
-from alloy_cli.core.project import PROJECT_FILE, AlloyDir, ProjectConfig, read
+from alloy_cli.core import boards as _boards
+from alloy_cli.core.project import PROJECT_FILE, AlloyDir, ChipRef, ProjectConfig, read
 
 BuildProfile = Literal["debug", "release", "relwithdebinfo"]
 SUPPORTED_PROFILES: tuple[BuildProfile, ...] = ("debug", "release", "relwithdebinfo")
@@ -247,6 +249,171 @@ def _render_toolchain_cmake(lock: _lockfile.ToolchainLock) -> str:
     return "\n".join(lines) + "\n"
 
 
+_ARCH_TOOLCHAIN: dict[str, str] = {
+    "cortex-m0plus": "arm-none-eabi.cmake",
+    "cortex-m0": "arm-none-eabi.cmake",
+    "cortex-m4": "arm-none-eabi.cmake",
+    "cortex-m7": "arm-none-eabi.cmake",
+    "cortex-m33": "arm-none-eabi.cmake",
+    "riscv32": "riscv32-esp-elf.cmake",
+    "xtensa-lx6": "xtensa-esp32-elf.cmake",
+    "xtensa-lx7": "xtensa-esp32s3-elf.cmake",
+    "avr": "avr-gcc.cmake",
+}
+
+
+def _find_alloy_root(start: Path) -> Path | None:
+    """Walk up from ``start`` looking for the alloy HAL root.
+
+    The root is identified by the presence of
+    ``cmake/toolchains/arm-none-eabi.cmake``.  Returns ``None`` when
+    not found within 5 parent levels.
+    """
+    current = start
+    for _ in range(5):
+        if (current / "cmake" / "toolchains" / "arm-none-eabi.cmake").exists():
+            return current
+        parent = current.parent
+        if parent == current:
+            break
+        current = parent
+    return None
+
+
+def _board_toolchain_file(board_id: str, alloy_root: Path) -> Path | None:
+    """Return the absolute toolchain file path for a board id.
+
+    Reads the board's ``board.json`` from
+    ``alloy_root/boards/<board_id>/board.json`` to get the arch, then
+    maps it to the right toolchain cmake file.  Returns ``None`` when
+    the board.json is missing or the arch has no known toolchain.
+    """
+    import json as _json  # local import to avoid top-level cost
+
+    board_json = alloy_root / "boards" / board_id / "board.json"
+    if not board_json.exists():
+        return None
+    try:
+        payload = _json.loads(board_json.read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001
+        return None
+    arch = str(payload.get("arch", ""))
+    tc_name = _ARCH_TOOLCHAIN.get(arch)
+    if tc_name is None:
+        return None
+    tc_path = alloy_root / "cmake" / "toolchains" / tc_name
+    return tc_path if tc_path.exists() else None
+
+
+def _resolve_chip_from_board(
+    config: ProjectConfig,
+    alloy_root: Path | None = None,
+) -> ProjectConfig:
+    """Return a copy of *config* with ``chip`` populated from ``board.json``.
+
+    When the project only declares ``[board]``, alloy-codegen cannot run
+    because it needs the (vendor, family, device) triple.  The board
+    catalogue already carries that information in ``board.json``, so we
+    look it up and inject it here — transparently to the rest of the
+    build pipeline.
+
+    Lookup order:
+    1. ``boards.lookup()`` — honours ALLOY_BOARDS_ROOT / SDK cache.
+    2. ``<alloy_root>/boards/<id>/board.json`` — in-tree dev fallback.
+
+    Returns *config* unchanged when the chip triple cannot be resolved.
+    """
+    if config.chip is not None or config.board is None:
+        return config
+
+    vendor = family = device = ""
+
+    # 1. Catalogue (SDK / ALLOY_BOARDS_ROOT)
+    try:
+        manifest = _boards.lookup(config.board.id)
+        vendor, family, device = manifest.vendor, manifest.family, manifest.device
+    except Exception:
+        pass
+
+    # 2. In-tree alloy repo fallback
+    if not (vendor and family and device) and alloy_root is not None:
+        board_json = alloy_root / "boards" / config.board.id / "board.json"
+        if board_json.exists():
+            try:
+                import json as _json
+                payload = _json.loads(board_json.read_text(encoding="utf-8"))
+                vendor = str(payload.get("vendor", ""))
+                family = str(payload.get("family", ""))
+                device = str(payload.get("device", ""))
+            except Exception:
+                pass
+
+    if not (vendor and family and device):
+        return config
+
+    chip = ChipRef(vendor=vendor, family=family, device=device)
+    return dataclasses.replace(config, chip=chip)
+
+
+def _find_devices_root(alloy_root: Path | None = None) -> Path | None:
+    """Return a device-runtime header root if one is locally available.
+
+    Checks, in order:
+    1. ``<alloy_root>/.alloy-devices-patched/`` — local patched copy (in-repo dev)
+    2. ``~/.alloy/sdk/<version>/devices/`` — installed by ``alloy sdk install``
+
+    Returns ``None`` when no candidate with a vendor/*/generated tree exists.
+    """
+    # 1. In-repo patched copy (highest priority for in-tree development)
+    if alloy_root is not None:
+        patched = alloy_root / ".alloy-devices-patched"
+        if patched.is_dir() and any(patched.glob("*/*/generated")):
+            return patched
+
+    # 2. SDK layout: ~/.alloy/sdk/<version>/devices/
+    sdk_base = Path.home() / ".alloy" / "sdk"
+    if sdk_base.is_dir():
+        versions = sorted(
+            (d for d in sdk_base.iterdir() if d.is_dir() and (d / "devices").is_dir()),
+            key=lambda p: p.name,
+        )
+        if versions:
+            devices_root = versions[-1] / "devices"
+            if any(devices_root.glob("*/*/generated")):
+                return devices_root
+
+    return None
+
+
+def _find_sdk_runtime_src(alloy_root: Path | None = None) -> Path | None:
+    """Return the SDK runtime ``src/`` dir if one is locally available.
+
+    The SDK runtime provides ``hal/detail/runtime_ops.hpp`` and friends
+    that ``alloy/src/runtime/interrupt_bridge.cpp`` pulls in.
+
+    Checks, in order:
+    1. ``<alloy_root>/.alloy-sdk-runtime/src/`` — local patched copy
+    2. ``~/.alloy/sdk/<version>/runtime/src/`` — installed by ``alloy sdk install``
+    """
+    if alloy_root is not None:
+        local = alloy_root / ".alloy-sdk-runtime" / "src"
+        if local.is_dir() and (local / "hal" / "detail" / "runtime_ops.hpp").exists():
+            return local
+
+    sdk_base = Path.home() / ".alloy" / "sdk"
+    if sdk_base.is_dir():
+        versions = sorted(
+            (d for d in sdk_base.iterdir() if d.is_dir() and (d / "runtime" / "src").is_dir()),
+            key=lambda p: p.name,
+        )
+        if versions:
+            runtime_src = versions[-1] / "runtime" / "src"
+            if (runtime_src / "hal" / "detail" / "runtime_ops.hpp").exists():
+                return runtime_src
+
+    return None
+
+
 def _generate_toolchain_cmake_if_stale(layout: AlloyDir) -> Path | None:
     """Generate ``.alloy/cache/toolchain.cmake`` under a stamp guard.
 
@@ -340,6 +507,11 @@ def run(
         shutil.rmtree(build_dir, ignore_errors=True)
     build_dir.mkdir(parents=True, exist_ok=True)
 
+    _alloy_root_for_codegen = _find_alloy_root(project_root)
+
+    # Resolve board → chip so codegen gets the (vendor, family, device) triple.
+    config = _resolve_chip_from_board(config, alloy_root=_alloy_root_for_codegen)
+
     # Codegen — runs before cmake so generated headers are in place.
     codegen_result: RegenResult | None = None
     if not skip_codegen:
@@ -387,6 +559,27 @@ def run(
                 codegen_reason=codegen_result.reason,
             )
 
+    # Board codegen — generate board.hpp / board.cpp / board_uart.hpp from
+    # board.json so the hand-written files become redundant.
+    generated_board_dir: Path | None = None
+    if config.board is not None and _alloy_root_for_codegen is not None:
+        _board_json = (
+            _alloy_root_for_codegen / "boards" / config.board.id / "board.json"
+        )
+        if _board_json.exists():
+            # Use generated/boards/<id>/ so `#include "<id>/board.hpp"` still resolves
+            # when the parent generated/boards/ dir is on the include path.
+            generated_board_dir = layout.generated / "boards" / config.board.id
+            try:
+                from alloy_codegen.entrypoint import generate_board as _gen_board
+                _gen_board(_board_json, generated_board_dir)
+                if on_line:
+                    on_line(f"[board-codegen] generated {config.board.id} → {generated_board_dir}")
+            except Exception as exc:
+                if on_line:
+                    on_line(f"[board-codegen] skipped ({exc})")
+                generated_board_dir = None
+
     r = runner or process.runner
 
     # Toolchain file generation — only when a project lockfile exists.
@@ -421,6 +614,40 @@ def run(
         configure_args.append(
             f"-DCMAKE_TOOLCHAIN_FILE={toolchain_cmake}"
         )
+
+    # Board / chip injection — when the project declares a [board], pass it
+    # to CMake so boards that consume ALLOY_BOARD directly don't need to
+    # re-read alloy.toml from their own CMakeLists.txt.
+    if config.board is not None and toolchain_cmake is None:
+        configure_args.append(f"-DALLOY_BOARD={config.board.id}")
+        # Auto-detect the alloy HAL root so we can point CMake at the
+        # correct cross-compile toolchain file.  We look for a boards/
+        # directory next to the project root and walk up the tree.
+        alloy_root = _find_alloy_root(project_root)
+        if alloy_root is not None:
+            configure_args.append(
+                f"-DALLOY_SOURCE_OVERRIDE={alloy_root}"
+            )
+            tc = _board_toolchain_file(config.board.id, alloy_root)
+            if tc is not None:
+                configure_args.append(f"-DCMAKE_TOOLCHAIN_FILE={tc}")
+        # Point alloy-devices at the runtime header cache so that
+        # ALLOY_DEVICE_RUNTIME_AVAILABLE is set when device headers exist.
+        devices_root = _find_devices_root(alloy_root)
+        if devices_root is not None:
+            configure_args.append(f"-DALLOY_DEVICES_ROOT={devices_root}")
+        sdk_runtime_src = _find_sdk_runtime_src(alloy_root)
+        if sdk_runtime_src is not None:
+            configure_args.append(f"-DALLOY_SDK_RUNTIME_SRC={sdk_runtime_src}")
+    if generated_board_dir is not None:
+        configure_args.append(f"-DALLOY_GENERATED_BOARD_DIR={generated_board_dir}")
+
+    # Prefer the codegen-produced linker.ld over the board's hand-written .ld
+    # so alloy-codegen is the single source of truth for memory layout too.
+    if codegen_result is not None:
+        _gen_ld = codegen_result.out_dir / "linker.ld"
+        if _gen_ld.exists():
+            configure_args.append(f"-DALLOY_GENERATED_LINKER_SCRIPT={_gen_ld}")
     cfg = r.run(configure_args, on_line=on_line)
     if not cfg.ok:
         record_event(
