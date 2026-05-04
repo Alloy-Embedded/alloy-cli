@@ -40,11 +40,11 @@
 
 ## 6. CI deployment — `.github/workflows/docs.yml`
 
-- [ ] 6.1 Author `.github/workflows/docs.yml` with: triggers (`push: branches: [main]`, `push: tags: ['v*']`, `workflow_dispatch`), single `deploy` job, concurrency group `docs-deploy` with `cancel-in-progress: true`.
-- [ ] 6.2 In the deploy job: `actions/checkout@v4` with `fetch-depth: 0` (so `git revision date` plugins resolve correctly); `actions/setup-python@v5` pinning Python 3.13; `pip install -e .[docs]`; `mkdocs gh-deploy --force --strict`.
-- [ ] 6.3 Set the workflow's `permissions:` to `contents: write` so `mkdocs gh-deploy` can push to the `gh-pages` branch.  Use the default `GITHUB_TOKEN` (no PAT needed).
-- [ ] 6.4 Add a placeholder `docs/CNAME` file (commented out / .example suffix) for the user to enable a custom domain when registered.  Document it in the workflow's README block.
-- [ ] 6.5 First-deploy dry-run: trigger the workflow manually via `workflow_dispatch`; verify the `gh-pages` branch is created + populated; verify GitHub Pages settings auto-detect it; verify `https://alloy-embedded.github.io/alloy-cli/` serves the rendered site.
+- [x] 6.1 Author `.github/workflows/docs.yml` with: triggers (`push: branches: [main]`, `push: tags: ['v*']`, `workflow_dispatch`), single `deploy` job, concurrency group `docs-deploy` with `cancel-in-progress: true`.
+- [x] 6.2 In the deploy job: `actions/checkout@v4` with `fetch-depth: 0` (so `git revision date` plugins resolve correctly); `actions/setup-python@v5` pinning Python 3.13; `pip install -e .[docs]`; `mkdocs gh-deploy --force --strict`.
+- [x] 6.3 Set the workflow's `permissions:` to `contents: write` so `mkdocs gh-deploy` can push to the `gh-pages` branch.  Use the default `GITHUB_TOKEN` (no PAT needed).
+- [x] 6.4 Add a placeholder `docs/CNAME` file (commented out / .example suffix) for the user to enable a custom domain when registered.  Document it in the workflow's README block.
+- [x] 6.5 First-deploy dry-run: trigger the workflow manually via `workflow_dispatch`; verify the `gh-pages` branch is created + populated; verify GitHub Pages settings auto-detect it; verify `https://alloy-embedded.github.io/alloy-cli/` serves the rendered site.
 
 ## 7. Doc-quality regression tests
 
