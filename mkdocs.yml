@@ -139,9 +139,36 @@ plugins:
               - "!^_"           # hide private symbols
               - "!^__init__$"
             merge_init_into_class: true
-  # Group 4 — URL stability for legacy docs/<X>.md paths.
+  # User-friendly URL aliases for discoverability + future-IA URLs
+  # that some external links might use.  The flat docs/<X>.md URLs
+  # remain canonical (source files stay where they are); these
+  # aliases are convenience redirects.
   - redirects:
-      redirect_maps: {}     # filled in Group 4
+      redirect_maps:
+        # Lowercase slug aliases.
+        quickstart.md: QUICKSTART.md
+        recovery.md: RECOVERY.md
+        cookbook.md: ERROR_COOKBOOK.md
+        cheatsheet.md: CHEATSHEET.md
+        architecture.md: ARCHITECTURE.md
+        roadmap.md: ROADMAP.md
+        vision.md: VISION.md
+        contributing.md: CONTRIBUTING.md
+        # Future-IA paths (in case external links use them).
+        getting-started/quickstart.md: QUICKSTART.md
+        user-guide/recovery.md: RECOVERY.md
+        user-guide/toolchain/onboarding.md: TOOLCHAIN_ONBOARDING.md
+        user-guide/toolchain/installer.md: TOOLCHAIN_INSTALLER.md
+        user-guide/toolchain/registry.md: TOOLCHAIN_REGISTRY.md
+        user-guide/ai-integration.md: AI_INTEGRATION.md
+        reference/errors.md: ERROR_COOKBOOK.md
+        reference/cheatsheet.md: CHEATSHEET.md
+        architecture/overview.md: ARCHITECTURE.md
+        architecture/tui-design.md: TUI_DESIGN.md
+        architecture/data-sources.md: DATA_SOURCES.md
+        architecture/comparison.md: COMPARISON.md
+        contributing/releasing.md: RELEASING.md
+        contributing/roadmap.md: ROADMAP.md
   # Include CHANGELOG / VISION / etc. without duplicating content.
   - include-markdown
 

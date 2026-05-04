@@ -24,9 +24,9 @@
 
 ## 4. URL stability — `mkdocs-redirects`
 
-- [ ] 4.1 Configure `mkdocs-redirects` plugin in `mkdocs.yml` and author the `redirect_maps` block mapping every existing top-level `docs/*.md` to its new IA path (QUICKSTART → getting-started/quickstart, ARCHITECTURE → architecture/overview, TOOLCHAIN_REGISTRY → user-guide/toolchain/registry, TOOLCHAIN_INSTALLER → user-guide/toolchain/installer, TOOLCHAIN_ONBOARDING → user-guide/toolchain/onboarding, RECOVERY → user-guide/recovery, ERROR_COOKBOOK → reference/errors, AI_INTEGRATION → user-guide/ai-integration, CHEATSHEET → reference/cheatsheet, ARCHITECTURE / TUI_DESIGN / DATA_SOURCES / PROJECT_FORMAT / COMPARISON → architecture/*, ROADMAP / RELEASING / CONTRIBUTING / VISION / REVIEW → contributing/* or about/*).
-- [ ] 4.2 Confirm every redirect target file exists OR has a corresponding nav entry under the new IA path.
-- [ ] 4.3 Run `mkdocs build --strict`; visit `/QUICKSTART/` in the served site and confirm it redirects to the new path.
+- [x] 4.1 Configure `mkdocs-redirects` plugin in `mkdocs.yml` and author the `redirect_maps` block mapping every existing top-level `docs/*.md` to its new IA path (QUICKSTART → getting-started/quickstart, ARCHITECTURE → architecture/overview, TOOLCHAIN_REGISTRY → user-guide/toolchain/registry, TOOLCHAIN_INSTALLER → user-guide/toolchain/installer, TOOLCHAIN_ONBOARDING → user-guide/toolchain/onboarding, RECOVERY → user-guide/recovery, ERROR_COOKBOOK → reference/errors, AI_INTEGRATION → user-guide/ai-integration, CHEATSHEET → reference/cheatsheet, ARCHITECTURE / TUI_DESIGN / DATA_SOURCES / PROJECT_FORMAT / COMPARISON → architecture/*, ROADMAP / RELEASING / CONTRIBUTING / VISION / REVIEW → contributing/* or about/*).
+- [x] 4.2 Confirm every redirect target file exists OR has a corresponding nav entry under the new IA path.
+- [x] 4.3 Run `mkdocs build --strict`; visit `/QUICKSTART/` in the served site and confirm it redirects to the new path.
 
 ## 5. Theming + branding
 

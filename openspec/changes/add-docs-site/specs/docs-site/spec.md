@@ -101,17 +101,27 @@ Private symbols (names starting with `_`) SHALL be filtered out.
 
 The site SHALL preserve every URL of the form `/<DOC>/` (e.g.
 `/QUICKSTART/`) corresponding to a previously-shipped
-`docs/<DOC>.md` via the `mkdocs-redirects` plugin after the IA
-reorg.  Each redirect SHALL land on the same content under the
-new IA path.
+`docs/<DOC>.md`.  Implementation strategy: source files DO NOT
+move under the IA reorg; the navigation tree groups them
+editorially.  This keeps every flat URL canonical and resolves
+external links / search-engine hits trivially.  The
+`mkdocs-redirects` plugin SHALL also register convenience
+aliases (e.g. `/quickstart/` → `/QUICKSTART/`) so user-friendly
+slugs work too.
 
-#### Scenario: legacy doc URLs redirect to the new IA path
+#### Scenario: legacy flat URLs render directly
 
 - **WHEN** a browser requests `/QUICKSTART/` on the deployed site
+- **THEN** the server SHALL render the page directly (no
+  redirect needed — source file lives at `docs/QUICKSTART.md`)
+- **AND** the page content SHALL match the source file
+
+#### Scenario: user-friendly aliases redirect to the canonical URL
+
+- **WHEN** a browser requests `/quickstart/` (lowercase) on the
+  deployed site
 - **THEN** the server SHALL respond with a redirect (or a meta
-  refresh) to `/getting-started/quickstart/`
-- **AND** the redirect target page SHALL render the original
-  content
+  refresh) to `/QUICKSTART/`
 
 #### Scenario: every redirect target exists
 
