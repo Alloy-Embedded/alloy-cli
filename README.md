@@ -4,6 +4,8 @@
 > Pin picker, clock-tree visualiser, build/flash/debug, AI-assisted scaffolding —
 > all in your terminal, all from a single tool.
 
+📖 **Full documentation: [alloy-embedded.github.io/alloy-cli](https://alloy-embedded.github.io/alloy-cli/)** — quickstart, user guide, CLI reference, API reference, and the onboarding / recovery / error cookbooks.
+
 ![Project Dashboard](docs/images/02-dashboard.svg)
 ![Peripheral Add — UART, IR-validated pinout, live diagnostics](docs/images/05-peripheral-add.svg)
 ![Clock Tree](docs/images/06-clock-tree.svg)

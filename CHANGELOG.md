@@ -9,6 +9,63 @@ Unreleased work lives at the top of the file; releases are tagged
 
 ## [Unreleased]
 
+### Added — Documentation site
+
+- **`add-docs-site`** — alloy-cli now ships a professional
+  GitHub Pages documentation site at
+  [alloy-embedded.github.io/alloy-cli](https://alloy-embedded.github.io/alloy-cli/).
+  Built with **MkDocs Material**; deployed via
+  `.github/workflows/docs.yml` on every push to `main` and every
+  `v*` tag.  Decoupled from `release.yml` so a docs-only change
+  does not trigger a PyPI publish.
+- **Information architecture**: Home / Getting Started / User
+  Guide / Reference / Concepts / Architecture & Design /
+  Contributing / API Reference / Changelog.  Every existing
+  `docs/*.md` file is reachable through the new nav; no file
+  moves.
+- **Auto-generated CLI reference** via `mkdocs-click` against
+  `alloy_cli.main:cli`.  Every `alloy <verb>` (all 18 commands)
+  surfaces automatically; adding a new Click command lands in
+  the docs on the next build.
+- **Auto-generated API reference** via `mkdocstrings[python]`
+  for `alloy_cli.core.{toolchain_orchestrator,probe_orchestrator,
+  toolchain_registry,tool_sources,errors}`, `alloy_cli.mcp`,
+  and the TUI screens.  Private symbols filtered out.
+- **5 new concept docs** under `docs/concepts/` (~80–130 lines
+  each): Device IR, Toolchain orchestrator (with Mermaid
+  diagram), Probe orchestrator (with Mermaid diagram),
+  Lockfile-aware execution, Two-phase mutations.
+- **2 new Getting Started pages**: Installation (system
+  requirements + extras matrix), Your first project (deep
+  walkthrough beyond the 5-min QUICKSTART).
+- **URL stability via `mkdocs-redirects`**: every existing
+  `docs/<X>.md` URL keeps resolving (source files didn't move),
+  plus user-friendly aliases (`/quickstart/`, `/recovery/`,
+  `/cookbook/`, `/cheatsheet/`) + future-IA paths
+  (`/getting-started/quickstart/`, `/user-guide/recovery/`,
+  etc.) for external link compatibility.
+- **`pip install -e .[docs]`** new optional-deps group
+  (mkdocs + mkdocs-material + mkdocstrings[python] +
+  mkdocs-click + mkdocs-redirects + mkdocs-include-markdown +
+  pymdown-extensions).  Runtime install footprint unchanged.
+- **Custom theming**: alloy-blue (Material indigo) + amber
+  accent (deep-orange) palette matching the TUI snapshots,
+  custom CSS for hero card / TUI snapshot framing / Mermaid
+  diagrams / print-friendly overrides, SVG wordmark logo +
+  favicon.  Light + dark palette with toggle persisting via
+  `localStorage`.
+- **Doc-quality regression tests** (12 new, total suite 1054):
+  `mkdocs build --strict` succeeds, every internal link
+  resolves, every existing `docs/*.md` is reachable from the
+  nav OR redirect-mapped, every redirect target points at a
+  real file, the landing page links to QUICKSTART + embeds the
+  install one-liner.
+- **Source docstring polish** surfaced by the auto-doc:
+  `tool_sources.py` and `toolchain_registry.py` `Raises:`
+  blocks reformatted to the Google-style `Error: description`
+  shape griffe expects.  Pure docstring edits; no behaviour
+  change.
+
 ## [0.5.0] — 2026-05-03
 
 The toolchain-management track lands.  Two waves ship together:

@@ -55,10 +55,10 @@
 
 ## 8. README link + CHANGELOG + validation + archive
 
-- [ ] 8.1 Update the top of `README.md` (above the screenshot grid) with a banner-style link to the deployed docs site (`https://alloy-embedded.github.io/alloy-cli/`).  Single line, above-the-fold.
-- [ ] 8.2 Run `openspec validate add-docs-site --strict`; resolve any reported issue.
-- [ ] 8.3 Run targeted tests: `pytest tests/test_docs_site_build.py tests/test_docs_site_links.py tests/test_docs_site_ia.py tests/test_quickstart_and_cookbook.py tests/test_toolchain_installer_doc.py tests/test_toolchain_onboarding_doc.py tests/test_recovery_doc.py`.  Confirm green.
-- [ ] 8.4 Run `pytest -q --deselect tests/test_mcp_server.py::test_alloy_mcp_serve_stdio_round_trips_via_subprocess` (and the four pre-Wave-3 environmental deselects).  Confirm green.
-- [ ] 8.5 Run `ruff check src tests scripts` and `pyright src/alloy_cli`.  Resolve any new finding.
-- [ ] 8.6 Update `CHANGELOG.md` under `[Unreleased]` with a "Documentation site" entry naming the new `[docs]` extra, the IA tree, the auto-generated CLI + API reference, the GitHub Pages deployment, and the URL-stability redirects.
-- [ ] 8.7 Open the PR titled `Implement add-docs-site` referencing this OpenSpec change in the description.  When merged, archive via `openspec archive add-docs-site`.
+- [x] 8.1 Update the top of `README.md` (above the screenshot grid) with a banner-style link to the deployed docs site (`https://alloy-embedded.github.io/alloy-cli/`).  Single line, above-the-fold.
+- [x] 8.2 Run `openspec validate add-docs-site --strict`; resolve any reported issue.
+- [x] 8.3 Run targeted tests: `pytest tests/test_docs_site_build.py tests/test_docs_site_links.py tests/test_docs_site_ia.py tests/test_quickstart_and_cookbook.py tests/test_toolchain_installer_doc.py tests/test_toolchain_onboarding_doc.py tests/test_recovery_doc.py`.  Confirm green.
+- [x] 8.4 Run `pytest -q --deselect tests/test_mcp_server.py::test_alloy_mcp_serve_stdio_round_trips_via_subprocess` (and the four pre-Wave-3 environmental deselects).  Confirm green.
+- [x] 8.5 Run `ruff check src tests scripts` and `pyright src/alloy_cli`.  Resolve any new finding.
+- [x] 8.6 Update `CHANGELOG.md` under `[Unreleased]` with a "Documentation site" entry naming the new `[docs]` extra, the IA tree, the auto-generated CLI + API reference, the GitHub Pages deployment, and the URL-stability redirects.
+- [x] 8.7 Open the PR titled `Implement add-docs-site` referencing this OpenSpec change in the description.  When merged, archive via `openspec archive add-docs-site`.
