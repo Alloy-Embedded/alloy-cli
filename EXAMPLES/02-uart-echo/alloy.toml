@@ -1,0 +1,31 @@
+schema_version = "1.1.0"
+
+[project]
+name = "uart-echo"
+
+[board]
+id = "nucleo_g071rb"
+
+[clocks]
+profile = "default_pll_64mhz"
+
+[[peripherals]]
+kind = "gpio"
+name = "led"
+pin = "PA5"
+mode = "output"
+initial = 0
+
+[[peripherals]]
+kind = "uart"
+name = "console"
+peripheral = "USART2"
+tx = "PA2"
+rx = "PA3"
+baud = 115200
+
+[build]
+profile = "debug"
+
+[flash]
+probe = "stlink"

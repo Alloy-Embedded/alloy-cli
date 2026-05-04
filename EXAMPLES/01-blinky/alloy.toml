@@ -1,0 +1,24 @@
+schema_version = "1.1.0"
+
+[project]
+name = "blinky"
+
+[board]
+id = "nucleo_g071rb"
+
+[clocks]
+profile = "default_pll_64mhz"
+
+[[peripherals]]
+kind = "gpio"
+name = "led"
+pin = "PA5"
+mode = "output"
+initial = 0
+label = "ld4"
+
+[build]
+profile = "debug"
+
+[flash]
+probe = "stlink"

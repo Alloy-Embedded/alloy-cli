@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  alloy-cli wordmark — v0.5.0 placeholder logo.
+
+  Designed to read cleanly at the Material header size (24px tall)
+  and as a favicon (16x16).  Uses the alloy-blue + amber palette
+  the TUI snapshots already established.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 64" role="img"
+     aria-label="alloy">
+  <!-- Outer angle-bracket frame — evokes the terminal / shell prompt. -->
+  <path d="M8 16 L20 32 L8 48" fill="none" stroke="#3F51B5"
+        stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M232 16 L220 32 L232 48" fill="none" stroke="#3F51B5"
+        stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Wordmark.  Material header swaps for currentColor on dark mode
+       via the `fill` reference; the simplified shapes keep the SVG
+       small enough to inline. -->
+  <text x="120" y="44" text-anchor="middle"
+        font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
+        font-size="32" font-weight="600" fill="#3F51B5"
+        letter-spacing="-0.5">alloy</text>
+
+  <!-- Accent dot under the 'y' — the deep-orange the Material theme
+       uses for hover states. -->
+  <circle cx="172" cy="50" r="3" fill="#FF6E40"/>
+</svg>

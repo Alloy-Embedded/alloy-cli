@@ -1,0 +1,50 @@
+schema_version = "1.1.0"
+
+[project]
+name = "spi-flash"
+
+[board]
+id = "nucleo_g071rb"
+
+[clocks]
+profile = "default_pll_64mhz"
+
+[[peripherals]]
+kind = "gpio"
+name = "led"
+pin = "PA5"
+mode = "output"
+initial = 0
+
+[[peripherals]]
+kind = "uart"
+name = "console"
+peripheral = "USART2"
+tx = "PA2"
+rx = "PA3"
+baud = 115200
+
+[[peripherals]]
+kind = "spi"
+name = "flash_bus"
+peripheral = "SPI1"
+sck = "PA5"
+miso = "PA6"
+mosi = "PA7"
+mode = 0
+frame = 8
+prescaler = 4
+
+[[peripherals]]
+kind = "gpio"
+name = "flash_cs"
+pin = "PB6"
+mode = "output"
+initial = 1
+label = "AT25_nCS"
+
+[build]
+profile = "debug"
+
+[flash]
+probe = "stlink"

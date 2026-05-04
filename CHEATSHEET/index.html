@@ -1,0 +1,3166 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Terminal-native developer surface for the Alloy embedded platform — scaffold, configure, build, flash, and debug firmware projects from one tool, with first-class AI-agent integration.">
+      
+      
+        <meta name="author" content="Alloy Embedded">
+      
+      
+        <link rel="canonical" href="https://alloy-embedded.github.io/alloy-cli/CHEATSHEET/">
+      
+      
+        <link rel="prev" href="../ERROR_COOKBOOK/">
+      
+      
+        <link rel="next" href="../PROJECT_FORMAT/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/logo.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Cheatsheet - alloy-cli</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#alloy-cli-cheatsheet" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="alloy-cli" class="md-header__button md-logo" aria-label="alloy-cli" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            alloy-cli
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Cheatsheet
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="deep-orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Alloy-Embedded/alloy-cli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Alloy-Embedded/alloy-cli
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../QUICKSTART/" class="md-tabs__link">
+          
+  
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../user-guide/toolchain/" class="md-tabs__link">
+          
+  
+  
+  User Guide
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../reference/cli/" class="md-tabs__link">
+          
+  
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../api/" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../concepts/" class="md-tabs__link">
+          
+  
+  
+  Concepts
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../ARCHITECTURE/" class="md-tabs__link">
+          
+  
+  
+  Architecture & Design
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../CONTRIBUTING/" class="md-tabs__link">
+          
+  
+  
+  Contributing
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="alloy-cli" class="md-nav__button md-logo" aria-label="alloy-cli" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    alloy-cli
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Alloy-Embedded/alloy-cli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Alloy-Embedded/alloy-cli
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../QUICKSTART/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/your-first-project/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Your first project
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_1" id="__nav_3_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Toolchain management
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Toolchain management
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user-guide/toolchain/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TOOLCHAIN_ONBOARDING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Onboarding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TOOLCHAIN_INSTALLER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TOOLCHAIN_REGISTRY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../RECOVERY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recovery
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../AI_INTEGRATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI commands
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ERROR_COOKBOOK/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error cookbook
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cheatsheet
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cheatsheet
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-add-adc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy add adc
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-add-can" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy add can
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-add-dac" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy add dac
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-add-eth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy add eth
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-add-gpio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy add gpio
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-add-i2c" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy add i2c
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-add-pwm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy add pwm
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-add-spi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy add spi
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-add-timer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy add timer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-add-uart" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy add uart
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-add-usb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy add usb
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-boards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy boards
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-build" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy build
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-chat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy chat
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-debug" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy debug
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-devices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy devices
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-doctor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy doctor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-erase" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy erase
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy export
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-flash" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy flash
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-mcp-serve" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy mcp serve
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-monitor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy monitor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-new" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy new
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-reset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy reset
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-toolchain-install" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy toolchain install
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-toolchain-list" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy toolchain list
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-toolchain-prune" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy toolchain prune
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-toolchain-shell" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy toolchain shell
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-toolchain-use" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy toolchain use
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-ui" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy ui
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy update
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PROJECT_FORMAT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project format (alloy.toml)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/toolchain-orchestrator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    toolchain_orchestrator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/probe-orchestrator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    probe_orchestrator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/toolchain-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    toolchain_registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/tool-sources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    tool_sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/mcp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    mcp
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concepts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Concepts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/device-ir/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Device IR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/toolchain-orchestrator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Toolchain orchestrator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/probe-orchestrator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Probe orchestrator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/lockfile-aware-execution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lockfile-aware execution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/two-phase-mutations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Two-phase mutations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture & Design
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture & Design
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARCHITECTURE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TUI_DESIGN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TUI design
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DATA_SOURCES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../COMPARISON/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Comparison
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contributing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../RELEASING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Releasing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ROADMAP/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../VISION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../REVIEW/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Review
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-add-adc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy add adc
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-add-can" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy add can
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-add-dac" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy add dac
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-add-eth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy add eth
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-add-gpio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy add gpio
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-add-i2c" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy add i2c
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-add-pwm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy add pwm
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-add-spi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy add spi
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-add-timer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy add timer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-add-uart" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy add uart
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-add-usb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy add usb
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-boards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy boards
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-build" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy build
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-chat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy chat
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-debug" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy debug
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-devices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy devices
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-doctor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy doctor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-erase" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy erase
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy export
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-flash" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy flash
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-mcp-serve" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy mcp serve
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-monitor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy monitor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-new" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy new
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-reset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy reset
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-toolchain-install" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy toolchain install
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-toolchain-list" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy toolchain list
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-toolchain-prune" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy toolchain prune
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-toolchain-shell" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy toolchain shell
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-toolchain-use" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy toolchain use
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-ui" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy ui
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alloy-update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        alloy update
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="alloy-cli-cheatsheet">alloy-cli — cheatsheet<a class="headerlink" href="#alloy-cli-cheatsheet" title="Direct link to this heading">#</a></h1>
+<p>Auto-generated from the live Click command tree.  Run <code>python scripts/generate_cheatsheet.py</code> after adding or renaming a subcommand.</p>
+<h2 id="alloy-add-adc"><code>alloy add adc</code><a class="headerlink" href="#alloy-add-adc" title="Direct link to this heading">#</a></h2>
+<p>Add an ADC peripheral with one or more channels.</p>
+<p>Options:
+  - <code>--name</code> — <strong>required.</strong> 
+  - <code>--peripheral</code> — 
+  - <code>--channel</code> — Repeatable; e.g. --channel 0:PA0 --channel 1:PA1.
+  - <code>--resolution</code> — 
+  - <code>--sample-time-cycles</code> — 
+  - <code>--dma</code> — 
+  - <code>--project-dir</code> — 
+  - <code>--diff-only</code> — Print the diff and exit.  Default when --apply is omitted.
+  - <code>--apply</code> — Write the diff (default: --diff-only).</p>
+<h2 id="alloy-add-can"><code>alloy add can</code><a class="headerlink" href="#alloy-add-can" title="Direct link to this heading">#</a></h2>
+<p>Add a CAN bus peripheral.</p>
+<p>Options:
+  - <code>--name</code> — <strong>required.</strong> 
+  - <code>--peripheral</code> — 
+  - <code>--tx</code> — 
+  - <code>--rx</code> — 
+  - <code>--bitrate</code> — 
+  - <code>--sample-point</code> — 
+  - <code>--fd, --no-fd</code> — 
+  - <code>--project-dir</code> — 
+  - <code>--diff-only</code> — Print the diff and exit.  Default when --apply is omitted.
+  - <code>--apply</code> — Write the diff (default: --diff-only).</p>
+<h2 id="alloy-add-dac"><code>alloy add dac</code><a class="headerlink" href="#alloy-add-dac" title="Direct link to this heading">#</a></h2>
+<p>Add a DAC channel.</p>
+<p>Options:
+  - <code>--name</code> — <strong>required.</strong> 
+  - <code>--peripheral</code> — 
+  - <code>--channel</code> — <strong>required.</strong> 
+  - <code>--pin</code> — <strong>required.</strong> 
+  - <code>--output-buffer, --no-output-buffer</code> — 
+  - <code>--trigger</code> — 
+  - <code>--project-dir</code> — 
+  - <code>--diff-only</code> — Print the diff and exit.  Default when --apply is omitted.
+  - <code>--apply</code> — Write the diff (default: --diff-only).</p>
+<h2 id="alloy-add-eth"><code>alloy add eth</code><a class="headerlink" href="#alloy-add-eth" title="Direct link to this heading">#</a></h2>
+<p>Add an Ethernet peripheral (MII / RMII).</p>
+<p>Options:
+  - <code>--name</code> — <strong>required.</strong> 
+  - <code>--peripheral</code> — 
+  - <code>--interface</code> — <strong>required.</strong> 
+  - <code>--phy-address</code> — 
+  - <code>--mdc</code> — 
+  - <code>--mdio</code> — 
+  - <code>--project-dir</code> — 
+  - <code>--diff-only</code> — Print the diff and exit.  Default when --apply is omitted.
+  - <code>--apply</code> — Write the diff (default: --diff-only).</p>
+<h2 id="alloy-add-gpio"><code>alloy add gpio</code><a class="headerlink" href="#alloy-add-gpio" title="Direct link to this heading">#</a></h2>
+<p>Add a GPIO peripheral.</p>
+<p>Options:
+  - <code>--name</code> — <strong>required.</strong> 
+  - <code>--pin</code> — <strong>required.</strong> 
+  - <code>--mode</code> — 
+  - <code>--pull</code> — 
+  - <code>--speed</code> — 
+  - <code>--label</code> — 
+  - <code>--initial</code> — 
+  - <code>--project-dir</code> — 
+  - <code>--diff-only</code> — Print the diff and exit.  Default when --apply is omitted.
+  - <code>--apply</code> — Write the diff (default: --diff-only).</p>
+<h2 id="alloy-add-i2c"><code>alloy add i2c</code><a class="headerlink" href="#alloy-add-i2c" title="Direct link to this heading">#</a></h2>
+<p>Add an I2C peripheral.</p>
+<p>Options:
+  - <code>--name</code> — <strong>required.</strong> 
+  - <code>--peripheral</code> — 
+  - <code>--sda</code> — 
+  - <code>--scl</code> — 
+  - <code>--speed</code> — 
+  - <code>--addressing</code> — 
+  - <code>--dma</code> — 
+  - <code>--project-dir</code> — 
+  - <code>--diff-only</code> — Print the diff and exit.  Default when --apply is omitted.
+  - <code>--apply</code> — Write the diff (default: --diff-only).</p>
+<h2 id="alloy-add-pwm"><code>alloy add pwm</code><a class="headerlink" href="#alloy-add-pwm" title="Direct link to this heading">#</a></h2>
+<p>Add a PWM channel.</p>
+<p>Options:
+  - <code>--name</code> — <strong>required.</strong> 
+  - <code>--peripheral</code> — 
+  - <code>--channel</code> — <strong>required.</strong> 
+  - <code>--pin</code> — <strong>required.</strong> 
+  - <code>--frequency-hz</code> — 
+  - <code>--duty-cycle</code> — 
+  - <code>--polarity</code> — 
+  - <code>--project-dir</code> — 
+  - <code>--diff-only</code> — Print the diff and exit.  Default when --apply is omitted.
+  - <code>--apply</code> — Write the diff (default: --diff-only).</p>
+<h2 id="alloy-add-spi"><code>alloy add spi</code><a class="headerlink" href="#alloy-add-spi" title="Direct link to this heading">#</a></h2>
+<p>Add an SPI peripheral.</p>
+<p>Options:
+  - <code>--name</code> — <strong>required.</strong> 
+  - <code>--peripheral</code> — 
+  - <code>--sck</code> — 
+  - <code>--miso</code> — 
+  - <code>--mosi</code> — 
+  - <code>--cs</code> — 
+  - <code>--cs-software</code> — 
+  - <code>--mode</code> — 
+  - <code>--frame</code> — 
+  - <code>--prescaler</code> — 
+  - <code>--dma</code> — 
+  - <code>--project-dir</code> — 
+  - <code>--diff-only</code> — Print the diff and exit.  Default when --apply is omitted.
+  - <code>--apply</code> — Write the diff (default: --diff-only).</p>
+<h2 id="alloy-add-timer"><code>alloy add timer</code><a class="headerlink" href="#alloy-add-timer" title="Direct link to this heading">#</a></h2>
+<p>Add a timer peripheral.</p>
+<p>Options:
+  - <code>--name</code> — <strong>required.</strong> 
+  - <code>--peripheral</code> — 
+  - <code>--period-ns</code> — <strong>required.</strong> 
+  - <code>--divider</code> — 
+  - <code>--mode</code> — 
+  - <code>--interrupt</code> — 
+  - <code>--project-dir</code> — 
+  - <code>--diff-only</code> — Print the diff and exit.  Default when --apply is omitted.
+  - <code>--apply</code> — Write the diff (default: --diff-only).</p>
+<h2 id="alloy-add-uart"><code>alloy add uart</code><a class="headerlink" href="#alloy-add-uart" title="Direct link to this heading">#</a></h2>
+<p>Add a UART/USART peripheral.</p>
+<p>Options:
+  - <code>--name</code> — <strong>required.</strong> Peripheral identifier in alloy.toml.
+  - <code>--peripheral</code> — IP instance, e.g. USART1 (default: lowest free).
+  - <code>--tx</code> — TX pin (default: first IR-valid candidate).
+  - <code>--rx</code> — RX pin (default: first IR-valid candidate).
+  - <code>--baud</code> — 
+  - <code>--data-bits</code> — 
+  - <code>--stop-bits</code> — 
+  - <code>--parity</code> — 
+  - <code>--dma</code> — 
+  - <code>--tx-dma</code> — 
+  - <code>--rx-dma</code> — 
+  - <code>--project-dir</code> — 
+  - <code>--diff-only</code> — Print the diff and exit.  Default when --apply is omitted.
+  - <code>--apply</code> — Write the diff (default: --diff-only).</p>
+<h2 id="alloy-add-usb"><code>alloy add usb</code><a class="headerlink" href="#alloy-add-usb" title="Direct link to this heading">#</a></h2>
+<p>Add a USB peripheral (device / host / otg).</p>
+<p>Options:
+  - <code>--name</code> — <strong>required.</strong> 
+  - <code>--peripheral</code> — 
+  - <code>--mode</code> — <strong>required.</strong> 
+  - <code>--vbus-sense, --no-vbus-sense</code> — 
+  - <code>--speed</code> — 
+  - <code>--project-dir</code> — 
+  - <code>--diff-only</code> — Print the diff and exit.  Default when --apply is omitted.
+  - <code>--apply</code> — Write the diff (default: --diff-only).</p>
+<h2 id="alloy-boards"><code>alloy boards</code><a class="headerlink" href="#alloy-boards" title="Direct link to this heading">#</a></h2>
+<p>List + search the curated board catalogue.</p>
+<p>Options:
+  - <code>--search</code> — Free-text query.
+  - <code>--vendor</code> — Filter by vendor (e.g. st, rp).
+  - <code>--isa</code> — Filter by core / ISA (e.g. cortex-m4).
+  - <code>--has</code> — Require a feature; repeatable (e.g. --has usb --has ethernet).
+  - <code>--tier</code> — Filter by support tier.
+  - <code>--json</code> — Emit JSON for scripting.
+  - <code>--pinout</code> — Open the read-only schematic pinout view in a Textual session.</p>
+<h2 id="alloy-build"><code>alloy build</code><a class="headerlink" href="#alloy-build" title="Direct link to this heading">#</a></h2>
+<p>Build the firmware for the current project.</p>
+<p>Options:
+  - <code>--profile</code> — Build profile (maps to CMAKE_BUILD_TYPE).
+  - <code>--clean</code> — Wipe .alloy/build before configuring.
+  - <code>--regen</code> — Force a fresh alloy-codegen pass (ignores the .stamp cache).
+  - <code>--no-codegen</code> — Skip the alloy-codegen step entirely (CI scenarios with pre-shipped headers).
+  - <code>--project-dir</code> — Project root containing alloy.toml.</p>
+<h2 id="alloy-chat"><code>alloy chat</code><a class="headerlink" href="#alloy-chat" title="Direct link to this heading">#</a></h2>
+<p>Launch opencode wired up to the alloy MCP server.</p>
+<p>Options:
+  - <code>--client</code> — LLM client to launch / emit config for.
+  - <code>--print-config</code> — Emit the MCP config snippet for the chosen client and exit (no launch).
+  - <code>--print-prompt</code> — Emit the bundled system prompt to stdout and exit.
+  - <code>--project-dir</code> — Project directory passed to the MCP server's --cwd flag.</p>
+<h2 id="alloy-debug"><code>alloy debug</code><a class="headerlink" href="#alloy-debug" title="Direct link to this heading">#</a></h2>
+<p>Launch probe-rs gdb-server + attach GDB.</p>
+<p>Options:
+  - <code>--probe</code> — Probe selector forwarded to probe-rs.
+  - <code>--target</code> — Override the chip name (default: from alloy.toml).
+  - <code>--gdb-ui</code> — Override the GDB binary (default: ALLOY_GDB env var, then arm-none-eabi-gdb).
+  - <code>--gdb-port</code> — TCP port for the gdb-server.
+  - <code>--elf</code> — Path to the firmware ELF.
+  - <code>--project-dir</code> — Project root containing alloy.toml.
+  - <code>--dry-run</code> — Print the gdb-server + GDB invocations without running them.
+  - <code>--tui, --no-tui</code> — Launch the Textual DebugScreen instead of the wrapper.  Defaults to --tui on a TTY, --no-tui otherwise.</p>
+<h2 id="alloy-devices"><code>alloy devices</code><a class="headerlink" href="#alloy-devices" title="Direct link to this heading">#</a></h2>
+<p>List + search the canonical device IR.</p>
+<p>Options:
+  - <code>--search</code> — Free-text query.
+  - <code>--vendor</code> — Filter by vendor (e.g. st, nordic).
+  - <code>--family</code> — Filter by family (e.g. stm32g0).
+  - <code>--has</code> — Require a feature; repeatable (e.g. --has usb --has ble).
+  - <code>--admitted, --all</code> — Restrict to admitted devices (default) or include bulk-admitted.
+  - <code>--json</code> — Emit JSON for scripting.</p>
+<h2 id="alloy-doctor"><code>alloy doctor</code><a class="headerlink" href="#alloy-doctor" title="Direct link to this heading">#</a></h2>
+<p>Diagnose the host environment for alloy-cli.</p>
+<p>Options:
+  - <code>--json</code> — Emit JSON.
+  - <code>--fix</code> — Run every available auto-fix; exits 0 only when no error rows remain.
+  - <code>--with-recommended</code> — Extend the toolchain auto-installer to the family's recommended tier (default: required tier only).
+  - <code>--for</code> — Inspect the toolchain for a specific MCU family (e.g. stm32g0, rp2040, esp32) instead of inferring it from the project's alloy.toml.  Useful before scaffolding.
+  - <code>--project-dir</code> — Project root containing alloy.toml.</p>
+<h2 id="alloy-erase"><code>alloy erase</code><a class="headerlink" href="#alloy-erase" title="Direct link to this heading">#</a></h2>
+<p>Erase the chip's flash through the lockfile-pinned probe-rs.  Gated behind a TTY confirmation prompt; pass --auto / --yes to bypass in CI or non-interactive contexts.  Pass --region <name|range> to erase only part of the flash.</p>
+<p>Options:
+  - <code>--region</code> — Region to erase.  Repeat for multiple regions.  Names (<code>bootloader</code>, <code>appslot-a</code>, …) resolve via the device IR; <code>0xBASE-0xEND</code> ranges pass through unchanged.  Default: chip-wide erase.
+  - <code>--auto</code> — Skip the confirmation prompt.  Required in non-TTY contexts.
+  - <code>--yes</code> — Alias for --auto (matches the common <code>apt</code>/<code>dnf</code> convention).
+  - <code>--probe</code> — Explicit probe selector.  Same shape as <code>alloy reset --probe</code>.
+  - <code>--project-dir</code> — Project root containing alloy.toml + .alloy/toolchain.lock.</p>
+<h2 id="alloy-export"><code>alloy export</code><a class="headerlink" href="#alloy-export" title="Direct link to this heading">#</a></h2>
+<p>Emit auxiliary configuration files.</p>
+<p>Options:
+  - <code>--target</code> — Sub-target (e.g. github / gitlab / jenkins for <code>alloy export ci</code>).
+  - <code>--project-dir</code> — 
+  - <code>--dry-run</code> — Print the generated content to stdout instead of writing files.</p>
+<h2 id="alloy-flash"><code>alloy flash</code><a class="headerlink" href="#alloy-flash" title="Direct link to this heading">#</a></h2>
+<p>Flash the firmware via probe-rs.</p>
+<p>Options:
+  - <code>--probe</code> — Probe selector: auto, jlink, stlink, picoprobe, cmsis-dap, …
+  - <code>--target</code> — Override the chip name passed to probe-rs (default: from alloy.toml).
+  - <code>--elf</code> — Path to the firmware ELF (default: most recent build under .alloy/build/).
+  - <code>--project-dir</code> — Project root containing alloy.toml.</p>
+<h2 id="alloy-mcp-serve"><code>alloy mcp serve</code><a class="headerlink" href="#alloy-mcp-serve" title="Direct link to this heading">#</a></h2>
+<p>Run the alloy MCP server (stdio default).</p>
+<p>Options:
+  - <code>--transport</code> — Transport for the MCP server.  HTTP / SSE land with the official SDK.
+  - <code>--cwd</code> — Project directory exposed to MCP tools.</p>
+<h2 id="alloy-monitor"><code>alloy monitor</code><a class="headerlink" href="#alloy-monitor" title="Direct link to this heading">#</a></h2>
+<p>Stream bytes from the target's debug UART (or RTT channel) to stdout.  Press Ctrl+] to disconnect cleanly.  Resolves the port from alloy.toml when the project declares a console UART; --port / --baud overrides.</p>
+<p>Options:
+  - <code>--port</code> — Serial device path (e.g. /dev/cu.usbmodem1234).  Overrides autodetect.
+  - <code>--baud</code> — Baud rate.  Overrides the project's [uart].debug config; falls back to 115200 when neither resolves.
+  - <code>--mode</code> — Stream source: raw UART bytes or probe-rs RTT channel.
+  - <code>--ansi, --no-ansi</code> — Pass through ANSI escape sequences.  Default strips them so the log stays grep-friendly.
+  - <code>--probe</code> — Probe selector (only meaningful in --mode rtt).
+  - <code>--project-dir</code> — Project root containing alloy.toml + .alloy/toolchain.lock.</p>
+<h2 id="alloy-new"><code>alloy new</code><a class="headerlink" href="#alloy-new" title="Direct link to this heading">#</a></h2>
+<p>Scaffold a new alloy-cli firmware project.</p>
+<p>Options:
+  - <code>--board</code> — Board id (run <code>alloy boards</code> to list).  Mutually exclusive with --device.
+  - <code>--device</code> — Chip-only project: e.g. st/stm32g0/stm32g071rb.  Mutually exclusive with --board.
+  - <code>--license</code> — License header for the generated LICENSE file.
+  - <code>--author</code> — Copyright holder for the LICENSE template.
+  - <code>--git, --no-git</code> — Initialise a git repo with a single 'alloy new' commit.
+  - <code>--force</code> — Allow scaffolding into a non-empty directory.
+  - <code>--path</code> — Destination directory.  Defaults to ./<NAME>.
+  - <code>--from-example</code> — Scaffold from a docs/EXAMPLES entry (e.g. 01-blinky, 02-uart-echo).  Mutually exclusive with --board / --device.
+  - <code>--install-toolchain, --no-install-toolchain</code> — Install the family's toolchain after scaffolding.  Default in a TTY: Y (prompts unless --auto).  Default elsewhere: N.
+  - <code>--auto</code> — Skip every interactive confirmation.  Combine with --install-toolchain to perform the install non-interactively.</p>
+<h2 id="alloy-reset"><code>alloy reset</code><a class="headerlink" href="#alloy-reset" title="Direct link to this heading">#</a></h2>
+<p>Reset the connected probe target.  Default is a soft CPU reset; pass --hard to pulse nRST.  Lockfile-aware: the probe-rs binary comes from .alloy/toolchain.lock when present.</p>
+<p>Options:
+  - <code>--soft, --hard</code> — Reset method: --soft (CPU reset, default) or --hard (nRST line).
+  - <code>--halt-after-reset</code> — Leave the core halted after reset so a debugger can attach.
+  - <code>--probe</code> — Explicit probe selector (matches alloy flash --probe).  Each field is optional — '0483' matches every ST-Link, '0483:374b' matches every ST-Link/V2-1, the full triple pinpoints one probe.
+  - <code>--project-dir</code> — Project root containing .alloy/toolchain.lock.</p>
+<h2 id="alloy-setup"><code>alloy setup</code><a class="headerlink" href="#alloy-setup" title="Direct link to this heading">#</a></h2>
+<p>Guided onboarding for a fresh machine: detect or scaffold a project, then install its toolchain through the shared orchestrator (the same path <code>alloy new</code> and <code>alloy doctor --fix</code> use).</p>
+<p>Options:
+  - <code>--board</code> — Pre-pick a board (skips the picker step).
+  - <code>--family</code> — Pre-pick a family; mutually exclusive with --board.
+  - <code>--auto</code> — Suppress every interactive prompt with the default answer (Y on each install confirmation).
+  - <code>--no-tui</code> — Force the line-based wizard even when STDIN is a TTY.  (Wave 3: line-based is the only path; this flag is a forward-compatible no-op.)
+  - <code>--project-dir</code> — Project root.  Defaults to the current directory.</p>
+<h2 id="alloy-toolchain-install"><code>alloy toolchain install</code><a class="headerlink" href="#alloy-toolchain-install" title="Direct link to this heading">#</a></h2>
+<p>Download + verify + extract every non-vendor tool the family declares.</p>
+<p>Options:
+  - <code>--for</code> — MCU family id (default: resolved from the project's alloy.toml).
+  - <code>--shared</code> — Install only into the global store; do NOT update the project lockfile.
+  - <code>--dry-run</code> — Print the plan + estimated total size without writing anything.
+  - <code>--include-optional</code> — Also install the family's optional tools.
+  - <code>--force</code> — Re-download even when the SHA matches an already-installed entry.
+  - <code>--project-dir</code> — Project root (used for family resolution + lockfile updates).</p>
+<h2 id="alloy-toolchain-list"><code>alloy toolchain list</code><a class="headerlink" href="#alloy-toolchain-list" title="Direct link to this heading">#</a></h2>
+<p>Show the per-family tool list with install state.</p>
+<p>Options:
+  - <code>--for</code> — 
+  - <code>--installed</code> — Show only tools that are installed.
+  - <code>--missing</code> — Show only tools that are not installed.
+  - <code>--include-optional</code> — Include the family's optional tools in the listing.
+  - <code>--json</code> — Emit JSON.
+  - <code>--project-dir</code> — </p>
+<h2 id="alloy-toolchain-prune"><code>alloy toolchain prune</code><a class="headerlink" href="#alloy-toolchain-prune" title="Direct link to this heading">#</a></h2>
+<p>Garbage-collect store entries no project lockfile pins.</p>
+<p>Options:
+  - <code>--dry-run</code> — List candidates without deleting.
+  - <code>--projects-root</code> — One or more directories to scan recursively for <code>.alloy/toolchain.lock</code> files.  Repeat to add more.  Default: the current --project-dir only.
+  - <code>--project-dir</code> — </p>
+<h2 id="alloy-toolchain-shell"><code>alloy toolchain shell</code><a class="headerlink" href="#alloy-toolchain-shell" title="Direct link to this heading">#</a></h2>
+<p>Spawn a subshell with PATH augmented for cached toolchain binaries.</p>
+<p>Options:
+  - <code>--for</code> — 
+  - <code>--print-path</code> — Print the augmented PATH instead of spawning a subshell.
+  - <code>--project-dir</code> — </p>
+<h2 id="alloy-toolchain-use"><code>alloy toolchain use</code><a class="headerlink" href="#alloy-toolchain-use" title="Direct link to this heading">#</a></h2>
+<p>Pin a specific tool version in .alloy/toolchain.lock.</p>
+<p>Options:
+  - <code>--project-dir</code> — </p>
+<h2 id="alloy-ui"><code>alloy ui</code><a class="headerlink" href="#alloy-ui" title="Direct link to this heading">#</a></h2>
+<p>Launch the alloy Textual UI.</p>
+<p>Options:
+  - <code>--theme</code> — Theme name (default: $ALLOY_TUI_THEME or default_dark).
+  - <code>--project-dir</code> — Project root containing alloy.toml.</p>
+<h2 id="alloy-update"><code>alloy update</code><a class="headerlink" href="#alloy-update" title="Direct link to this heading">#</a></h2>
+<p>Atomically upgrade pinned alloy components.</p>
+<p>Options:
+  - <code>--dry-run</code> — Print the upgrades that would happen without applying.
+  - <code>--frozen</code> — Refuse any change.  Useful for CI.
+  - <code>--project-dir</code> —</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../ERROR_COOKBOOK/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Error cookbook">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Error cookbook
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../PROJECT_FORMAT/" class="md-footer__link md-footer__link--next" aria-label="Next: Project format (alloy.toml)">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Project format (alloy.toml)
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/Alloy-Embedded/alloy-cli" target="_blank" rel="noopener" title="alloy-cli on GitHub" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.footer", "content.code.copy", "content.code.annotate", "content.tabs.link", "search.highlight", "search.share", "search.suggest", "announce.dismiss"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

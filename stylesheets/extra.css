@@ -1,0 +1,146 @@
+/* extra.css — alloy-cli docs site overrides.
+ *
+ * Group 1 ships the minimum (hero card + footer note); Group 5
+ * extends with print-friendly + brand-colour tweaks.
+ *
+ * Spec: openspec/specs/docs-site/spec.md
+ */
+
+/* -----------------------------------------------------------------
+ * Hero card on the landing page (docs/index.md).
+ * -------------------------------------------------------------- */
+
+.hero {
+  text-align: center;
+  padding: 2rem 1rem 1rem 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.hero h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.hero blockquote {
+  border-left: none;
+  font-size: 1.15rem;
+  color: var(--md-default-fg-color--light);
+  margin: 0.75rem auto 1.5rem auto;
+  max-width: 42rem;
+  padding: 0;
+}
+
+.hero blockquote p {
+  margin: 0;
+}
+
+.hero pre {
+  display: inline-block;
+  margin: 0.5rem 0 1.25rem 0;
+  text-align: left;
+}
+
+.hero .md-button {
+  margin: 0.25rem 0.4rem;
+}
+
+/* -----------------------------------------------------------------
+ * Feature grid (the "What you get" + "Where to go next" sections).
+ * -------------------------------------------------------------- */
+
+.md-typeset .grid.cards > :is(ul, ol) {
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+}
+
+/* -----------------------------------------------------------------
+ * Footer note on the landing page.
+ * -------------------------------------------------------------- */
+
+.footer-note {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--md-default-fg-color--light);
+  margin-top: 2rem;
+}
+
+/* -----------------------------------------------------------------
+ * Embedded TUI snapshots (the SVGs under docs/images/).  Add a soft
+ * border so they stand out from body copy on light mode + render
+ * cleanly on dark mode.
+ * -------------------------------------------------------------- */
+
+.md-typeset img[src*="/images/"] {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.4rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  margin: 0.5rem 0;
+}
+
+[data-md-color-scheme="slate"] .md-typeset img[src*="/images/"] {
+  background: #1e1e2e;
+  border-color: var(--md-default-fg-color--lightest);
+}
+
+/* -----------------------------------------------------------------
+ * Mermaid diagrams — better contrast in dark mode.
+ * -------------------------------------------------------------- */
+
+.md-typeset pre.mermaid {
+  background: var(--md-code-bg-color);
+  border-radius: 0.4rem;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+/* -----------------------------------------------------------------
+ * Code blocks in body copy — slightly larger so embedded TUI SVGs
+ * + the install one-liner read clearly.
+ * -------------------------------------------------------------- */
+
+.md-typeset code {
+  font-size: 0.88em;
+}
+
+.md-typeset pre > code {
+  font-size: 0.85em;
+  line-height: 1.5;
+}
+
+/* -----------------------------------------------------------------
+ * Print-friendly overrides.
+ * -------------------------------------------------------------- */
+
+@media print {
+  .md-header,
+  .md-tabs,
+  .md-sidebar,
+  .md-footer,
+  .md-content__button {
+    display: none !important;
+  }
+  .md-main__inner {
+    margin: 0;
+  }
+  .md-content {
+    margin: 0 !important;
+  }
+  /* Ink-friendly syntax-highlight palette: don't burn through
+     printer ink with a dark code-block background. */
+  .md-typeset pre,
+  .md-typeset code {
+    background: #fff !important;
+    color: #000 !important;
+    border: 1px solid #ddd;
+  }
+  /* Print URLs after links so paper readers can follow them. */
+  .md-typeset a:not(.md-button)::after {
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+    color: #444;
+  }
+  /* But not for in-page anchors. */
+  .md-typeset a[href^="#"]::after {
+    content: "";
+  }
+}
