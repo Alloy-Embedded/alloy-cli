@@ -110,11 +110,11 @@ theme:
   icon:
     repo: fontawesome/brands/github
     edit: material/pencil
-  # Logo + favicon land in Group 5 (theming + branding).  The
-  # placeholder paths are referenced ahead of time so the build is
-  # already structured when the assets ship.
-  # logo: assets/logo.png
-  # favicon: assets/favicon.ico
+  # Brand wordmark + favicon (Group 5).  v0.5.0 ships an SVG
+  # placeholder; a polished raster logo can replace it without
+  # any structural change.
+  logo: assets/logo.svg
+  favicon: assets/logo.svg
 
 # ----------------------------------------------------------------------
 # Plugins

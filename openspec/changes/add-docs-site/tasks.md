@@ -30,13 +30,13 @@
 
 ## 5. Theming + branding
 
-- [ ] 5.1 Create `docs/stylesheets/extra.css` with: brand-colour overrides (alloy-blue / amber accent matching the TUI snapshots), print-friendly overrides (no header/footer in print, ink-friendly syntax-highlight palette), hero-card styling for the landing page, a slightly larger code-block font for embedded TUI SVGs.
-- [ ] 5.2 Reference `extra.css` in `mkdocs.yml`'s `extra_css:` block.
-- [ ] 5.3 Generate or pick a logo + favicon: a simple wordmark "alloy" rendered in the brand colour, exported as 192x192 PNG (logo) + multi-size ICO (favicon).  Drop both at `docs/assets/logo.png` + `docs/assets/favicon.ico`.  Reference them in the Material theme's `logo:` and `favicon:` keys.
-- [ ] 5.4 Enable Mermaid diagram support via `pymdownx.superfences` with the `mermaid` custom-fence config so architecture pages can include flow diagrams.
-- [ ] 5.5 Author one Mermaid diagram in `concepts/toolchain-orchestrator.md` showing the five entry points → `install_family` fan-in.
-- [ ] 5.6 Author one Mermaid diagram in `concepts/probe-orchestrator.md` showing the three CLI verbs + TUI + MCP → `probe_orchestrator` fan-in.
-- [ ] 5.7 Run `mkdocs build --strict`; confirm both diagrams render in the rendered HTML.
+- [x] 5.1 Create `docs/stylesheets/extra.css` with: brand-colour overrides (alloy-blue / amber accent matching the TUI snapshots), print-friendly overrides (no header/footer in print, ink-friendly syntax-highlight palette), hero-card styling for the landing page, a slightly larger code-block font for embedded TUI SVGs.
+- [x] 5.2 Reference `extra.css` in `mkdocs.yml`'s `extra_css:` block.
+- [x] 5.3 Generate or pick a logo + favicon: a simple wordmark "alloy" rendered in the brand colour, exported as 192x192 PNG (logo) + multi-size ICO (favicon).  Drop both at `docs/assets/logo.png` + `docs/assets/favicon.ico`.  Reference them in the Material theme's `logo:` and `favicon:` keys.
+- [x] 5.4 Enable Mermaid diagram support via `pymdownx.superfences` with the `mermaid` custom-fence config so architecture pages can include flow diagrams.
+- [x] 5.5 Author one Mermaid diagram in `concepts/toolchain-orchestrator.md` showing the five entry points → `install_family` fan-in.
+- [x] 5.6 Author one Mermaid diagram in `concepts/probe-orchestrator.md` showing the three CLI verbs + TUI + MCP → `probe_orchestrator` fan-in.
+- [x] 5.7 Run `mkdocs build --strict`; confirm both diagrams render in the rendered HTML.
 
 ## 6. CI deployment — `.github/workflows/docs.yml`
 
