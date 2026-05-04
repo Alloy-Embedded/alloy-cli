@@ -49,6 +49,10 @@ def pytest_configure(config: pytest.Config) -> None:
         "markers",
         "perf: performance benchmark gated by ARCHITECTURE.md budgets.",
     )
+    config.addinivalue_line(
+        "markers",
+        "docs: docs-site build/links/IA tests; requires `pip install -e .[docs]`.",
+    )
 
 
 @pytest.fixture

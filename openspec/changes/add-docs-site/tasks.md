@@ -48,10 +48,10 @@
 
 ## 7. Doc-quality regression tests
 
-- [ ] 7.1 Create `tests/test_docs_site_build.py` invoking `mkdocs build --strict` against the repo's `mkdocs.yml` in a tmpdir; assert exit code 0, zero warnings on stderr, `site/index.html` exists.
-- [ ] 7.2 Create `tests/test_docs_site_links.py` walking `site/**/*.html`, parsing every `<a href="...">`, and resolving each internal target.  Skip external `http(s)://` and `mailto:` URLs.  Assert every internal anchor resolves to a real file (or in-page anchor).
-- [ ] 7.3 Create `tests/test_docs_site_ia.py` parsing `mkdocs.yml` (via PyYAML); assert the top-level nav contains every section listed in the IA spec; walk every `docs/*.md` file and assert it's reachable via either the nav OR the redirects map.
-- [ ] 7.4 Pin the new tests with `pytest.mark.docs` so contributors who haven't installed `[docs]` extras get a skip rather than an import-error.  Configure the marker in `conftest.py` or `pyproject.toml` `[tool.pytest.ini_options]`.
+- [x] 7.1 Create `tests/test_docs_site_build.py` invoking `mkdocs build --strict` against the repo's `mkdocs.yml` in a tmpdir; assert exit code 0, zero warnings on stderr, `site/index.html` exists.
+- [x] 7.2 Create `tests/test_docs_site_links.py` walking `site/**/*.html`, parsing every `<a href="...">`, and resolving each internal target.  Skip external `http(s)://` and `mailto:` URLs.  Assert every internal anchor resolves to a real file (or in-page anchor).
+- [x] 7.3 Create `tests/test_docs_site_ia.py` parsing `mkdocs.yml` (via PyYAML); assert the top-level nav contains every section listed in the IA spec; walk every `docs/*.md` file and assert it's reachable via either the nav OR the redirects map.
+- [x] 7.4 Pin the new tests with `pytest.mark.docs` so contributors who haven't installed `[docs]` extras get a skip rather than an import-error.  Configure the marker in `conftest.py` or `pyproject.toml` `[tool.pytest.ini_options]`.
 
 ## 8. README link + CHANGELOG + validation + archive
 
