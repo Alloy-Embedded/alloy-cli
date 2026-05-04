@@ -131,7 +131,7 @@ class Source(Protocol):
         """Return the concrete artefact for ``tool`` on ``host``.
 
         Raises:
-          FamilyToolchainInstallerUnsupportedHostError when no pin
+          FamilyToolchainInstallerUnsupportedHostError: when no pin
             exists for the requested ``(tool, host)`` combination.
         """
         ...
@@ -445,9 +445,9 @@ def adapter_for(source: str) -> Source:
     fetch manually.
 
     Raises:
-      FamilyToolchainInstallerUnsupportedHostError when ``source``
+      FamilyToolchainInstallerUnsupportedHostError: when ``source``
         is ``"vendor"``.
-      FamilyToolchainInstallerError when ``source`` is unrecognised.
+      FamilyToolchainInstallerError: when ``source`` is unrecognised.
     """
     if source == "vendor":
         raise FamilyToolchainInstallerUnsupportedHostError(

@@ -442,12 +442,12 @@ def load_family(family_id: str) -> FamilyManifest:
     """Load + resolve + cache the manifest for ``family_id``.
 
     Raises:
-      FamilyToolchainNotFoundError when no YAML ships for the id.
-      FamilyToolchainSchemaError when the YAML fails JSON-Schema
+      FamilyToolchainNotFoundError: when no YAML ships for the id.
+      FamilyToolchainSchemaError: when the YAML fails JSON-Schema
         validation.
-      FamilyToolchainUnknownParentError when an ``extends:`` target
+      FamilyToolchainUnknownParentError: when an ``extends:`` target
         has no manifest.
-      FamilyToolchainCycleError when the extends chain cycles.
+      FamilyToolchainCycleError: when the extends chain cycles.
     """
     chain = _resolve_chain(family_id)
     chain_key = _cache_key(entry[2] for entry in chain)

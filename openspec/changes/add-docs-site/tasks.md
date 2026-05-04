@@ -16,11 +16,11 @@
 
 ## 3. Auto-generated CLI + API references
 
-- [ ] 3.1 Configure `mkdocs-click` plugin in `mkdocs.yml` and create `docs/reference/cli.md` with a `:::click:` directive against `alloy_cli.main:cli` (renders every `alloy <verb>` automatically).
-- [ ] 3.2 Configure `mkdocstrings[python]` plugin in `mkdocs.yml` with the Google docstring style, `show_source: true`, `heading_level: 2`, `filters: ["!^_"]` (private filter).
-- [ ] 3.3 Create `docs/api/` with one page per allowlisted module: `api/toolchain-orchestrator.md`, `api/probe-orchestrator.md`, `api/toolchain-registry.md`, `api/tool-sources.md`, `api/errors.md`, `api/mcp.md`, `api/tui-screens.md`.  Each page uses the `::: alloy_cli.<module>` directive.
-- [ ] 3.4 Add the `API Reference` section to the nav with one entry per module page.
-- [ ] 3.5 Re-run `mkdocs build --strict`; confirm every `mkdocstrings` reference resolves; confirm the `mkdocs-click` page renders all 18 commands; confirm filtering hides private symbols.
+- [x] 3.1 Configure `mkdocs-click` plugin in `mkdocs.yml` and create `docs/reference/cli.md` with a `:::click:` directive against `alloy_cli.main:cli` (renders every `alloy <verb>` automatically).
+- [x] 3.2 Configure `mkdocstrings[python]` plugin in `mkdocs.yml` with the Google docstring style, `show_source: true`, `heading_level: 2`, `filters: ["!^_"]` (private filter).
+- [x] 3.3 Create `docs/api/` with one page per allowlisted module: `api/toolchain-orchestrator.md`, `api/probe-orchestrator.md`, `api/toolchain-registry.md`, `api/tool-sources.md`, `api/errors.md`, `api/mcp.md`, `api/tui-screens.md`.  Each page uses the `::: alloy_cli.<module>` directive.
+- [x] 3.4 Add the `API Reference` section to the nav with one entry per module page.
+- [x] 3.5 Re-run `mkdocs build --strict`; confirm every `mkdocstrings` reference resolves; confirm the `mkdocs-click` page renders all 18 commands; confirm filtering hides private symbols.
 
 ## 4. URL stability — `mkdocs-redirects`
 
