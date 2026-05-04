@@ -181,6 +181,33 @@ def select_probe(
 # ---------------------------------------------------------------------------
 
 
+def _openocd_cfg_for(config: ProjectConfig) -> str | None:
+    """Find the OpenOCD board config file.
+
+    Sources (in priority order):
+    1. ``alloy.toml`` ``[flash].openocd_config`` — explicit user override.
+    2. ``board.json`` ``debug.openocd_cfg``        — board-catalogue default.
+    """
+    # 1. Explicit in alloy.toml [flash] table.
+    explicit = (config.flash or {}).get("openocd_config")
+    if explicit:
+        return str(explicit)
+
+    # 2. board.json debug.openocd_cfg
+    if config.board is not None:
+        from alloy_cli.core import boards as _boards
+
+        try:
+            manifest = _boards.lookup(config.board.id)
+            cfg = manifest.payload.get("debug", {}).get("openocd_cfg")
+            if cfg:
+                return str(cfg)
+        except (BoardNotFoundError, Exception):
+            pass
+
+    return None
+
+
 def _target_for(config: ProjectConfig) -> str | None:
     if config.chip is not None:
         return config.chip.device
@@ -216,24 +243,53 @@ def run(
     seam through which the event log is written.  Tests that build
     against a tmp dir already pass it implicitly.
     """
+    layout = AlloyDir(root=project_root or elf.parent.resolve())
+    r = runner or process.runner
+
+    # ---- Toolchain selection: probe-rs preferred, OpenOCD fallback ----
+    use_openocd = False
+    openocd_cfg: str | None = None
+
     if require_toolchain:
-        status = _toolchain.detect_probe_rs()
-        if not status.present:
-            # OpenOCD fallback path is allowed if config opts in.
-            if not config.flash.get("openocd_config") or not _toolchain.detect_openocd().present:
+        probe_rs_status = _toolchain.detect_probe_rs()
+        if not probe_rs_status.present:
+            openocd_cfg = _openocd_cfg_for(config)
+            openocd_status = _toolchain.detect_openocd()
+            if openocd_cfg and openocd_status.present:
+                use_openocd = True
+            else:
                 raise ToolchainMissingError(
-                    f"probe-rs is not installed: {status.install_hint}\n"
+                    f"probe-rs is not installed: {probe_rs_status.install_hint}\n"
                     "Install probe-rs (preferred) or set [flash].openocd_config "
                     "and install openocd."
                 )
 
-    layout = AlloyDir(root=project_root or elf.parent.resolve())
+    if use_openocd:
+        # OpenOCD path — no probe-rs needed at all.
+        openocd_probe = ProbeInfo(
+            kind="openocd",
+            serial=None,
+            vendor_id=None,
+            product_id=None,
+            label="openocd",
+        )
+        chip = target or _target_for(config) or "unknown"
+        record_event(layout, "flash_started", probe="openocd", target=chip, elf=str(elf))
+        args = [
+            "openocd",
+            "-f", openocd_cfg,  # type: ignore[arg-type]
+            "-c", f"program {elf} verify reset exit",
+        ]
+        result = r.run(args, on_line=on_line)
+        record_event(
+            layout, "flash_finished", probe="openocd", target=chip, returncode=result.returncode
+        )
+        return FlashResult(
+            probe=openocd_probe, elf=elf, returncode=result.returncode, log=result.stdout
+        )
 
+    # ---- probe-rs path ----
     # Wave-2: prefer the project lockfile's pinned probe-rs over PATH.
-    # When no lockfile pins probe-rs, fall back to the bare command
-    # (PATH resolution; byte-identical to the pre-Wave-2 baseline).
-    # Lockfile pin without matching store entry surfaces as a typed
-    # FamilyToolchainInstallerVersionMismatchError up the stack.
     from alloy_cli.core import toolchain_manager as _tm
 
     pinned_probe_rs = _tm.resolve_for_lockfile(layout.root, "probe-rs")
@@ -247,20 +303,10 @@ def run(
     if probe.serial:
         args.extend(["--probe", f"{probe.kind}:{probe.serial}"])
 
-
-    record_event(
-        layout, "flash_started", probe=probe.kind, target=chip, elf=str(elf)
-    )
-
-    r = runner or process.runner
+    record_event(layout, "flash_started", probe=probe.kind, target=chip, elf=str(elf))
     result = r.run(args, on_line=on_line)
-
     record_event(
-        layout,
-        "flash_finished",
-        probe=probe.kind,
-        target=chip,
-        returncode=result.returncode,
+        layout, "flash_finished", probe=probe.kind, target=chip, returncode=result.returncode
     )
     return FlashResult(probe=probe, elf=elf, returncode=result.returncode, log=result.stdout)
 

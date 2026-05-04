@@ -83,6 +83,14 @@ def _boards_root() -> Path | None:
         if candidate.is_dir() and any(candidate.glob("*/board.json")):
             return candidate
 
+    # 4. Walk up from the current working directory — covers running alloy
+    #    commands from within an in-tree project (e.g. alloy/examples/blink/).
+    cwd = Path(os.getcwd()).resolve()
+    for parent in [cwd, *cwd.parents]:
+        candidate = parent / "boards"
+        if candidate.is_dir() and any(candidate.glob("*/board.json")):
+            return candidate
+
     return None
 
 
