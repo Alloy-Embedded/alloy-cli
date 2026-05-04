@@ -7,12 +7,12 @@
 
 ## 2. Full nav tree — every existing doc reachable
 
-- [ ] 2.1 Wire the nav tree in `mkdocs.yml` matching the IA from the proposal: `Home` → `index.md`; `Getting Started` (Quickstart, Installation, Your first project); `User Guide` (Scaffolding, Configuration, Build & Flash, Toolchain management with three sub-pages, Recovery, TUI dashboard, AI integration); `Reference` (CLI commands, alloy.toml schema, Family manifest schema, Source pin file schema, MCP tools, Error cookbook, Cheatsheet); `Concepts` (Device IR, Toolchain orchestrator, Probe orchestrator, Lockfile-aware execution, Two-phase mutations); `Examples` (linked to docs/EXAMPLES); `Architecture & Design`; `Contributing`; `API Reference`; `Changelog`.
-- [ ] 2.2 Author the new `Concepts` doc stubs (5 small pages, ~50-100 lines each): `concepts/device-ir.md`, `concepts/toolchain-orchestrator.md`, `concepts/probe-orchestrator.md`, `concepts/lockfile-aware-execution.md`, `concepts/two-phase-mutations.md`.  Each pulls the existing material from the README + RECOVERY + TOOLCHAIN_ONBOARDING into a focused conceptual narrative.
-- [ ] 2.3 Author the new `Getting Started/Installation` page splitting the install steps out of QUICKSTART into a dedicated page (covers system requirements, `pip install alloy-cli`, optional extras, verifying with `alloy --version`).
-- [ ] 2.4 Author the new `Getting Started/Your first project` page: a deep walkthrough that goes beyond the 5-min QUICKSTART (adds peripherals, explains the IR validation, walks through the doctor + cookbook).
-- [ ] 2.5 Author the new `User Guide` index pages for each section that needs an introduction (Toolchain management, Recovery).  Single-paragraph pages that link to the existing `TOOLCHAIN_*.md` / `RECOVERY.md` files.
-- [ ] 2.6 Run `mkdocs build --strict` locally; confirm zero warnings; confirm every nav entry resolves to a real file.
+- [x] 2.1 Wire the nav tree in `mkdocs.yml` matching the IA from the proposal: `Home` → `index.md`; `Getting Started` (Quickstart, Installation, Your first project); `User Guide` (Scaffolding, Configuration, Build & Flash, Toolchain management with three sub-pages, Recovery, TUI dashboard, AI integration); `Reference` (CLI commands, alloy.toml schema, Family manifest schema, Source pin file schema, MCP tools, Error cookbook, Cheatsheet); `Concepts` (Device IR, Toolchain orchestrator, Probe orchestrator, Lockfile-aware execution, Two-phase mutations); `Examples` (linked to docs/EXAMPLES); `Architecture & Design`; `Contributing`; `API Reference`; `Changelog`.
+- [x] 2.2 Author the new `Concepts` doc stubs (5 small pages, ~50-100 lines each): `concepts/device-ir.md`, `concepts/toolchain-orchestrator.md`, `concepts/probe-orchestrator.md`, `concepts/lockfile-aware-execution.md`, `concepts/two-phase-mutations.md`.  Each pulls the existing material from the README + RECOVERY + TOOLCHAIN_ONBOARDING into a focused conceptual narrative.
+- [x] 2.3 Author the new `Getting Started/Installation` page splitting the install steps out of QUICKSTART into a dedicated page (covers system requirements, `pip install alloy-cli`, optional extras, verifying with `alloy --version`).
+- [x] 2.4 Author the new `Getting Started/Your first project` page: a deep walkthrough that goes beyond the 5-min QUICKSTART (adds peripherals, explains the IR validation, walks through the doctor + cookbook).
+- [x] 2.5 Author the new `User Guide` index pages for each section that needs an introduction (Toolchain management, Recovery).  Single-paragraph pages that link to the existing `TOOLCHAIN_*.md` / `RECOVERY.md` files.
+- [x] 2.6 Run `mkdocs build --strict` locally; confirm zero warnings; confirm every nav entry resolves to a real file.
 
 ## 3. Auto-generated CLI + API references
 

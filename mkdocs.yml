@@ -39,14 +39,29 @@ strict: true
 # to info so the strict build stays green; keep `not_found` strict
 # so a real typo on a SITE-internal link still fails.
 validation:
-  # Group 1 ships a slim nav; Group 2 wires every file into the
-  # tree.  Until then, downgrade omitted_files to info.
-  omitted_files: info
+  # Group 2 wires every existing top-level doc into the nav.
+  # The four EXAMPLES READMEs and two ROADMAP_WAVE_* docs are
+  # intentionally OUT of the main nav — they're either linked
+  # inline (EXAMPLES) or historical (ROADMAP_WAVE_*).  The
+  # `not_in_nav:` block below lists them explicitly so the
+  # strict build still passes.
+  omitted_files: warn
   links:
     not_found: info           # `../src/...`, `../schema/...` (GH paths)
     absolute_links: info      # `/foo` → external
     unrecognized_links: info  # ambiguous external refs
     anchors: warn             # in-page anchor typos still warn
+
+# Files that exist under docs/ but are intentionally NOT in the nav
+# tree.  Listed explicitly so a typo (forgot-to-add-to-nav) still
+# surfaces as a warning.
+not_in_nav: |
+  /ROADMAP_WAVE_2.md
+  /ROADMAP_WAVE_3.md
+  /EXAMPLES/01-blinky/README.md
+  /EXAMPLES/02-uart-echo/README.md
+  /EXAMPLES/03-spi-flash/README.md
+  /EXAMPLES/04-dma-double-buffer/README.md
 
 theme:
   name: material
@@ -179,8 +194,11 @@ nav:
   - Home: index.md
   - Getting Started:
       - Quickstart: QUICKSTART.md
+      - Installation: getting-started/installation.md
+      - Your first project: getting-started/your-first-project.md
   - User Guide:
       - Toolchain management:
+          - Overview: user-guide/toolchain.md
           - Onboarding: TOOLCHAIN_ONBOARDING.md
           - Installer: TOOLCHAIN_INSTALLER.md
           - Registry: TOOLCHAIN_REGISTRY.md
@@ -189,11 +207,18 @@ nav:
   - Reference:
       - Error cookbook: ERROR_COOKBOOK.md
       - Cheatsheet: CHEATSHEET.md
+      - Project format (alloy.toml): PROJECT_FORMAT.md
+  - Concepts:
+      - Overview: concepts/index.md
+      - Device IR: concepts/device-ir.md
+      - Toolchain orchestrator: concepts/toolchain-orchestrator.md
+      - Probe orchestrator: concepts/probe-orchestrator.md
+      - Lockfile-aware execution: concepts/lockfile-aware-execution.md
+      - Two-phase mutations: concepts/two-phase-mutations.md
   - Architecture & Design:
       - Overview: ARCHITECTURE.md
       - TUI design: TUI_DESIGN.md
       - Data sources: DATA_SOURCES.md
-      - Project format: PROJECT_FORMAT.md
       - Comparison: COMPARISON.md
   - Contributing:
       - Contributing: CONTRIBUTING.md
