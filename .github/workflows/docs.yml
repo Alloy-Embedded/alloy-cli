@@ -3,6 +3,7 @@ name: Docs
 on:
   push:
     branches: [main]
+    tags: ["v*"]
     paths:
       # Only fire when something docs-relevant changes.  This keeps the
       # workflow off `main` pushes that touch only `src/` / `tests/`.
@@ -19,8 +20,6 @@ on:
       - "CHANGELOG.md"
       - "README.md"
       - "pyproject.toml"
-  push:
-    tags: ["v*"]
   workflow_dispatch:
     # Maintainer dry-run / manual republish.
 
