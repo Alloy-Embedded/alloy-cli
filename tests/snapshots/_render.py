@@ -396,6 +396,7 @@ def pinned_screen_names() -> tuple[str, ...]:
         "06-clock-tree",
         "07-dma-matrix",
         "08-memory-map",
+        "11-pinout-editor",
     )
 
 
@@ -469,6 +470,16 @@ def build_app_for(name: str, *, project_root: Path) -> TuiApp:
             ),
         )
         return TuiApp(initial_screen=MemoryMapScreen(memory=memory))
+    if name == "11-pinout-editor":
+        from alloy_cli.tui.screens.pinout_editor import PinoutEditorScreen
+
+        return TuiApp(
+            initial_screen=PinoutEditorScreen(
+                project_dir=project_root,
+                config=config,
+                device=ir,
+            )
+        )
     raise ValueError(f"Unknown pinned screen: {name!r}")
 
 

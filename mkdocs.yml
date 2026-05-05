@@ -226,6 +226,7 @@ nav:
       - Installation: getting-started/installation.md
       - Your first project: getting-started/your-first-project.md
   - User Guide:
+      - TUI screens: user-guide/tui.md
       - Toolchain management:
           - Overview: user-guide/toolchain.md
           - Onboarding: TOOLCHAIN_ONBOARDING.md
