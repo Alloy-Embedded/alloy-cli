@@ -28,8 +28,10 @@ from rich.panel import Panel
 from rich.table import Table
 
 from alloy_cli.core import probe_orchestrator as _po
+from alloy_cli.core import toolchain as _toolchain
 from alloy_cli.core.errors import (
     AlloyCliError,
+    BoardNotFoundError,
     FamilyToolchainEraseAbortedError,
     FamilyToolchainEraseError,
     FamilyToolchainEraseProbeFailedError,
@@ -37,6 +39,42 @@ from alloy_cli.core.errors import (
     FamilyToolchainProbeError,
 )
 from alloy_cli.core.project import PROJECT_FILE, read
+
+
+def _openocd_cfg_for(project_dir: Path) -> str | None:
+    """Return the OpenOCD board config path for the project in *project_dir*.
+
+    Mirrors ``flash._openocd_cfg_for`` — duplicated here to keep the
+    import surface clean (flash.py is a Wave-1 module; erase.py is Wave-4).
+
+    Priority order:
+    1. ``alloy.toml`` ``[flash].openocd_config`` — explicit user override.
+    2. ``board.json`` ``debug.openocd_cfg`` — board-catalogue default.
+    """
+    toml = project_dir / PROJECT_FILE
+    if not toml.exists():
+        return None
+    try:
+        config = read(toml)
+    except AlloyCliError:
+        return None
+
+    explicit = (config.flash or {}).get("openocd_config")
+    if explicit:
+        return str(explicit)
+
+    if config.board is not None:
+        from alloy_cli.core import boards as _boards
+
+        try:
+            manifest = _boards.lookup(config.board.id)
+            cfg = manifest.payload.get("debug", {}).get("openocd_cfg")
+            if cfg:
+                return str(cfg)
+        except BoardNotFoundError:
+            pass
+
+    return None
 
 
 def _is_stdin_tty() -> bool:
@@ -204,15 +242,23 @@ def erase_command(
     console = Console()
     skip_prompt = auto or yes
 
-    # ---- Probe selection ----
-    try:
-        identity = _po.select_probe(hint=probe_hint, project_root=project_dir)
-    except FamilyToolchainProbeError as exc:
-        raise click.ClickException(_render_probe_error(exc)) from exc
-    except AlloyCliError as exc:
-        raise click.ClickException(str(exc)) from exc
+    # ---- Probe selection: probe-rs preferred, OpenOCD fallback ----
+    # When probe-rs is absent but the board declares an openocd_cfg and
+    # OpenOCD is installed, skip probe-rs entirely — mirrors flash.run().
+    probe: _po.Probe | None = None
+    if not _toolchain.detect_probe_rs().present:
+        openocd_cfg = _openocd_cfg_for(project_dir)
+        if openocd_cfg and _toolchain.detect_openocd().present:
+            probe = _po.openocd_probe_for(openocd_cfg)
 
-    probe = _po.real_probe_for(identity, project_root=project_dir)
+    if probe is None:
+        try:
+            identity = _po.select_probe(hint=probe_hint, project_root=project_dir)
+        except FamilyToolchainProbeError as exc:
+            raise click.ClickException(_render_probe_error(exc)) from exc
+        except AlloyCliError as exc:
+            raise click.ClickException(str(exc)) from exc
+        probe = _po.real_probe_for(identity, project_root=project_dir)
 
     # ---- Build the plan ----
     region_args: list[str] | None = list(regions) if regions else None

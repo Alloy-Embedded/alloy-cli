@@ -31,6 +31,7 @@ from alloy_cli.core.project import (
     SCHEMA_VERSION,
     BoardRef,
     ChipRef,
+    PeripheralEntry,
     ProjectConfig,
     ProjectMeta,
     write,
@@ -170,13 +171,44 @@ def _config_from_board(name: str, board_id: str) -> tuple[ProjectConfig, dict[st
         context["has_led"] = True
         context["led_pin"] = str(leds[0]["pin"])
 
+    # ---- Populate peripherals from board-native hardware ----
+    peripherals: list[PeripheralEntry] = []
+
+    if debug_uart and {"peripheral", "tx", "rx"} <= debug_uart.keys():
+        uart_payload: dict[str, Any] = {
+            "peripheral": debug_uart["peripheral"],
+            "tx": debug_uart["tx"],
+            "rx": debug_uart["rx"],
+        }
+        if "baud" in debug_uart:
+            uart_payload["baud"] = debug_uart["baud"]
+        peripherals.append(PeripheralEntry(kind="uart", name="debug", payload=uart_payload))
+
+    leds = payload.get("leds") or []
+    for led in leds:
+        if not (isinstance(led, dict) and led.get("pin")):
+            continue
+        peripherals.append(
+            PeripheralEntry(
+                kind="gpio",
+                name=str(led.get("name", "led")),
+                payload={"pin": str(led["pin"]), "mode": "output"},
+            )
+        )
+
+    # ---- First clock profile as the default ----
+    clock_profiles: list[str] = payload.get("clock_profiles") or []
+    clocks: dict[str, Any] = {}
+    if clock_profiles:
+        clocks = {"profile": str(clock_profiles[0])}
+
     config = ProjectConfig(
         schema_version=SCHEMA_VERSION,
         project=ProjectMeta(name=name, alloy_cli=_alloy_cli_version),
         board=BoardRef(id=manifest.board_id),
         chip=None,
-        clocks={},
-        peripherals=(),
+        clocks=clocks,
+        peripherals=tuple(peripherals),
         build={"profile": "debug"},
         flash={},
         raw={},

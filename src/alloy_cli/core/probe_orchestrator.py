@@ -724,6 +724,127 @@ from alloy_cli.core.errors import (  # noqa: E402
 )
 
 # ---------------------------------------------------------------------------
+# OpenOCD subprocess backend (fallback when probe-rs is absent)
+# ---------------------------------------------------------------------------
+
+
+class _OpenOcdProbe:
+    """OpenOCD-backed :class:`Probe` for erase on boards without probe-rs.
+
+    Only :meth:`erase` is implemented; :meth:`reset` and :meth:`monitor`
+    raise :class:`AlloyCliError` because OpenOCD's one-shot ``-c`` TCL
+    interface does not map onto a persistent session model.
+
+    The canonical use-case: ``alloy erase`` on a board whose
+    ``board.json`` declares ``debug.openocd_cfg`` and the user has not
+    installed probe-rs.  :func:`openocd_probe_for` is the public factory.
+    """
+
+    def __init__(
+        self,
+        identity: ProbeIdentity,
+        *,
+        openocd_cfg: str,
+        runner: Any | None = None,
+    ) -> None:
+        self._identity = identity
+        self._openocd_cfg = openocd_cfg
+        from alloy_cli.core import process as _process
+
+        self._runner = runner if runner is not None else _process.runner
+
+    @property
+    def identity(self) -> ProbeIdentity:
+        return self._identity
+
+    def reset(self, *, method: str, halt_after: bool) -> ResetReport:
+        from alloy_cli.core.errors import AlloyCliError
+
+        raise AlloyCliError(
+            "alloy reset is not supported via OpenOCD; "
+            "install probe-rs or run openocd manually."
+        )
+
+    def erase(self, regions: Sequence[EraseRegion]) -> EraseReport:
+        """Erase one or more flash regions via OpenOCD.
+
+        Chip-wide (``name == "all"``):
+            ``openocd -f <cfg> -c init -c "reset halt"``
+            ``-c "flash erase_sector 0 0 last" -c exit``
+
+        Per-region (named alias or ``0xBASE-0xEND``):
+            One ``flash erase_address 0xBASE 0xSIZE`` command per region,
+            using the address-based API (bank-agnostic, works for any
+            target that OpenOCD understands).
+        """
+        regions_tuple = tuple(regions)
+        is_chip_wide = len(regions_tuple) == 1 and regions_tuple[0].name == "all"
+
+        argv: list[str] = ["openocd", "-f", self._openocd_cfg, "-c", "init", "-c", "reset halt"]
+        if is_chip_wide:
+            argv += ["-c", "flash erase_sector 0 0 last"]
+        else:
+            for r in regions_tuple:
+                argv += ["-c", f"flash erase_address 0x{r.base:08x} 0x{r.size:08x}"]
+        argv += ["-c", "exit"]
+
+        started = _now_ms()
+        result = self._runner.run(argv)
+        duration = _now_ms() - started
+
+        if not result.ok:
+            raise FamilyToolchainEraseProbeFailedError(
+                f"openocd erase failed (returncode={result.returncode}): "
+                f"{result.stderr or result.stdout}".strip(),
+                stderr=result.stderr or result.stdout,
+                returncode=result.returncode,
+            )
+
+        total = sum(r.size for r in regions_tuple)
+        return EraseReport(
+            probe=self._identity,
+            regions=regions_tuple,
+            total_bytes_erased=total,
+            duration_ms=duration,
+        )
+
+    def monitor(
+        self,
+        *,
+        port: Path | None,
+        baud: int,
+        mode: str,
+        on_event: Callable[[MonitorEvent], None],
+    ) -> int:
+        from alloy_cli.core.errors import AlloyCliError
+
+        raise AlloyCliError(
+            "alloy monitor is not supported via OpenOCD; "
+            "install probe-rs or use a serial terminal directly."
+        )
+
+
+def openocd_probe_for(
+    openocd_cfg: str,
+    *,
+    runner: Any | None = None,
+) -> _OpenOcdProbe:
+    """Build an OpenOCD-backed probe for boards without probe-rs.
+
+    The returned :class:`_OpenOcdProbe` implements only :meth:`erase`;
+    calling :meth:`reset` or :meth:`monitor` raises
+    :class:`AlloyCliError` with a helpful install hint.
+
+    The synthetic :class:`ProbeIdentity` carries ``kind="openocd"``
+    so erase reports label the backend unambiguously.
+    """
+    identity = ProbeIdentity(
+        vid="0000", pid="0000", serial="", kind="openocd", vendor_only=False
+    )
+    return _OpenOcdProbe(identity, openocd_cfg=openocd_cfg, runner=runner)
+
+
+# ---------------------------------------------------------------------------
 # Probe selection
 # ---------------------------------------------------------------------------
 
@@ -1176,6 +1297,7 @@ __all__ = [
     "ResetReport",
     "execute_erase",
     "open_monitor",
+    "openocd_probe_for",
     "plan_erase",
     "real_probe_for",
     "reset_target",
