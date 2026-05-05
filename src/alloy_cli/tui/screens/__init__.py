@@ -9,6 +9,7 @@ from alloy_cli.tui.screens.flash import FlashScreen
 from alloy_cli.tui.screens.memory_map import MemoryMapScreen
 from alloy_cli.tui.screens.onboarding import OnboardingScreen
 from alloy_cli.tui.screens.peripheral_add import PeripheralAddScreen
+from alloy_cli.tui.screens.pinout_editor import PinoutEditorScreen
 from alloy_cli.tui.screens.welcome import WelcomeScreen
 
 __all__ = [
@@ -21,5 +22,6 @@ __all__ = [
     "MemoryMapScreen",
     "OnboardingScreen",
     "PeripheralAddScreen",
+    "PinoutEditorScreen",
     "WelcomeScreen",
 ]
