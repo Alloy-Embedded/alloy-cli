@@ -202,7 +202,7 @@ def _openocd_cfg_for(config: ProjectConfig) -> str | None:
             cfg = manifest.payload.get("debug", {}).get("openocd_cfg")
             if cfg:
                 return str(cfg)
-        except (BoardNotFoundError, Exception):
+        except BoardNotFoundError:
             pass
 
     return None

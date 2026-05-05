@@ -65,7 +65,7 @@ def _resolve_debug_uart_baud(config: ProjectConfig) -> int | None:
             baud = manifest.payload.get("uart", {}).get("debug", {}).get("baud")
             if isinstance(baud, int):
                 return baud
-        except (BoardNotFoundError, Exception):
+        except BoardNotFoundError:
             pass
 
     return None
@@ -97,7 +97,7 @@ def _autodetect_port(config: ProjectConfig | None, console: Console) -> Path | N
     try:
         manifest = _boards.lookup(config.board.id)
         globs: list[str] = manifest.payload.get("serial_globs", []) or []
-    except (BoardNotFoundError, Exception):
+    except BoardNotFoundError:
         return None
 
     if not globs:

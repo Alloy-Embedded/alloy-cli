@@ -20,10 +20,12 @@ _SRC = _REPO_ROOT / "src" / "alloy_cli"
 # justification.
 # Each value is a count.  `noqa` markers in source explain why.
 _BROAD_CATCH_ALLOW_LIST = {
-    "core/codegen.py": 1,  # entry.callable from a vendor adapter
-    "core/toolchain_manager.py": 1,  # cleanup-on-failure hook in install pipeline
-    "tui/app.py": 1,  # entry.factory registered by user code
-    "core/probe_orchestrator.py": 1,  # subprocess runner errors → typed not-attached envelope
+    "core/codegen.py": 1,          # entry.callable from a vendor adapter
+    "core/toolchain_manager.py": 1, # cleanup-on-failure hook in install pipeline
+    "tui/app.py": 1,               # entry.factory registered by user code
+    "core/build.py": 2,            # JSON/OS parse + alloy_codegen third-party adapter
+    "core/probe_orchestrator.py": 5,  # tty setup/restore, serial close, RTT reader thread, probe enum
+    "tui/screens/memory_map.py": 1,   # arm-none-eabi-size subprocess (any tool/version failure)
 }
 
 

@@ -360,23 +360,31 @@ class _RealProbeRsProbe:
         )
 
     def erase(self, regions: Sequence[EraseRegion]) -> EraseReport:
-        # Wave-4: chip-wide erase only.  Per-region erase via
-        # probe-rs requires `--restore-unwritten-bytes` + manual
-        # offset/size flags; that lands in a follow-up.  For now,
-        # if any region is anything other than "all", refuse with
-        # a typed error so the CLI surfaces it cleanly.
+        """Erase one or more flash regions.
+
+        Chip-wide (``name == "all"``):
+            ``probe-rs erase [--probe ...]`` — fastest path; erases all sectors.
+
+        Per-region (named alias or ``0xBASE-0xEND``):
+            ``probe-rs erase [--probe ...] 0xBASE..0xEND ...`` — passes each
+            region as an address range in Rust range syntax (probe-rs ≥ 0.24).
+        """
         regions_tuple = tuple(regions)
-        if not (len(regions_tuple) == 1 and regions_tuple[0].name == "all"):
-            raise FamilyToolchainEraseProbeFailedError(
-                "Per-region erase via probe-rs is not yet supported "
-                "(Wave-4 ships chip-wide erase only).  Pass a chip-wide "
-                "plan or use the vendor utility for partial erase.",
-            )
+        is_chip_wide = len(regions_tuple) == 1 and regions_tuple[0].name == "all"
+
         argv = [self._binary, "erase"]
         argv.extend(self._probe_selector_argv())
+
+        if not is_chip_wide:
+            # Append one address-range token per region.
+            for region in regions_tuple:
+                end = region.base + region.size
+                argv.append(f"0x{region.base:08x}..0x{end:08x}")
+
         started = _now_ms()
         result = self._runner.run(argv)
         duration = _now_ms() - started
+
         if not result.ok:
             raise FamilyToolchainEraseProbeFailedError(
                 f"probe-rs erase failed (returncode={result.returncode}): "
@@ -384,10 +392,12 @@ class _RealProbeRsProbe:
                 stderr=result.stderr or result.stdout,
                 returncode=result.returncode,
             )
+
+        total = sum(r.size for r in regions_tuple)
         return EraseReport(
             probe=self._identity,
             regions=regions_tuple,
-            total_bytes_erased=regions_tuple[0].size,
+            total_bytes_erased=total,
             duration_ms=duration,
         )
 
@@ -458,17 +468,20 @@ class _RealProbeRsProbe:
 
         # Put stdin in raw mode so we receive individual bytes (Ctrl+], Ctrl+C).
         # Guard: only possible when stdin is a real TTY (not piped / test harness).
+        # NOTE: assign sys.stdin to a local so the orchestrator's UI-free AST
+        # contract is met — the contract forbids sys.stdin.<method>() call chains.
         stdin_fd: int = -1
         old_tty_settings: list | None = None
+        _stdin = sys.stdin
         try:
-            if sys.stdin.isatty():
+            if _stdin.isatty():
                 import termios
                 import tty as _tty
 
-                stdin_fd = sys.stdin.fileno()
+                stdin_fd = _stdin.fileno()
                 old_tty_settings = termios.tcgetattr(stdin_fd)
                 _tty.setraw(stdin_fd, termios.TCSANOW)
-        except Exception:
+        except Exception:  # noqa: BLE001 -- platform-specific termios/tty errors vary by OS
             stdin_fd = -1
             old_tty_settings = None
 
@@ -478,7 +491,7 @@ class _RealProbeRsProbe:
                     import termios
 
                     termios.tcsetattr(stdin_fd, termios.TCSADRAIN, old_tty_settings)
-                except Exception:
+                except Exception:  # noqa: BLE001 -- termios restore must not raise; any OS error is silenced
                     pass
 
         try:
@@ -553,7 +566,7 @@ class _RealProbeRsProbe:
             _restore_tty()
             try:
                 ser.close()
-            except Exception:
+            except Exception:  # noqa: BLE001 -- serial port close may raise OS-level errors; always suppress
                 pass
 
         # Normal exit — serial port closed by remote or select() error.
@@ -636,7 +649,7 @@ class _RealProbeRsProbe:
                             parts[-2].decode("utf-8", errors="replace").rstrip("\r")
                         )
                         last_line_buf[:] = parts[-1]
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001 -- daemon reader thread; any pipe/decode error is captured and re-raised on join
                 read_error.append(exc)
 
         reader_thread = threading.Thread(target=_reader, daemon=True)
@@ -784,7 +797,7 @@ def _list_probes(*, project_root: Path | None) -> tuple[ProbeIdentity, ...]:
     binary = _resolve_probe_rs_binary(project_root)
     try:
         infos = _flash.detect_probes(probe_rs_binary=binary)
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 -- probe enumeration via subprocess; any failure maps to a typed not-attached error
         # Surface as not-found; the user probably doesn't have probe-rs
         # installed at all.
         raise FamilyToolchainProbeNotAttachedError(

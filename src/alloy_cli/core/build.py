@@ -25,6 +25,7 @@ from alloy_cli.core import toolchain_manager as _tm
 from alloy_cli.core.codegen import RegenResult
 from alloy_cli.core.errors import (
     AlloyCliError,
+    BoardNotFoundError,
     FamilyToolchainInstallerVersionMismatchError,
     ToolchainMissingError,
 )
@@ -332,7 +333,7 @@ def _resolve_chip_from_board(
     try:
         manifest = _boards.lookup(config.board.id)
         vendor, family, device = manifest.vendor, manifest.family, manifest.device
-    except Exception:
+    except BoardNotFoundError:
         pass
 
     # 2. In-tree alloy repo fallback
@@ -345,7 +346,7 @@ def _resolve_chip_from_board(
                 vendor = str(payload.get("vendor", ""))
                 family = str(payload.get("family", ""))
                 device = str(payload.get("device", ""))
-            except Exception:
+            except (json.JSONDecodeError, OSError):
                 pass
 
     if not (vendor and family and device):
@@ -575,7 +576,7 @@ def run(
                 _gen_board(_board_json, generated_board_dir)
                 if on_line:
                     on_line(f"[board-codegen] generated {config.board.id} → {generated_board_dir}")
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001 -- alloy_codegen is a third-party adapter; any failure is non-fatal
                 if on_line:
                     on_line(f"[board-codegen] skipped ({exc})")
                 generated_board_dir = None
