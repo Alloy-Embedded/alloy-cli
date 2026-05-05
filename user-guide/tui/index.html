@@ -12,13 +12,13 @@
         <meta name="author" content="Alloy Embedded">
       
       
-        <link rel="canonical" href="https://alloy-embedded.github.io/alloy-cli/concepts/toolchain-orchestrator/">
+        <link rel="canonical" href="https://alloy-embedded.github.io/alloy-cli/user-guide/tui/">
       
       
-        <link rel="prev" href="../device-ir/">
+        <link rel="prev" href="../../getting-started/your-first-project/">
       
       
-        <link rel="next" href="../probe-orchestrator/">
+        <link rel="next" href="../toolchain/">
       
       
         
@@ -29,7 +29,7 @@
     
     
       
-        <title>Toolchain orchestrator - alloy-cli</title>
+        <title>TUI screens - alloy-cli</title>
       
     
     
@@ -84,7 +84,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#toolchain-orchestrator" class="md-skip">
+        <a href="#tui-screens" class="md-skip">
           Skip to content
         </a>
       
@@ -119,7 +119,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Toolchain orchestrator
+              TUI screens
             
           </span>
         </div>
@@ -268,11 +268,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../../user-guide/tui/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
           
   
   
@@ -328,13 +330,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="../" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../concepts/" class="md-tabs__link">
           
   
   
@@ -612,28 +612,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
-        
-          
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   
@@ -651,7 +654,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -666,10 +669,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../user-guide/tui/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TUI screens
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -685,6 +715,193 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#pinout-editor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pinout editor
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Pinout editor">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-you-see" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What you see
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-a-peripheral" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding a peripheral
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#keyboard-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keyboard reference
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#auto-discovery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Auto-discovery
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#memory-map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Memory map
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Memory map">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-you-see_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What you see
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#per-region-erase" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-region erase
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Per-region erase">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#erase-plan-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Erase plan table
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#monitor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Monitor
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Monitor">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#auto-detect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Auto-detect
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ansi-stripping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ANSI stripping
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related commands
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -703,10 +920,13 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
@@ -715,7 +935,7 @@
         <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_2" >
         
           
-          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="">
             
   
   
@@ -751,7 +971,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/toolchain/" class="md-nav__link">
+      <a href="../toolchain/" class="md-nav__link">
         
   
   
@@ -1361,31 +1581,28 @@
       
   
   
-    
   
   
-  
     
     
     
     
-      
-        
-        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
         
           
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
             
   
   
@@ -1403,7 +1620,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1421,7 +1638,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../" class="md-nav__link">
+      <a href="../../concepts/" class="md-nav__link">
         
   
   
@@ -1449,7 +1666,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../device-ir/" class="md-nav__link">
+      <a href="../../concepts/device-ir/" class="md-nav__link">
         
   
   
@@ -1474,37 +1691,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Toolchain orchestrator
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../concepts/toolchain-orchestrator/" class="md-nav__link">
         
   
   
@@ -1520,81 +1710,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#the-fan-in-problem" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The fan-in problem
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#the-contract" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The contract
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#architectural-invariants" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Architectural invariants
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#where-it-lives" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Where it lives
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#cross-references" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Cross-references
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1607,7 +1722,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../probe-orchestrator/" class="md-nav__link">
+      <a href="../../concepts/probe-orchestrator/" class="md-nav__link">
         
   
   
@@ -1635,7 +1750,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../lockfile-aware-execution/" class="md-nav__link">
+      <a href="../../concepts/lockfile-aware-execution/" class="md-nav__link">
         
   
   
@@ -1663,7 +1778,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../two-phase-mutations/" class="md-nav__link">
+      <a href="../../concepts/two-phase-mutations/" class="md-nav__link">
         
   
   
@@ -2092,54 +2207,166 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#the-fan-in-problem" class="md-nav__link">
+  <a href="#pinout-editor" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The fan-in problem
+        Pinout editor
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Pinout editor">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-you-see" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What you see
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#the-contract" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#adding-a-peripheral" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The contract
+        Adding a peripheral
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#architectural-invariants" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#keyboard-reference" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Architectural invariants
+        Keyboard reference
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#where-it-lives" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#auto-discovery" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Where it lives
+        Auto-discovery
       
     </span>
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#cross-references" class="md-nav__link">
+  <a href="#memory-map" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Cross-references
+        Memory map
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Memory map">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-you-see_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What you see
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#per-region-erase" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-region erase
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Per-region erase">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#erase-plan-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Erase plan table
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#monitor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Monitor
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Monitor">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#auto-detect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Auto-detect
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ansi-stripping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ANSI stripping
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related commands
       
     </span>
   </a>
@@ -2166,127 +2393,215 @@
   
 
 
-<h1 id="toolchain-orchestrator">Toolchain orchestrator<a class="headerlink" href="#toolchain-orchestrator" title="Direct link to this heading">#</a></h1>
-<p>The toolchain orchestrator is the <strong>single seam</strong> every "install
-the toolchain" entry point dispatches through.  It lives at
-<code>alloy_cli.core.toolchain_orchestrator.install_family</code> and owns
-the tier walk + vendor short-circuit + lockfile update + typed
-event stream.</p>
-<h2 id="the-fan-in-problem">The fan-in problem<a class="headerlink" href="#the-fan-in-problem" title="Direct link to this heading">#</a></h2>
-<p>Wave 2 shipped a content-addressed tool installer; Wave 3 had to
-expose it through five surfaces:</p>
-<pre class="mermaid"><code>flowchart LR
-  N["alloy new&lt;br/&gt;--install-toolchain"] --&gt; O[install_family]
-  D["alloy doctor --fix"] --&gt; O
-  S["alloy setup"] --&gt; O
-  T["TUI Onboarding&lt;br/&gt;screen"] --&gt; O
-  M["MCP&lt;br/&gt;toolchain_apply_install_plan"] --&gt; O
-  O --&gt; M2["toolchain_manager.install"]
-  O --&gt; L[".alloy/toolchain.lock"]</code></pre>
-<p>Without one walker, "did vendor short-circuit fire?", "did the
-lockfile update?", "what's the partial-progress on cancellation?"
-would diverge between surfaces.  With the orchestrator, every
-surface reads the same <code>InstallReport</code>.</p>
-<h2 id="the-contract">The contract<a class="headerlink" href="#the-contract" title="Direct link to this heading">#</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">report</span> <span class="o">=</span> <span class="n">install_family</span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">manifest</span><span class="p">,</span>                       <span class="c1"># FamilyManifest from toolchain_registry</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="o">*</span><span class="p">,</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">project_root</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>              <span class="c1"># None → no lockfile update</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">include_optional</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">on_event</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>                  <span class="c1"># Callable[[InstallEvent], None]</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">downloader</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>                <span class="c1"># FakeDownloader in tests</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="p">)</span>
+<h1 id="tui-screens">TUI screens<a class="headerlink" href="#tui-screens" title="Direct link to this heading">#</a></h1>
+<p><code>alloy ui</code> opens the terminal user interface — a full-screen Textual
+application that lets you configure, build, and flash firmware without
+typing individual commands.  Every screen is also reachable from the
+command palette (<strong>Ctrl+P</strong>) so keyboard-first workflows stay fast.</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>alloy<span class="w"> </span>ui<span class="w">                    </span><span class="c1"># open TUI (Dashboard on first launch)</span>
 </span></code></pre></div>
-<p>The <code>on_event</code> callback receives a typed <code>InstallEvent</code>:</p>
+<hr />
+<h2 id="pinout-editor">Pinout editor<a class="headerlink" href="#pinout-editor" title="Direct link to this heading">#</a></h2>
+<p>The pinout editor shows the device's package schematic with live pin
+assignment state, and lets you add peripherals interactively from the
+same screen.</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>alloy<span class="w"> </span>ui<span class="w">                    </span><span class="c1"># then Ctrl+P → &quot;pinout-editor&quot;</span>
+</span></code></pre></div>
+<p><img alt="Pinout editor screen" src="../../images/11-pinout-editor.svg" /></p>
+<h3 id="what-you-see">What you see<a class="headerlink" href="#what-you-see" title="Direct link to this heading">#</a></h3>
 <table>
 <thead>
 <tr>
-<th>Event</th>
-<th>When</th>
+<th>Glyph</th>
+<th>Colour</th>
+<th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>ToolStarted</code></td>
-<td>Adapter resolved the artefact; install about to begin</td>
+<td><code>◉</code></td>
+<td>green</td>
+<td>Assigned — pin claimed by a peripheral in <code>alloy.toml</code></td>
 </tr>
 <tr>
-<td><code>ToolDownloaded</code></td>
-<td>Bytes finalised + SHA verified</td>
+<td><code>○</code></td>
+<td>dim</td>
+<td>Free — available for assignment</td>
 </tr>
 <tr>
-<td><code>ToolInstalled</code></td>
-<td>Atomic promotion done; lockfile pin staged</td>
+<td><code>◆</code></td>
+<td>magenta</td>
+<td>Candidate — legal pin for the signal currently being configured</td>
 </tr>
 <tr>
-<td><code>ToolFailed</code></td>
-<td>Typed install error — walker continues</td>
+<td><code>▣</code></td>
+<td>yellow</td>
+<td>Reserved — power, ground, or debug pad</td>
 </tr>
 <tr>
-<td><code>ToolSkippedVendor</code></td>
-<td>Vendor (EULA-gated) tool — never auto-installed</td>
-</tr>
-<tr>
-<td><code>ToolSkippedHostUnsupported</code></td>
-<td>Active host has no pin</td>
+<td><code>✗</code></td>
+<td>red</td>
+<td>Conflict — same pin claimed by two peripherals</td>
 </tr>
 </tbody>
 </table>
-<h2 id="architectural-invariants">Architectural invariants<a class="headerlink" href="#architectural-invariants" title="Direct link to this heading">#</a></h2>
-<ul>
-<li><strong>UI-free</strong>: zero Click / Rich / Textual / <code>input()</code> /
-  <code>sys.stdin</code> references.  Verified by an AST-based contract test
-  (<code>tests/test_toolchain_orchestrator.py</code>).</li>
-<li><strong>Per-tool failure isolation</strong>: <code>family-toolchain-installer-
-  checksum</code> on tool N does NOT abort tools N+1.  Each row
-  surfaces its <code>state</code> independently.</li>
-<li><strong>Vendor short-circuit</strong>: vendor tools (STM32CubeProgrammer,
-  nrfjprog, J-Link) emit <code>ToolSkippedVendor</code> with the
-  <code>install_doc_url</code> populated.  No download spawned.</li>
-<li><strong>Lockfile update is conditional</strong>: only fires when
-  <code>project_root</code> is set AND at least one tool actually installed.
-  A <code>--shared</code> install (passing <code>project_root=None</code>) populates
-  the global store without touching any lockfile.</li>
-</ul>
-<h2 id="where-it-lives">Where it lives<a class="headerlink" href="#where-it-lives" title="Direct link to this heading">#</a></h2>
+<h3 id="adding-a-peripheral">Adding a peripheral<a class="headerlink" href="#adding-a-peripheral" title="Direct link to this heading">#</a></h3>
+<ol>
+<li>Press one of the <strong>Add peripheral</strong> buttons at the bottom of the
+   screen (UART, SPI, I2C, GPIO, Timer, ADC, CAN, USB, ETH).</li>
+<li>The <strong>Peripheral Add</strong> screen opens for the chosen kind — fill in
+   the fields and press <strong>Ctrl+S</strong> to apply.</li>
+<li>On close, <code>alloy.toml</code> is updated and the schematic reloads
+   automatically so the newly assigned pins turn green.</li>
+</ol>
+<h3 id="keyboard-reference">Keyboard reference<a class="headerlink" href="#keyboard-reference" title="Direct link to this heading">#</a></h3>
 <table>
 <thead>
 <tr>
-<th>File</th>
-<th>Role</th>
+<th>Key</th>
+<th>Action</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>src/alloy_cli/core/toolchain_orchestrator.py</code></td>
-<td>The walker + every typed dataclass</td>
+<td><strong>F3</strong></td>
+<td>Toggle compact list ↔ schematic view</td>
 </tr>
 <tr>
-<td><code>src/alloy_cli/commands/_install_view.py</code></td>
-<td>Shared Rich rendering (<code>render_install_plan</code> / <code>make_event_logger</code>)</td>
+<td><strong>F5</strong></td>
+<td>Reload <code>alloy.toml</code> from disk (pick up external edits)</td>
 </tr>
 <tr>
-<td><code>tests/test_toolchain_orchestrator.py</code></td>
-<td>15 scenarios</td>
-</tr>
-<tr>
-<td><code>tests/test_toolchain_onboarding_contract.py</code></td>
-<td>"every entry point routes through <code>install_family</code>" guard</td>
+<td><strong>ESC</strong></td>
+<td>Close and return to the previous screen</td>
 </tr>
 </tbody>
 </table>
-<h2 id="cross-references">Cross-references<a class="headerlink" href="#cross-references" title="Direct link to this heading">#</a></h2>
-<ul>
-<li><a href="../../TOOLCHAIN_ONBOARDING/"><code>docs/TOOLCHAIN_ONBOARDING.md</code></a> —
-  the full reference for the four CLI/TUI entry points + the MCP
-  apply tool.</li>
-<li><a href="../../TOOLCHAIN_INSTALLER/"><code>docs/TOOLCHAIN_INSTALLER.md</code></a> —
-  Wave 2's pin file format + content-addressed store.</li>
-<li><a href="../two-phase-mutations/">Two-phase mutations</a> — why the MCP
-  <code>toolchain_apply_install_plan</code> tool requires a preview-then-
-  apply dance.</li>
-</ul>
+<h3 id="auto-discovery">Auto-discovery<a class="headerlink" href="#auto-discovery" title="Direct link to this heading">#</a></h3>
+<p>The editor walks up from the current working directory to find
+<code>alloy.toml</code>.  Run <code>alloy ui</code> from anywhere inside your project tree
+and the editor opens the correct project automatically.  If no project
+is found a placeholder is shown with instructions.</p>
+<hr />
+<h2 id="memory-map">Memory map<a class="headerlink" href="#memory-map" title="Direct link to this heading">#</a></h2>
+<p>After a successful build, the memory map screen shows flash and RAM
+usage as stacked bar charts, broken down by ELF section.</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>alloy<span class="w"> </span>build<span class="w">                 </span><span class="c1"># build first</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>alloy<span class="w"> </span>ui<span class="w">                    </span><span class="c1"># then Ctrl+P → &quot;memory-map&quot;</span>
+</span></code></pre></div>
+<p><img alt="Memory map screen" src="../../images/08-memory-map.svg" /></p>
+<h3 id="what-you-see_1">What you see<a class="headerlink" href="#what-you-see_1" title="Direct link to this heading">#</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>FLASH  18.0/128.0 KiB  [████░░░░░░░░░░░░░░░░░░░░░░░░░░] 14%
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>RAM     2.0/ 36.0 KiB  [█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  6%
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>Sections
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>  flash  .text           17920 B
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>  flash  .rodata           320 B
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>  flash  .data             192 B
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>  ram    .bss             2048 B
+</span></code></pre></div>
+<p>Capacities come from <code>board.json</code> (<code>flash_size_bytes</code> + <code>sram_size_bytes</code>).
+Section sizes are read from the most-recently modified <code>*.elf</code> under
+<code>.alloy/build/</code> via <code>arm-none-eabi-size</code>.</p>
+<hr />
+<h2 id="per-region-erase">Per-region erase<a class="headerlink" href="#per-region-erase" title="Direct link to this heading">#</a></h2>
+<p><code>alloy erase</code> supports erasing specific flash regions instead of the
+whole chip.  Region aliases resolve via the device IR; raw address
+ranges also work.</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Erase the whole chip (default)</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>alloy<span class="w"> </span>erase<span class="w"> </span>--auto
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Erase a named region (alias defined in the device IR)</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>alloy<span class="w"> </span>erase<span class="w"> </span>--region<span class="w"> </span>bootloader<span class="w"> </span>--auto
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="c1"># Erase a literal address range</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>alloy<span class="w"> </span>erase<span class="w"> </span>--region<span class="w"> </span>0x08000000-0x08010000<span class="w"> </span>--auto
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="c1"># Multiple regions in one command</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>alloy<span class="w"> </span>erase<span class="w"> </span>--region<span class="w"> </span>bootloader<span class="w"> </span>--region<span class="w"> </span>appslot-a<span class="w"> </span>--auto
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="c1"># Dry-run: see the plan without erasing</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>alloy<span class="w"> </span>erase<span class="w"> </span>--region<span class="w"> </span>bootloader
+</span></code></pre></div>
+<div class="admonition warning">
+<p class="admonition-title">Safety gates</p>
+<p>Without <code>--auto</code> / <code>--yes</code>, the command shows the erase plan and
+asks for confirmation in an interactive TTY.  In CI always pass
+<code>--auto</code> or the command will refuse to run on a non-TTY stdin.</p>
+</div>
+<h3 id="erase-plan-table">Erase plan table<a class="headerlink" href="#erase-plan-table" title="Direct link to this heading">#</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>            Erase plan — board=nucleo_g071rb
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a> region        base          size
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a> ─────────────────────────────────────────
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a> bootloader    0x08000000    16.0 KiB
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a> appslot-a     0x08004000    48.0 KiB
+</span></code></pre></div>
+<p>The table is printed before the confirmation prompt so you can verify
+the addresses before committing.</p>
+<hr />
+<h2 id="monitor">Monitor<a class="headerlink" href="#monitor" title="Direct link to this heading">#</a></h2>
+<p>Stream UART output from the target directly to your terminal.  The
+port is auto-detected from the board's <code>serial_globs</code> in <code>board.json</code>.</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>alloy<span class="w"> </span>monitor<span class="w">               </span><span class="c1"># auto-detect port + baud from alloy.toml</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>alloy<span class="w"> </span>monitor<span class="w"> </span>--port<span class="w"> </span>/dev/cu.usbmodem1234
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>alloy<span class="w"> </span>monitor<span class="w"> </span>--baud<span class="w"> </span><span class="m">9600</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>alloy<span class="w"> </span>monitor<span class="w"> </span>--mode<span class="w"> </span>rtt<span class="w">    </span><span class="c1"># RTT via probe-rs (requires probe connected)</span>
+</span></code></pre></div>
+<p>Press <strong>Ctrl+]</strong> to disconnect cleanly.  On close, alloy prints the
+byte count, session duration, and last line received:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Closed monitor session.  1024 bytes captured over 12.3s.
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>Last line: &#39;Hello from SAME70!&#39;
+</span></code></pre></div>
+<h3 id="auto-detect">Auto-detect<a class="headerlink" href="#auto-detect" title="Direct link to this heading">#</a></h3>
+<p>Port detection requires a <code>[board]</code> entry in <code>alloy.toml</code> with
+<code>serial_globs</code> declared in the board's <code>board.json</code>.  When multiple
+ports match, the first is used and the others are listed so you can
+override with <code>--port</code>.</p>
+<h3 id="ansi-stripping">ANSI stripping<a class="headerlink" href="#ansi-stripping" title="Direct link to this heading">#</a></h3>
+<p>By default, ANSI escape sequences are stripped so the log stays
+<code>grep</code>-friendly.  Pass <code>--ansi</code> to preserve colour output:</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>alloy<span class="w"> </span>monitor<span class="w"> </span>--ansi<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>ERROR
+</span></code></pre></div>
+<hr />
+<h2 id="related-commands">Related commands<a class="headerlink" href="#related-commands" title="Direct link to this heading">#</a></h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>alloy ui</code></td>
+<td>Open the full TUI</td>
+</tr>
+<tr>
+<td><code>alloy monitor</code></td>
+<td>Stream UART / RTT bytes from the target</td>
+</tr>
+<tr>
+<td><code>alloy erase</code></td>
+<td>Erase flash (chip-wide or per-region)</td>
+</tr>
+<tr>
+<td><code>alloy reset</code></td>
+<td>Soft or hard reset via the debug probe</td>
+</tr>
+<tr>
+<td><code>alloy flash</code></td>
+<td>Flash the ELF and reset</td>
+</tr>
+<tr>
+<td><code>alloy add uart</code></td>
+<td>Add a UART peripheral to <code>alloy.toml</code></td>
+</tr>
+<tr>
+<td><code>alloy boards &lt;id&gt; --pinout</code></td>
+<td>Read-only package schematic (no project needed)</td>
+</tr>
+</tbody>
+</table>
 
 
 
@@ -2318,7 +2633,7 @@ surface reads the same <code>InstallReport</code>.</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../device-ir/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Device IR">
+          <a href="../../getting-started/your-first-project/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Your first project">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -2328,20 +2643,20 @@ surface reads the same <code>InstallReport</code>.</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Device IR
+                Your first project
               </div>
             </div>
           </a>
         
         
           
-          <a href="../probe-orchestrator/" class="md-footer__link md-footer__link--next" aria-label="Next: Probe orchestrator">
+          <a href="../toolchain/" class="md-footer__link md-footer__link--next" aria-label="Next: Overview">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Probe orchestrator
+                Overview
               </div>
             </div>
             <div class="md-footer__button md-icon">

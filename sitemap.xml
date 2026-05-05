@@ -2,170 +2,174 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/AI_INTEGRATION/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/ARCHITECTURE/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/CHEATSHEET/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/COMPARISON/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/CONTRIBUTING/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/DATA_SOURCES/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/ERROR_COOKBOOK/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/PROJECT_FORMAT/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/QUICKSTART/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/RECOVERY/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/RELEASING/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/REVIEW/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/ROADMAP/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/ROADMAP_WAVE_2/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/ROADMAP_WAVE_3/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/TOOLCHAIN_INSTALLER/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/TOOLCHAIN_ONBOARDING/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/TOOLCHAIN_REGISTRY/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/TUI_DESIGN/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/VISION/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/EXAMPLES/01-blinky/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/EXAMPLES/02-uart-echo/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/EXAMPLES/03-spi-flash/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/EXAMPLES/04-dma-double-buffer/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/api/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/api/errors/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/api/mcp/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/api/probe-orchestrator/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/api/tool-sources/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/api/toolchain-orchestrator/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/api/toolchain-registry/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/concepts/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/concepts/device-ir/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/concepts/lockfile-aware-execution/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/concepts/probe-orchestrator/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/concepts/toolchain-orchestrator/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/concepts/two-phase-mutations/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/getting-started/installation/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/getting-started/your-first-project/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/reference/cli/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://alloy-embedded.github.io/alloy-cli/user-guide/toolchain/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
+    </url>
+    <url>
+         <loc>https://alloy-embedded.github.io/alloy-cli/user-guide/tui/</loc>
+         <lastmod>2026-05-05</lastmod>
     </url>
 </urlset>
