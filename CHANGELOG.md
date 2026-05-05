@@ -9,6 +9,50 @@ Unreleased work lives at the top of the file; releases are tagged
 
 ## [Unreleased]
 
+## [0.5.1] — 2026-05-04
+
+### Added — TUI backends + hardware tooling
+
+- **`PinoutEditorScreen`** — full in-project TUI schematic with
+  peripheral-add flow (UART / SPI / I2C / GPIO / Timer / ADC /
+  CAN / USB / ETH buttons), live refresh after each add, F3
+  compact/schematic toggle, F5 reload, ESC close.  Registered
+  in the command palette as `pinout-editor`.
+- **`DmaMatrixScreen` backend** — `make_dma_matrix()` now walks
+  CWD to find `alloy.toml`, resolves the device IR, and builds
+  a live `DmaMatrix` from `dma_routes`.  Falls back to a
+  placeholder when no project/device IR is found (previously
+  always returned the placeholder).
+- **`MemoryMapScreen` backend** — `make_memory_map()` resolves
+  the most-recent ELF under `.alloy/build/`, runs
+  `arm-none-eabi-size`, reads flash/RAM capacities from
+  `board.json`, and returns a fully-populated `MemoryMapScreen`.
+- **`alloy erase` OpenOCD fallback** — when probe-rs is absent
+  but the board's `board.json` declares `debug.openocd_cfg` and
+  OpenOCD is installed, `alloy erase` now falls through to
+  OpenOCD.  Chip-wide uses `flash erase_sector 0 0 last`;
+  per-region uses `flash erase_address 0xBASE 0xSIZE` per
+  region.  Mirrors the existing `alloy flash` fallback path.
+- **`alloy monitor` raw UART + RTT backends** — `_monitor_raw()`
+  streams PySerial bytes with `select`/`tty.setraw`; `_monitor_rtt()`
+  attaches probe-rs and pipes RTT output.  Ctrl+] closes cleanly.
+- **`alloy monitor` auto-detect serial port** — reads
+  `serial_globs` from `board.json` and globs the host's serial
+  devices; first match wins; others listed for `--port` override.
+- **CWD board-catalogue discovery** — `_boards_root()` now also
+  walks up from the current working directory, so commands like
+  `alloy monitor` and `alloy flash` find the boards catalogue
+  when run from inside a project tree rather than the install
+  root.
+- **`alloy flash` OpenOCD fallback** — when probe-rs is absent,
+  reads `debug.openocd_cfg` from `board.json` (or
+  `[flash].openocd_config` from `alloy.toml`) and invokes
+  `openocd -f <cfg> -c "program <elf> verify reset exit"`.
+- **Scaffold peripheral population** — `alloy new --board` now
+  writes `[[peripherals]]` entries for the debug UART and LED
+  GPIOs from `board.json`, and sets `[clocks].profile` to the
+  first declared clock profile.
+
 ### Added — Documentation site
 
 - **`add-docs-site`** — alloy-cli now ships a professional
@@ -18,6 +62,9 @@ Unreleased work lives at the top of the file; releases are tagged
   `.github/workflows/docs.yml` on every push to `main` and every
   `v*` tag.  Decoupled from `release.yml` so a docs-only change
   does not trigger a PyPI publish.
+- **TUI user guide** (`docs/user-guide/tui.md`): Pinout editor,
+  Memory map, Per-region erase, Monitor — each with CLI examples,
+  keyboard reference, and inline SVG screenshots.
 - **Information architecture**: Home / Getting Started / User
   Guide / Reference / Concepts / Architecture & Design /
   Contributing / API Reference / Changelog.  Every existing
@@ -25,46 +72,31 @@ Unreleased work lives at the top of the file; releases are tagged
   moves.
 - **Auto-generated CLI reference** via `mkdocs-click` against
   `alloy_cli.main:cli`.  Every `alloy <verb>` (all 18 commands)
-  surfaces automatically; adding a new Click command lands in
-  the docs on the next build.
+  surfaces automatically.
 - **Auto-generated API reference** via `mkdocstrings[python]`
-  for `alloy_cli.core.{toolchain_orchestrator,probe_orchestrator,
-  toolchain_registry,tool_sources,errors}`, `alloy_cli.mcp`,
-  and the TUI screens.  Private symbols filtered out.
+  for the core orchestrator modules and TUI screens.  Private
+  symbols filtered out.
 - **5 new concept docs** under `docs/concepts/` (~80–130 lines
-  each): Device IR, Toolchain orchestrator (with Mermaid
-  diagram), Probe orchestrator (with Mermaid diagram),
+  each): Device IR, Toolchain orchestrator, Probe orchestrator,
   Lockfile-aware execution, Two-phase mutations.
-- **2 new Getting Started pages**: Installation (system
-  requirements + extras matrix), Your first project (deep
-  walkthrough beyond the 5-min QUICKSTART).
-- **URL stability via `mkdocs-redirects`**: every existing
-  `docs/<X>.md` URL keeps resolving (source files didn't move),
-  plus user-friendly aliases (`/quickstart/`, `/recovery/`,
-  `/cookbook/`, `/cheatsheet/`) + future-IA paths
-  (`/getting-started/quickstart/`, `/user-guide/recovery/`,
-  etc.) for external link compatibility.
-- **`pip install -e .[docs]`** new optional-deps group
-  (mkdocs + mkdocs-material + mkdocstrings[python] +
-  mkdocs-click + mkdocs-redirects + mkdocs-include-markdown +
-  pymdown-extensions).  Runtime install footprint unchanged.
-- **Custom theming**: alloy-blue (Material indigo) + amber
-  accent (deep-orange) palette matching the TUI snapshots,
-  custom CSS for hero card / TUI snapshot framing / Mermaid
-  diagrams / print-friendly overrides, SVG wordmark logo +
-  favicon.  Light + dark palette with toggle persisting via
-  `localStorage`.
-- **Doc-quality regression tests** (12 new, total suite 1054):
-  `mkdocs build --strict` succeeds, every internal link
-  resolves, every existing `docs/*.md` is reachable from the
-  nav OR redirect-mapped, every redirect target points at a
-  real file, the landing page links to QUICKSTART + embeds the
-  install one-liner.
-- **Source docstring polish** surfaced by the auto-doc:
-  `tool_sources.py` and `toolchain_registry.py` `Raises:`
-  blocks reformatted to the Google-style `Error: description`
-  shape griffe expects.  Pure docstring edits; no behaviour
-  change.
+- **2 new Getting Started pages**: Installation, Your first
+  project.
+- **URL stability via `mkdocs-redirects`** — user-friendly
+  aliases and future-IA paths for external link compatibility.
+- **`pip install -e .[docs]`** new optional-deps group.
+- **Custom theming**: alloy-blue + amber accent palette, custom
+  CSS, SVG wordmark logo + favicon.  Light/dark toggle.
+- **Doc-quality regression tests** (12 new): strict build,
+  internal link resolution, nav/redirect coverage.
+- **Source docstring polish** for `tool_sources.py` and
+  `toolchain_registry.py` — Google-style `Raises:` blocks.
+
+### Fixed
+
+- Exception narrowing: replaced broad `except Exception` catches
+  in `build.py`, `flash.py`, `monitor.py`, and
+  `probe_orchestrator.py` with specific typed catches; annotated
+  the 5 legitimate broad catches with `# noqa: BLE001`.
 
 ## [0.5.0] — 2026-05-03
 
@@ -420,5 +452,7 @@ schema v1.1, snapshot testing, and a release runbook.
   ``ScreenRegistry`` APIs, injection-seam regression test,
   ``docs/RELEASING.md`` runbook, HIL CI workflow.
 
-[Unreleased]: https://github.com/Alloy-Embedded/alloy-cli/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Alloy-Embedded/alloy-cli/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/Alloy-Embedded/alloy-cli/compare/v0.5.0...v0.5.1
+[0.5.0]: https://github.com/Alloy-Embedded/alloy-cli/compare/v0.1.0...v0.5.0
 [0.1.0]: https://github.com/Alloy-Embedded/alloy-cli/releases/tag/v0.1.0

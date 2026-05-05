@@ -19,166 +19,166 @@
         font-weight: 700;
     }
 
-    .terminal-matrix {
+    .terminal-938092521-matrix {
         font-family: Fira Code, monospace;
         font-size: 20px;
         line-height: 24.4px;
         font-variant-east-asian: full-width;
     }
 
-    .terminal-title {
+    .terminal-938092521-title {
         font-size: 18px;
         font-weight: bold;
         font-family: arial;
     }
 
-    .terminal-r1 { fill: #c5c8c6 }
-.terminal-r2 { fill: #c5c8c6;font-weight: bold }
-.terminal-r3 { fill: #d0b344 }
-.terminal-r4 { fill: #68a0b3;font-weight: bold }
+    .terminal-938092521-r1 { fill: #c5c8c6 }
+.terminal-938092521-r2 { fill: #c5c8c6;font-weight: bold }
+.terminal-938092521-r3 { fill: #d0b344 }
+.terminal-938092521-r4 { fill: #68a0b3;font-weight: bold }
     </style>
 
     <defs>
-    <clipPath id="terminal-clip-terminal">
+    <clipPath id="terminal-938092521-clip-terminal">
       <rect x="0" y="0" width="1463.0" height="779.8" />
     </clipPath>
-    <clipPath id="terminal-line-0">
+    <clipPath id="terminal-938092521-line-0">
     <rect x="0" y="1.5" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-1">
+<clipPath id="terminal-938092521-line-1">
     <rect x="0" y="25.9" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-2">
+<clipPath id="terminal-938092521-line-2">
     <rect x="0" y="50.3" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-3">
+<clipPath id="terminal-938092521-line-3">
     <rect x="0" y="74.7" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-4">
+<clipPath id="terminal-938092521-line-4">
     <rect x="0" y="99.1" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-5">
+<clipPath id="terminal-938092521-line-5">
     <rect x="0" y="123.5" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-6">
+<clipPath id="terminal-938092521-line-6">
     <rect x="0" y="147.9" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-7">
+<clipPath id="terminal-938092521-line-7">
     <rect x="0" y="172.3" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-8">
+<clipPath id="terminal-938092521-line-8">
     <rect x="0" y="196.7" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-9">
+<clipPath id="terminal-938092521-line-9">
     <rect x="0" y="221.1" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-10">
+<clipPath id="terminal-938092521-line-10">
     <rect x="0" y="245.5" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-11">
+<clipPath id="terminal-938092521-line-11">
     <rect x="0" y="269.9" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-12">
+<clipPath id="terminal-938092521-line-12">
     <rect x="0" y="294.3" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-13">
+<clipPath id="terminal-938092521-line-13">
     <rect x="0" y="318.7" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-14">
+<clipPath id="terminal-938092521-line-14">
     <rect x="0" y="343.1" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-15">
+<clipPath id="terminal-938092521-line-15">
     <rect x="0" y="367.5" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-16">
+<clipPath id="terminal-938092521-line-16">
     <rect x="0" y="391.9" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-17">
+<clipPath id="terminal-938092521-line-17">
     <rect x="0" y="416.3" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-18">
+<clipPath id="terminal-938092521-line-18">
     <rect x="0" y="440.7" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-19">
+<clipPath id="terminal-938092521-line-19">
     <rect x="0" y="465.1" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-20">
+<clipPath id="terminal-938092521-line-20">
     <rect x="0" y="489.5" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-21">
+<clipPath id="terminal-938092521-line-21">
     <rect x="0" y="513.9" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-22">
+<clipPath id="terminal-938092521-line-22">
     <rect x="0" y="538.3" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-23">
+<clipPath id="terminal-938092521-line-23">
     <rect x="0" y="562.7" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-24">
+<clipPath id="terminal-938092521-line-24">
     <rect x="0" y="587.1" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-25">
+<clipPath id="terminal-938092521-line-25">
     <rect x="0" y="611.5" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-26">
+<clipPath id="terminal-938092521-line-26">
     <rect x="0" y="635.9" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-27">
+<clipPath id="terminal-938092521-line-27">
     <rect x="0" y="660.3" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-28">
+<clipPath id="terminal-938092521-line-28">
     <rect x="0" y="684.7" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-29">
+<clipPath id="terminal-938092521-line-29">
     <rect x="0" y="709.1" width="1464" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-line-30">
+<clipPath id="terminal-938092521-line-30">
     <rect x="0" y="733.5" width="1464" height="24.65"/>
             </clipPath>
     </defs>
 
-    <rect fill="#292929" stroke="rgba(255,255,255,0.35)" stroke-width="1" x="1" y="1" width="1480" height="828.8" rx="8"/><text class="terminal-title" fill="#c5c8c6" text-anchor="middle" x="740" y="27">alloy&#160;--help</text>
+    <rect fill="#292929" stroke="rgba(255,255,255,0.35)" stroke-width="1" x="1" y="1" width="1480" height="828.8" rx="8"/><text class="terminal-938092521-title" fill="#c5c8c6" text-anchor="middle" x="740" y="27">alloy&#160;--help</text>
             <g transform="translate(26,22)">
             <circle cx="0" cy="0" r="7" fill="#ff5f57"/>
             <circle cx="22" cy="0" r="7" fill="#febc2e"/>
             <circle cx="44" cy="0" r="7" fill="#28c840"/>
             </g>
         
-    <g transform="translate(9, 41)" clip-path="url(#terminal-clip-terminal)">
+    <g transform="translate(9, 41)" clip-path="url(#terminal-938092521-clip-terminal)">
     
-    <g class="terminal-matrix">
-    <text class="terminal-r1" x="0" y="20" textLength="134.2" clip-path="url(#terminal-line-0)">Usage:&#160;cli&#160;</text><text class="terminal-r2" x="134.2" y="20" textLength="12.2" clip-path="url(#terminal-line-0)">[</text><text class="terminal-r1" x="146.4" y="20" textLength="85.4" clip-path="url(#terminal-line-0)">OPTIONS</text><text class="terminal-r2" x="231.8" y="20" textLength="12.2" clip-path="url(#terminal-line-0)">]</text><text class="terminal-r1" x="244" y="20" textLength="109.8" clip-path="url(#terminal-line-0)">&#160;COMMAND&#160;</text><text class="terminal-r2" x="353.8" y="20" textLength="12.2" clip-path="url(#terminal-line-0)">[</text><text class="terminal-r1" x="366" y="20" textLength="48.8" clip-path="url(#terminal-line-0)">ARGS</text><text class="terminal-r2" x="414.8" y="20" textLength="12.2" clip-path="url(#terminal-line-0)">]</text><text class="terminal-r3" x="427" y="20" textLength="36.6" clip-path="url(#terminal-line-0)">...</text><text class="terminal-r1" x="1464" y="20" textLength="12.2" clip-path="url(#terminal-line-0)">
-</text><text class="terminal-r1" x="1464" y="44.4" textLength="12.2" clip-path="url(#terminal-line-1)">
-</text><text class="terminal-r1" x="0" y="68.8" textLength="927.2" clip-path="url(#terminal-line-2)">&#160;&#160;alloy&#160;—&#160;terminal-native&#160;developer&#160;surface&#160;for&#160;the&#160;Alloy&#160;embedded&#160;platform.</text><text class="terminal-r1" x="1464" y="68.8" textLength="12.2" clip-path="url(#terminal-line-2)">
-</text><text class="terminal-r1" x="1464" y="93.2" textLength="12.2" clip-path="url(#terminal-line-3)">
-</text><text class="terminal-r1" x="0" y="117.6" textLength="939.4" clip-path="url(#terminal-line-4)">&#160;&#160;The&#160;roadmap&#160;is&#160;sequenced&#160;under&#160;openspec/changes/&#160;in&#160;this&#160;repository.&#160;Phase&#160;</text><text class="terminal-r4" x="939.4" y="117.6" textLength="12.2" clip-path="url(#terminal-line-4)">1</text><text class="terminal-r1" x="1464" y="117.6" textLength="12.2" clip-path="url(#terminal-line-4)">
-</text><text class="terminal-r2" x="24.4" y="142" textLength="12.2" clip-path="url(#terminal-line-5)">(</text><text class="terminal-r1" x="36.6" y="142" textLength="414.8" clip-path="url(#terminal-line-5)">this&#160;proposal:&#160;bootstrap-alloy-cli</text><text class="terminal-r2" x="451.4" y="142" textLength="12.2" clip-path="url(#terminal-line-5)">)</text><text class="terminal-r1" x="463.6" y="142" textLength="402.6" clip-path="url(#terminal-line-5)">&#160;ships&#160;only&#160;the&#160;package&#160;skeleton.</text><text class="terminal-r1" x="1464" y="142" textLength="12.2" clip-path="url(#terminal-line-5)">
-</text><text class="terminal-r1" x="0" y="166.4" textLength="170.8" clip-path="url(#terminal-line-6)">&#160;&#160;Subcommands&#160;</text><text class="terminal-r2" x="170.8" y="166.4" textLength="12.2" clip-path="url(#terminal-line-6)">(</text><text class="terminal-r1" x="183" y="166.4" textLength="610" clip-path="url(#terminal-line-6)">new,&#160;build,&#160;flash,&#160;debug,&#160;boards,&#160;add,&#160;mcp,&#160;doctor</text><text class="terminal-r2" x="793" y="166.4" textLength="12.2" clip-path="url(#terminal-line-6)">)</text><text class="terminal-r1" x="805.2" y="166.4" textLength="97.6" clip-path="url(#terminal-line-6)">&#160;land&#160;in</text><text class="terminal-r1" x="1464" y="166.4" textLength="12.2" clip-path="url(#terminal-line-6)">
-</text><text class="terminal-r1" x="0" y="190.8" textLength="280.6" clip-path="url(#terminal-line-7)">&#160;&#160;subsequent&#160;proposals.</text><text class="terminal-r1" x="1464" y="190.8" textLength="12.2" clip-path="url(#terminal-line-7)">
-</text><text class="terminal-r1" x="1464" y="215.2" textLength="12.2" clip-path="url(#terminal-line-8)">
-</text><text class="terminal-r1" x="0" y="239.6" textLength="97.6" clip-path="url(#terminal-line-9)">Options:</text><text class="terminal-r1" x="1464" y="239.6" textLength="12.2" clip-path="url(#terminal-line-9)">
-</text><text class="terminal-r1" x="0" y="264" textLength="488" clip-path="url(#terminal-line-10)">&#160;&#160;--version&#160;&#160;&#160;Show&#160;the&#160;version&#160;and&#160;exit.</text><text class="terminal-r1" x="1464" y="264" textLength="12.2" clip-path="url(#terminal-line-10)">
-</text><text class="terminal-r1" x="0" y="288.4" textLength="500.2" clip-path="url(#terminal-line-11)">&#160;&#160;-h,&#160;--help&#160;&#160;Show&#160;this&#160;message&#160;and&#160;exit.</text><text class="terminal-r1" x="1464" y="288.4" textLength="12.2" clip-path="url(#terminal-line-11)">
-</text><text class="terminal-r1" x="1464" y="312.8" textLength="12.2" clip-path="url(#terminal-line-12)">
-</text><text class="terminal-r1" x="0" y="337.2" textLength="109.8" clip-path="url(#terminal-line-13)">Commands:</text><text class="terminal-r1" x="1464" y="337.2" textLength="12.2" clip-path="url(#terminal-line-13)">
-</text><text class="terminal-r1" x="0" y="361.6" textLength="646.6" clip-path="url(#terminal-line-14)">&#160;&#160;add&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Add&#160;a&#160;peripheral&#160;to&#160;the&#160;current&#160;project.</text><text class="terminal-r1" x="1464" y="361.6" textLength="12.2" clip-path="url(#terminal-line-14)">
-</text><text class="terminal-r1" x="0" y="386" textLength="671" clip-path="url(#terminal-line-15)">&#160;&#160;boards&#160;&#160;&#160;&#160;&#160;List&#160;+&#160;search&#160;the&#160;curated&#160;board&#160;catalogue.</text><text class="terminal-r1" x="1464" y="386" textLength="12.2" clip-path="url(#terminal-line-15)">
-</text><text class="terminal-r1" x="0" y="410.4" textLength="683.2" clip-path="url(#terminal-line-16)">&#160;&#160;build&#160;&#160;&#160;&#160;&#160;&#160;Build&#160;the&#160;firmware&#160;for&#160;the&#160;current&#160;project.</text><text class="terminal-r1" x="1464" y="410.4" textLength="12.2" clip-path="url(#terminal-line-16)">
-</text><text class="terminal-r1" x="0" y="434.8" textLength="756.4" clip-path="url(#terminal-line-17)">&#160;&#160;chat&#160;&#160;&#160;&#160;&#160;&#160;&#160;Launch&#160;opencode&#160;wired&#160;up&#160;to&#160;the&#160;alloy&#160;MCP&#160;server.</text><text class="terminal-r1" x="1464" y="434.8" textLength="12.2" clip-path="url(#terminal-line-17)">
-</text><text class="terminal-r1" x="0" y="459.2" textLength="646.6" clip-path="url(#terminal-line-18)">&#160;&#160;debug&#160;&#160;&#160;&#160;&#160;&#160;Launch&#160;probe-rs&#160;gdb-server&#160;+&#160;attach&#160;GDB.</text><text class="terminal-r1" x="1464" y="459.2" textLength="12.2" clip-path="url(#terminal-line-18)">
-</text><text class="terminal-r1" x="0" y="483.6" textLength="622.2" clip-path="url(#terminal-line-19)">&#160;&#160;devices&#160;&#160;&#160;&#160;List&#160;+&#160;search&#160;the&#160;canonical&#160;device&#160;IR.</text><text class="terminal-r1" x="1464" y="483.6" textLength="12.2" clip-path="url(#terminal-line-19)">
-</text><text class="terminal-r1" x="0" y="508" textLength="695.4" clip-path="url(#terminal-line-20)">&#160;&#160;doctor&#160;&#160;&#160;&#160;&#160;Diagnose&#160;the&#160;host&#160;environment&#160;for&#160;alloy-cli.</text><text class="terminal-r1" x="1464" y="508" textLength="12.2" clip-path="url(#terminal-line-20)">
-</text><text class="terminal-r1" x="0" y="532.4" textLength="890.6" clip-path="url(#terminal-line-21)">&#160;&#160;erase&#160;&#160;&#160;&#160;&#160;&#160;Erase&#160;the&#160;chip&#x27;s&#160;flash&#160;through&#160;the&#160;lockfile-pinned&#160;probe-rs.</text><text class="terminal-r1" x="1464" y="532.4" textLength="12.2" clip-path="url(#terminal-line-21)">
-</text><text class="terminal-r1" x="0" y="556.8" textLength="585.6" clip-path="url(#terminal-line-22)">&#160;&#160;export&#160;&#160;&#160;&#160;&#160;Emit&#160;auxiliary&#160;configuration&#160;files.</text><text class="terminal-r1" x="1464" y="556.8" textLength="12.2" clip-path="url(#terminal-line-22)">
-</text><text class="terminal-r1" x="0" y="581.2" textLength="549" clip-path="url(#terminal-line-23)">&#160;&#160;flash&#160;&#160;&#160;&#160;&#160;&#160;Flash&#160;the&#160;firmware&#160;via&#160;probe-rs.</text><text class="terminal-r1" x="1464" y="581.2" textLength="12.2" clip-path="url(#terminal-line-23)">
-</text><text class="terminal-r1" x="0" y="605.6" textLength="597.8" clip-path="url(#terminal-line-24)">&#160;&#160;mcp&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Model&#160;Context&#160;Protocol&#160;integrations.</text><text class="terminal-r1" x="1464" y="605.6" textLength="12.2" clip-path="url(#terminal-line-24)">
-</text><text class="terminal-r1" x="0" y="630" textLength="671" clip-path="url(#terminal-line-25)">&#160;&#160;monitor&#160;&#160;&#160;&#160;Stream&#160;bytes&#160;from&#160;the&#160;target&#x27;s&#160;debug&#160;UART&#160;</text><text class="terminal-r2" x="671" y="630" textLength="12.2" clip-path="url(#terminal-line-25)">(</text><text class="terminal-r1" x="683.2" y="630" textLength="170.8" clip-path="url(#terminal-line-25)">or&#160;RTT&#160;channel</text><text class="terminal-r2" x="854" y="630" textLength="12.2" clip-path="url(#terminal-line-25)">)</text><text class="terminal-r1" x="866.2" y="630" textLength="36.6" clip-path="url(#terminal-line-25)">&#160;to</text><text class="terminal-r3" x="902.8" y="630" textLength="36.6" clip-path="url(#terminal-line-25)">...</text><text class="terminal-r1" x="1464" y="630" textLength="12.2" clip-path="url(#terminal-line-25)">
-</text><text class="terminal-r1" x="0" y="654.4" textLength="671" clip-path="url(#terminal-line-26)">&#160;&#160;new&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Scaffold&#160;a&#160;new&#160;alloy-cli&#160;firmware&#160;project.</text><text class="terminal-r1" x="1464" y="654.4" textLength="12.2" clip-path="url(#terminal-line-26)">
-</text><text class="terminal-r1" x="0" y="678.8" textLength="561.2" clip-path="url(#terminal-line-27)">&#160;&#160;reset&#160;&#160;&#160;&#160;&#160;&#160;Reset&#160;the&#160;connected&#160;probe&#160;target.</text><text class="terminal-r1" x="1464" y="678.8" textLength="12.2" clip-path="url(#terminal-line-27)">
-</text><text class="terminal-r1" x="0" y="703.2" textLength="878.4" clip-path="url(#terminal-line-28)">&#160;&#160;setup&#160;&#160;&#160;&#160;&#160;&#160;Guided&#160;onboarding&#160;for&#160;a&#160;fresh&#160;machine:&#160;detect&#160;or&#160;scaffold&#160;a</text><text class="terminal-r3" x="878.4" y="703.2" textLength="36.6" clip-path="url(#terminal-line-28)">...</text><text class="terminal-r1" x="1464" y="703.2" textLength="12.2" clip-path="url(#terminal-line-28)">
-</text><text class="terminal-r1" x="0" y="727.6" textLength="707.6" clip-path="url(#terminal-line-29)">&#160;&#160;toolchain&#160;&#160;Manage&#160;the&#160;per-family&#160;binary&#160;toolchain&#160;store.</text><text class="terminal-r1" x="1464" y="727.6" textLength="12.2" clip-path="url(#terminal-line-29)">
-</text><text class="terminal-r1" x="0" y="752" textLength="500.2" clip-path="url(#terminal-line-30)">&#160;&#160;ui&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Launch&#160;the&#160;alloy&#160;Textual&#160;UI.</text><text class="terminal-r1" x="1464" y="752" textLength="12.2" clip-path="url(#terminal-line-30)">
-</text><text class="terminal-r1" x="0" y="776.4" textLength="683.2" clip-path="url(#terminal-line-31)">&#160;&#160;update&#160;&#160;&#160;&#160;&#160;Atomically&#160;upgrade&#160;pinned&#160;alloy&#160;components.</text><text class="terminal-r1" x="1464" y="776.4" textLength="12.2" clip-path="url(#terminal-line-31)">
+    <g class="terminal-938092521-matrix">
+    <text class="terminal-938092521-r1" x="0" y="20" textLength="134.2" clip-path="url(#terminal-938092521-line-0)">Usage:&#160;cli&#160;</text><text class="terminal-938092521-r2" x="134.2" y="20" textLength="12.2" clip-path="url(#terminal-938092521-line-0)">[</text><text class="terminal-938092521-r1" x="146.4" y="20" textLength="85.4" clip-path="url(#terminal-938092521-line-0)">OPTIONS</text><text class="terminal-938092521-r2" x="231.8" y="20" textLength="12.2" clip-path="url(#terminal-938092521-line-0)">]</text><text class="terminal-938092521-r1" x="244" y="20" textLength="109.8" clip-path="url(#terminal-938092521-line-0)">&#160;COMMAND&#160;</text><text class="terminal-938092521-r2" x="353.8" y="20" textLength="12.2" clip-path="url(#terminal-938092521-line-0)">[</text><text class="terminal-938092521-r1" x="366" y="20" textLength="48.8" clip-path="url(#terminal-938092521-line-0)">ARGS</text><text class="terminal-938092521-r2" x="414.8" y="20" textLength="12.2" clip-path="url(#terminal-938092521-line-0)">]</text><text class="terminal-938092521-r3" x="427" y="20" textLength="36.6" clip-path="url(#terminal-938092521-line-0)">...</text><text class="terminal-938092521-r1" x="1464" y="20" textLength="12.2" clip-path="url(#terminal-938092521-line-0)">
+</text><text class="terminal-938092521-r1" x="1464" y="44.4" textLength="12.2" clip-path="url(#terminal-938092521-line-1)">
+</text><text class="terminal-938092521-r1" x="0" y="68.8" textLength="927.2" clip-path="url(#terminal-938092521-line-2)">&#160;&#160;alloy&#160;—&#160;terminal-native&#160;developer&#160;surface&#160;for&#160;the&#160;Alloy&#160;embedded&#160;platform.</text><text class="terminal-938092521-r1" x="1464" y="68.8" textLength="12.2" clip-path="url(#terminal-938092521-line-2)">
+</text><text class="terminal-938092521-r1" x="1464" y="93.2" textLength="12.2" clip-path="url(#terminal-938092521-line-3)">
+</text><text class="terminal-938092521-r1" x="0" y="117.6" textLength="939.4" clip-path="url(#terminal-938092521-line-4)">&#160;&#160;The&#160;roadmap&#160;is&#160;sequenced&#160;under&#160;openspec/changes/&#160;in&#160;this&#160;repository.&#160;Phase&#160;</text><text class="terminal-938092521-r4" x="939.4" y="117.6" textLength="12.2" clip-path="url(#terminal-938092521-line-4)">1</text><text class="terminal-938092521-r1" x="1464" y="117.6" textLength="12.2" clip-path="url(#terminal-938092521-line-4)">
+</text><text class="terminal-938092521-r2" x="24.4" y="142" textLength="12.2" clip-path="url(#terminal-938092521-line-5)">(</text><text class="terminal-938092521-r1" x="36.6" y="142" textLength="414.8" clip-path="url(#terminal-938092521-line-5)">this&#160;proposal:&#160;bootstrap-alloy-cli</text><text class="terminal-938092521-r2" x="451.4" y="142" textLength="12.2" clip-path="url(#terminal-938092521-line-5)">)</text><text class="terminal-938092521-r1" x="463.6" y="142" textLength="402.6" clip-path="url(#terminal-938092521-line-5)">&#160;ships&#160;only&#160;the&#160;package&#160;skeleton.</text><text class="terminal-938092521-r1" x="1464" y="142" textLength="12.2" clip-path="url(#terminal-938092521-line-5)">
+</text><text class="terminal-938092521-r1" x="0" y="166.4" textLength="170.8" clip-path="url(#terminal-938092521-line-6)">&#160;&#160;Subcommands&#160;</text><text class="terminal-938092521-r2" x="170.8" y="166.4" textLength="12.2" clip-path="url(#terminal-938092521-line-6)">(</text><text class="terminal-938092521-r1" x="183" y="166.4" textLength="610" clip-path="url(#terminal-938092521-line-6)">new,&#160;build,&#160;flash,&#160;debug,&#160;boards,&#160;add,&#160;mcp,&#160;doctor</text><text class="terminal-938092521-r2" x="793" y="166.4" textLength="12.2" clip-path="url(#terminal-938092521-line-6)">)</text><text class="terminal-938092521-r1" x="805.2" y="166.4" textLength="97.6" clip-path="url(#terminal-938092521-line-6)">&#160;land&#160;in</text><text class="terminal-938092521-r1" x="1464" y="166.4" textLength="12.2" clip-path="url(#terminal-938092521-line-6)">
+</text><text class="terminal-938092521-r1" x="0" y="190.8" textLength="280.6" clip-path="url(#terminal-938092521-line-7)">&#160;&#160;subsequent&#160;proposals.</text><text class="terminal-938092521-r1" x="1464" y="190.8" textLength="12.2" clip-path="url(#terminal-938092521-line-7)">
+</text><text class="terminal-938092521-r1" x="1464" y="215.2" textLength="12.2" clip-path="url(#terminal-938092521-line-8)">
+</text><text class="terminal-938092521-r1" x="0" y="239.6" textLength="97.6" clip-path="url(#terminal-938092521-line-9)">Options:</text><text class="terminal-938092521-r1" x="1464" y="239.6" textLength="12.2" clip-path="url(#terminal-938092521-line-9)">
+</text><text class="terminal-938092521-r1" x="0" y="264" textLength="488" clip-path="url(#terminal-938092521-line-10)">&#160;&#160;--version&#160;&#160;&#160;Show&#160;the&#160;version&#160;and&#160;exit.</text><text class="terminal-938092521-r1" x="1464" y="264" textLength="12.2" clip-path="url(#terminal-938092521-line-10)">
+</text><text class="terminal-938092521-r1" x="0" y="288.4" textLength="500.2" clip-path="url(#terminal-938092521-line-11)">&#160;&#160;-h,&#160;--help&#160;&#160;Show&#160;this&#160;message&#160;and&#160;exit.</text><text class="terminal-938092521-r1" x="1464" y="288.4" textLength="12.2" clip-path="url(#terminal-938092521-line-11)">
+</text><text class="terminal-938092521-r1" x="1464" y="312.8" textLength="12.2" clip-path="url(#terminal-938092521-line-12)">
+</text><text class="terminal-938092521-r1" x="0" y="337.2" textLength="109.8" clip-path="url(#terminal-938092521-line-13)">Commands:</text><text class="terminal-938092521-r1" x="1464" y="337.2" textLength="12.2" clip-path="url(#terminal-938092521-line-13)">
+</text><text class="terminal-938092521-r1" x="0" y="361.6" textLength="646.6" clip-path="url(#terminal-938092521-line-14)">&#160;&#160;add&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Add&#160;a&#160;peripheral&#160;to&#160;the&#160;current&#160;project.</text><text class="terminal-938092521-r1" x="1464" y="361.6" textLength="12.2" clip-path="url(#terminal-938092521-line-14)">
+</text><text class="terminal-938092521-r1" x="0" y="386" textLength="671" clip-path="url(#terminal-938092521-line-15)">&#160;&#160;boards&#160;&#160;&#160;&#160;&#160;List&#160;+&#160;search&#160;the&#160;curated&#160;board&#160;catalogue.</text><text class="terminal-938092521-r1" x="1464" y="386" textLength="12.2" clip-path="url(#terminal-938092521-line-15)">
+</text><text class="terminal-938092521-r1" x="0" y="410.4" textLength="683.2" clip-path="url(#terminal-938092521-line-16)">&#160;&#160;build&#160;&#160;&#160;&#160;&#160;&#160;Build&#160;the&#160;firmware&#160;for&#160;the&#160;current&#160;project.</text><text class="terminal-938092521-r1" x="1464" y="410.4" textLength="12.2" clip-path="url(#terminal-938092521-line-16)">
+</text><text class="terminal-938092521-r1" x="0" y="434.8" textLength="756.4" clip-path="url(#terminal-938092521-line-17)">&#160;&#160;chat&#160;&#160;&#160;&#160;&#160;&#160;&#160;Launch&#160;opencode&#160;wired&#160;up&#160;to&#160;the&#160;alloy&#160;MCP&#160;server.</text><text class="terminal-938092521-r1" x="1464" y="434.8" textLength="12.2" clip-path="url(#terminal-938092521-line-17)">
+</text><text class="terminal-938092521-r1" x="0" y="459.2" textLength="646.6" clip-path="url(#terminal-938092521-line-18)">&#160;&#160;debug&#160;&#160;&#160;&#160;&#160;&#160;Launch&#160;probe-rs&#160;gdb-server&#160;+&#160;attach&#160;GDB.</text><text class="terminal-938092521-r1" x="1464" y="459.2" textLength="12.2" clip-path="url(#terminal-938092521-line-18)">
+</text><text class="terminal-938092521-r1" x="0" y="483.6" textLength="622.2" clip-path="url(#terminal-938092521-line-19)">&#160;&#160;devices&#160;&#160;&#160;&#160;List&#160;+&#160;search&#160;the&#160;canonical&#160;device&#160;IR.</text><text class="terminal-938092521-r1" x="1464" y="483.6" textLength="12.2" clip-path="url(#terminal-938092521-line-19)">
+</text><text class="terminal-938092521-r1" x="0" y="508" textLength="695.4" clip-path="url(#terminal-938092521-line-20)">&#160;&#160;doctor&#160;&#160;&#160;&#160;&#160;Diagnose&#160;the&#160;host&#160;environment&#160;for&#160;alloy-cli.</text><text class="terminal-938092521-r1" x="1464" y="508" textLength="12.2" clip-path="url(#terminal-938092521-line-20)">
+</text><text class="terminal-938092521-r1" x="0" y="532.4" textLength="890.6" clip-path="url(#terminal-938092521-line-21)">&#160;&#160;erase&#160;&#160;&#160;&#160;&#160;&#160;Erase&#160;the&#160;chip&#x27;s&#160;flash&#160;through&#160;the&#160;lockfile-pinned&#160;probe-rs.</text><text class="terminal-938092521-r1" x="1464" y="532.4" textLength="12.2" clip-path="url(#terminal-938092521-line-21)">
+</text><text class="terminal-938092521-r1" x="0" y="556.8" textLength="585.6" clip-path="url(#terminal-938092521-line-22)">&#160;&#160;export&#160;&#160;&#160;&#160;&#160;Emit&#160;auxiliary&#160;configuration&#160;files.</text><text class="terminal-938092521-r1" x="1464" y="556.8" textLength="12.2" clip-path="url(#terminal-938092521-line-22)">
+</text><text class="terminal-938092521-r1" x="0" y="581.2" textLength="549" clip-path="url(#terminal-938092521-line-23)">&#160;&#160;flash&#160;&#160;&#160;&#160;&#160;&#160;Flash&#160;the&#160;firmware&#160;via&#160;probe-rs.</text><text class="terminal-938092521-r1" x="1464" y="581.2" textLength="12.2" clip-path="url(#terminal-938092521-line-23)">
+</text><text class="terminal-938092521-r1" x="0" y="605.6" textLength="597.8" clip-path="url(#terminal-938092521-line-24)">&#160;&#160;mcp&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Model&#160;Context&#160;Protocol&#160;integrations.</text><text class="terminal-938092521-r1" x="1464" y="605.6" textLength="12.2" clip-path="url(#terminal-938092521-line-24)">
+</text><text class="terminal-938092521-r1" x="0" y="630" textLength="671" clip-path="url(#terminal-938092521-line-25)">&#160;&#160;monitor&#160;&#160;&#160;&#160;Stream&#160;bytes&#160;from&#160;the&#160;target&#x27;s&#160;debug&#160;UART&#160;</text><text class="terminal-938092521-r2" x="671" y="630" textLength="12.2" clip-path="url(#terminal-938092521-line-25)">(</text><text class="terminal-938092521-r1" x="683.2" y="630" textLength="170.8" clip-path="url(#terminal-938092521-line-25)">or&#160;RTT&#160;channel</text><text class="terminal-938092521-r2" x="854" y="630" textLength="12.2" clip-path="url(#terminal-938092521-line-25)">)</text><text class="terminal-938092521-r1" x="866.2" y="630" textLength="36.6" clip-path="url(#terminal-938092521-line-25)">&#160;to</text><text class="terminal-938092521-r3" x="902.8" y="630" textLength="36.6" clip-path="url(#terminal-938092521-line-25)">...</text><text class="terminal-938092521-r1" x="1464" y="630" textLength="12.2" clip-path="url(#terminal-938092521-line-25)">
+</text><text class="terminal-938092521-r1" x="0" y="654.4" textLength="671" clip-path="url(#terminal-938092521-line-26)">&#160;&#160;new&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Scaffold&#160;a&#160;new&#160;alloy-cli&#160;firmware&#160;project.</text><text class="terminal-938092521-r1" x="1464" y="654.4" textLength="12.2" clip-path="url(#terminal-938092521-line-26)">
+</text><text class="terminal-938092521-r1" x="0" y="678.8" textLength="561.2" clip-path="url(#terminal-938092521-line-27)">&#160;&#160;reset&#160;&#160;&#160;&#160;&#160;&#160;Reset&#160;the&#160;connected&#160;probe&#160;target.</text><text class="terminal-938092521-r1" x="1464" y="678.8" textLength="12.2" clip-path="url(#terminal-938092521-line-27)">
+</text><text class="terminal-938092521-r1" x="0" y="703.2" textLength="878.4" clip-path="url(#terminal-938092521-line-28)">&#160;&#160;setup&#160;&#160;&#160;&#160;&#160;&#160;Guided&#160;onboarding&#160;for&#160;a&#160;fresh&#160;machine:&#160;detect&#160;or&#160;scaffold&#160;a</text><text class="terminal-938092521-r3" x="878.4" y="703.2" textLength="36.6" clip-path="url(#terminal-938092521-line-28)">...</text><text class="terminal-938092521-r1" x="1464" y="703.2" textLength="12.2" clip-path="url(#terminal-938092521-line-28)">
+</text><text class="terminal-938092521-r1" x="0" y="727.6" textLength="707.6" clip-path="url(#terminal-938092521-line-29)">&#160;&#160;toolchain&#160;&#160;Manage&#160;the&#160;per-family&#160;binary&#160;toolchain&#160;store.</text><text class="terminal-938092521-r1" x="1464" y="727.6" textLength="12.2" clip-path="url(#terminal-938092521-line-29)">
+</text><text class="terminal-938092521-r1" x="0" y="752" textLength="500.2" clip-path="url(#terminal-938092521-line-30)">&#160;&#160;ui&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Launch&#160;the&#160;alloy&#160;Textual&#160;UI.</text><text class="terminal-938092521-r1" x="1464" y="752" textLength="12.2" clip-path="url(#terminal-938092521-line-30)">
+</text><text class="terminal-938092521-r1" x="0" y="776.4" textLength="683.2" clip-path="url(#terminal-938092521-line-31)">&#160;&#160;update&#160;&#160;&#160;&#160;&#160;Atomically&#160;upgrade&#160;pinned&#160;alloy&#160;components.</text><text class="terminal-938092521-r1" x="1464" y="776.4" textLength="12.2" clip-path="url(#terminal-938092521-line-31)">
 </text>
     </g>
     </g>
